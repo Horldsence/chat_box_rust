@@ -1,0 +1,61 @@
+:root {
+  /* Primary colors */
+  --color-primary: #6750A4;
+  --color-on-primary: #FFFFFF;
+  --color-primary-container: #EADDFF;
+  --color-on-primary-container: #21005D;
+  
+  /* Surface colors */
+  --color-surface: #FEF7FF;
+  --color-surface-container-low: #F7F2FA;
+  --color-surface-container-high: #ECE6F0;
+  --color-surface-variant: #E7E0EC;
+  
+  /* Outline */
+  --color-outline: #79747E;
+  
+  /* Text colors */
+  --color-on-surface: #1D1B20;
+  --color-on-surface-variant: #49454F;
+}
+
+/* 添加流式输出优化的样式 */
+.markdown-content {
+  /* 使用硬件加速 */
+  transform: translateZ(0);
+  will-change: contents;
+  
+  /* 平滑文本变化 */
+  transition: color 0.2s;
+}
+
+.message {
+  /* 使用硬件加速优化渲染 */
+  transform: translateZ(0);
+  will-change: opacity;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.7;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 优化打字指示器动画性能 */
+.typing-indicator span {
+  will-change: transform;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+/* 优化滚动性能 */
+.messages-container {
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}

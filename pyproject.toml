@@ -1,0 +1,19 @@
+[[tool.uv.index]]
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
+default = true
+
+[project]
+name = "voice-assitent"
+version = "0.1.1"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "edge-tts>=7.0.0",
+    "pyaudio>=0.2.14",
+    "vosk>=0.3.45",
+    "kokoro",
+    "soundfile>=0.13.1",
+    "ipython>=9.2.0",
+    "pip>=25.1",
+]
