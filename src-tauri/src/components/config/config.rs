@@ -3,7 +3,6 @@ use std::fs;
 use log::debug;
 use anyhow::{Result, Context};
 use config::{Config, Environment};
-slint::include_modules!();
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct AppConfig {

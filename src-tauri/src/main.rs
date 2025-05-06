@@ -1,20 +1,16 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-// 在文件顶部添加：
-mod components {
-    pub mod agent {
-        pub mod ollama;
-    }
-    pub mod asr {
-        pub mod vosk;
-    }
-}
-
+// 个人组件
+mod components;
+// use components::asr::vosk::VoskASR;
 use components::agent::ollama::OllamaAgent;
+use components::asr::vosk_python::VoskASR as VoskASRPython;
+
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use tauri::{Emitter, State, Window};
+use tokio_stream::StreamExt;
 
 use log::{debug, error, info, warn};
 
@@ -24,7 +20,7 @@ struct Message {
     content: String,
     sender: String,
     timestamp: u64,
-    conversation_id: u64,  // 新增字段，关联消息与对话
+    conversation_id: u64, // 新增字段，关联消息与对话
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -47,6 +43,8 @@ struct AppState {
     conversations: Arc<Mutex<Vec<Conversation>>>, // 使用Arc包装Mutex
     messages: Arc<Mutex<Vec<Message>>>,           // 使用Arc包装Mutex
     ollama_agent: Arc<OllamaAgent>,
+    // vosk_asr: Arc<tokio::sync::Mutex<VoskASR>>, // 使用Arc包装Mutex
+    vosk_asr_python: Arc<tokio::sync::Mutex<VoskASRPython>>, // 使用Arc包装Mutex
 }
 
 #[tauri::command]
@@ -130,7 +128,7 @@ fn send_user_message(
         content: content.clone(),
         sender: "user".to_string(),
         timestamp: chrono::Utc::now().timestamp_millis() as u64,
-        conversation_id,  // 添加会话ID
+        conversation_id, // 添加会话ID
     };
 
     info!("用户消息处理完成");
@@ -199,7 +197,7 @@ async fn send_message_stream(
                 "message_chunk",
                 MessageChunk {
                     conversation_id,
-                    content: chunk,
+                    content: chunk.to_owned(),
                     is_complete: false,
                 },
             );
@@ -296,7 +294,8 @@ async fn generate_ai_response(
 
             // 使用缓冲策略: 每收集一定数量的内容，或者经过一定时间后发送
             let now = std::time::Instant::now();
-            let should_emit = buffer.len() >= 2 || now.duration_since(last_emit_time).as_millis() >= 3;
+            let should_emit =
+                buffer.len() >= 2 || now.duration_since(last_emit_time).as_millis() >= 3;
 
             if should_emit && !buffer.is_empty() {
                 match window.emit(
@@ -347,25 +346,159 @@ async fn generate_ai_response(
         }
 
         // 发送完成信号
-        window_clone.emit(
-            "message_chunk",
-            MessageChunk {
-                conversation_id,
-                content: String::new(),
-                is_complete: true,
-            },
-        ).unwrap();
+        window_clone
+            .emit(
+                "message_chunk",
+                MessageChunk {
+                    conversation_id,
+                    content: String::new(),
+                    is_complete: true,
+                },
+            )
+            .unwrap();
     });
 
     Ok(())
 }
 
 #[tauri::command]
-fn voice_input(state: State<AppState>) -> Result<String, String> {
-    // 这里可以实现语音输入的逻辑
-    // 例如，调用外部库进行语音识别等
-    Ok("语音输入功能尚未实现".to_string())
+async fn voice_input_python(
+    window: Window,
+    conversation_id: u64,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    info!("开始语音输入，对话ID: {}", conversation_id);
+
+    // 通知前端录音开始
+    window
+        .emit("voice_status", "recording")
+        .map_err(|e| e.to_string())?;
+
+    // 创建一个变量存储最终的转录文本结果
+    let mut final_transcript = String::new();
+    let window_clone = window.clone();
+
+    {
+        let mut vosk_asr = state.vosk_asr_python.lock().await;
+
+        match vosk_asr.try_get() {
+            Some(text) => {
+                // 特殊标记处理
+                if text == "[timeout reached]" || text == "[silence detected]" {
+                    info!("录音结束: {}", text);
+                    // 不将这些特殊标记发送到最终结果，但通知前端
+                    window
+                        .emit("voice_partial", &text)
+                        .map_err(|e| e.to_string())?;
+                } else {
+                    // 发送部分结果到前端
+                    window
+                        .emit("voice_partial", &text)
+                        .map_err(|e| e.to_string())?;
+
+                    // 更新最终文本（仅当不为空时）
+                    if !text.trim().is_empty() {
+                        final_transcript = text;
+                    }
+                }
+            }
+            None => {
+                error!("没有获取到语音识别结果");
+                window_clone
+                    .emit("voice_status", "error")
+                    .map_err(|e| e.to_string())?;
+                return Err("没有获取到语音识别结果".to_string());
+            }
+        }
+    }
+
+    // 通知前端录音完成
+    window_clone
+        .emit("voice_status", "completed")
+        .map_err(|e| e.to_string())?;
+
+    // 返回最终结果
+    Ok(final_transcript)
 }
+
+// #[tauri::command]
+// async fn voice_input(
+//     window: Window,
+//     conversation_id: u64,
+//     state: State<'_, AppState>,
+// ) -> Result<String, String> {
+//     info!("开始语音输入，对话ID: {}", conversation_id);
+
+//     // 通知前端录音开始
+//     window
+//         .emit("voice_status", "recording")
+//         .map_err(|e| e.to_string())?;
+
+//     // 创建一个变量存储最终的转录文本结果
+//     let mut final_transcript = String::new();
+//     let window_clone = window.clone();
+
+//     // 在单独作用域中锁定vosk_asr，确保锁被及时释放
+//     {
+//         let mut vosk_asr = state.vosk_asr.lock().await;
+
+//         // 调用正确的方法名
+//         let stream_result = vosk_asr.listen_and_transcribe(Some(15.0)).await;
+
+//         match stream_result {
+//             Ok(mut stream) => {
+//                 // 处理流中的每个项目
+//                 while let Some(result) = stream.next().await {
+//                     match result {
+//                         Ok(text) => {
+//                             // 特殊标记处理
+//                             if text == "[timeout reached]" || text == "[silence detected]" {
+//                                 info!("录音结束: {}", text);
+//                                 // 不将这些特殊标记发送到最终结果，但通知前端
+//                                 window
+//                                     .emit("voice_partial", &text)
+//                                     .map_err(|e| e.to_string())?;
+//                                 continue;
+//                             }
+
+//                             // 发送部分结果到前端
+//                             window
+//                                 .emit("voice_partial", &text)
+//                                 .map_err(|e| e.to_string())?;
+
+//                             // 更新最终文本（仅当不为空时）
+//                             if !text.trim().is_empty() {
+//                                 final_transcript = text;
+//                             }
+//                         }
+//                         Err(e) => {
+//                             error!("语音识别错误: {}", e);
+//                             window_clone
+//                                 .emit("voice_status", "error")
+//                                 .map_err(|_| e.to_string())?;
+//                             return Err(format!("语音识别出错: {}", e));
+//                         }
+//                     }
+//                 }
+
+//                 // 通知前端录音完成
+//                 window_clone
+//                     .emit("voice_status", "completed")
+//                     .map_err(|e| e.to_string())?;
+
+//                 // 返回最终结果
+//                 Ok(final_transcript)
+//             }
+//             Err(e) => {
+//                 error!("创建语音输入流失败: {}", e);
+//                 window_clone
+//                     .emit("voice_status", "error")
+//                     .map_err(|_| e.to_string())?;
+//                 Err(format!("创建语音输入流失败: {}", e))
+//             }
+//         }
+//     }
+// }
 
 #[tauri::command]
 fn create_conversation(title: String, state: State<AppState>) -> Result<Conversation, String> {
@@ -437,6 +570,22 @@ async fn main() {
             .with_system_prompt("你是一个友好、乐于助人的AI助手，使用中文回答问题。"),
     );
     info!("OllamaAgent initialized");
+    // // 创建 Rust vosk 实例
+    // let vosk_asr = match VoskASR::new(Some("src-tauri/model/vosk-model-small-cn-0.22")){
+    //     Ok(asr) => asr,
+    //     Err(e) => {
+    //         error!("VoskASR initialization failed: {}", e);
+    //         return;
+    //     }
+    // };
+    // 创建 Python VOSK 实例
+    let vosk_asr = match VoskASRPython::new(Some("src-tauri/model/vosk-model-small-cn-0.22")) {
+        Ok(asr) => asr,
+        Err(e) => {
+            error!("VoskASR initialization failed: {}", e);
+            return;
+        }
+    };
 
     let default_conversation_id = 1;
 
@@ -447,16 +596,16 @@ async fn main() {
             last_message: "你好!".to_string(),
             timestamp: chrono::Utc::now().timestamp_millis() as u64,
         }])),
-        messages: Arc::new(Mutex::new(vec![
-            Message {
-                id: 1,
-                content: "欢迎使用聊天应用!".to_string(),
-                sender: "bot".to_string(),
-                timestamp: chrono::Utc::now().timestamp_millis() as u64,
-                conversation_id: default_conversation_id,
-            }
-        ])),
+        messages: Arc::new(Mutex::new(vec![Message {
+            id: 1,
+            content: "欢迎使用聊天应用!".to_string(),
+            sender: "bot".to_string(),
+            timestamp: chrono::Utc::now().timestamp_millis() as u64,
+            conversation_id: default_conversation_id,
+        }])),
         ollama_agent,
+        // vosk_asr: Arc::new(tokio::sync::Mutex::new(vosk_asr)),
+        vosk_asr_python: Arc::new(tokio::sync::Mutex::new(vosk_asr)),
     };
 
     tauri::Builder::default()
@@ -465,12 +614,13 @@ async fn main() {
             get_conversations,
             get_messages,
             send_message,
-            send_user_message,    // 添加新函数
-            generate_ai_response, // 添加新函数
-            send_message_stream,  // 保留原函数以保持兼容
-            create_conversation,  // 添加新函数
-            delete_conversation,  // 添加新函数
-            get_conversation_messages, // 添加新函数
+            send_user_message,
+            generate_ai_response,
+            send_message_stream,
+            create_conversation,
+            delete_conversation,
+            get_conversation_messages,
+            voice_input_python,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

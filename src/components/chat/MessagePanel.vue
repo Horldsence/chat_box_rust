@@ -72,9 +72,14 @@
         <div class="message-input">
             <div class="input-container">
                 <textarea ref="inputRef" v-model="inputMessage" @keydown.enter.prevent="onSendMessage"
-                    placeholder="输入消息..." :disabled="isLoading || !conversation" rows="1"></textarea>
+                    placeholder="输入消息..." :disabled="isLoading || !conversation || isVoiceRecording"
+                    rows="1"></textarea>
 
                 <div class="input-actions">
+                    <button class="input-action" title="语音输入" @click="startVoiceInput"
+                        :class="{ 'recording': isVoiceRecording }" :disabled="isLoading || !conversation">
+                        <img :src="isVoiceRecording ? micActiveIcon : micIcon" alt="Voice" />
+                    </button>
                     <button class="input-action" title="添加表情">
                         <img :src="emojiIcon" alt="Emoji" />
                     </button>
@@ -92,6 +97,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import MessageItem from './MessageItem.vue';
 import type { Message, Conversation } from '../../types';
 
@@ -106,6 +113,28 @@ import emojiIcon from '../../assets/emoticon.svg';
 import attachmentIcon from '../../assets/image.svg';
 import moreIcon from '../../assets/more.svg';
 import chatIcon from '../../assets/chat.svg'; // 需添加此图标
+import micIcon from '../../assets/microphone.svg'; // 添加麦克风图标
+import micActiveIcon from '../../assets/microphone-active.svg'; // 添加激活状态的麦克风图标
+
+const realTimeText = ref('');
+const isProcessing = ref(false);
+
+// 监听实时识别事件
+onMounted(async () => {
+    await listen('voice_partial', (event) => {
+        const text = event.payload as string;
+        realTimeText.value = text;
+        isProcessing.value = true;
+
+        // 自动滚动到底部
+        nextTick(() => {
+            const container = messageListRef.value;
+            if (container && autoScrollEnabled) {
+                container.scrollTop = container.scrollHeight;
+            }
+        });
+    });
+});
 
 const props = defineProps<{
     messages: Message[];
@@ -121,6 +150,7 @@ const emit = defineEmits<{
 const inputMessage = ref('');
 const messageListRef = ref<HTMLDivElement | null>(null);
 const inputRef = ref<HTMLTextAreaElement | null>(null);
+const isVoiceRecording = ref(false);
 let autoScrollEnabled = true;
 
 // 格式化时间
@@ -145,7 +175,10 @@ const lastActivityTime = computed(() => {
 
 // 是否可以发送消息
 const canSend = computed(() => {
-    return !!props.conversation && inputMessage.value.trim().length > 0 && !props.isLoading;
+    return !!props.conversation &&
+        inputMessage.value.trim().length > 0 &&
+        !props.isLoading &&
+        !isVoiceRecording.value;
 });
 
 // 发送消息
@@ -171,6 +204,26 @@ const copyMessage = (content: string) => {
         .catch(err => {
             console.error('复制失败:', err);
         });
+};
+
+// 修改后的语音输入方法
+const startVoiceInput = async () => {
+    try {
+        realTimeText.value = ''; // 重置实时文本
+        isProcessing.value = true;
+
+        const result = await invoke<string>('voice_input', {
+            conversationId: props.conversation?.id
+        });
+
+        // 最终结果处理
+        if (result) {
+            inputMessage.value = result;
+            realTimeText.value = ''; // 清空实时显示
+        }
+    } finally {
+        isProcessing.value = false;
+    }
 };
 
 // 自动滚动到底部
@@ -206,7 +259,7 @@ watch(() => props.conversation?.id, () => {
 });
 
 // 设置滚动监听
-onMounted(() => {
+onMounted(async () => {
     if (messageListRef.value) {
         messageListRef.value.addEventListener('scroll', handleScroll);
         scrollToBottom();
@@ -214,6 +267,16 @@ onMounted(() => {
 
     // 聚焦输入框
     inputRef.value?.focus();
+
+    // 监听语音状态事件
+    await listen('voice_status', (event) => {
+        const status = event.payload as string;
+        if (status === 'recording') {
+            isVoiceRecording.value = true;
+        } else if (status === 'completed') {
+            isVoiceRecording.value = false;
+        }
+    });
 });
 </script>
 
@@ -503,6 +566,25 @@ textarea {
     height: 20px;
 }
 
+.input-action.recording {
+    background-color: rgba(255, 0, 0, 0.1);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    }
+}
+
 .send-button {
     display: flex;
     align-items: center;
@@ -524,5 +606,62 @@ textarea {
     width: 18px;
     height: 18px;
     filter: brightness(0) invert(1);
+}
+
+.realtime-result {
+    position: relative;
+    min-height: 40px;
+    margin: 8px 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+
+    &.visible {
+        opacity: 1;
+    }
+}
+
+.partial-text {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 0.95em;
+    color: #333;
+    display: flex;
+    align-items: center;
+    backdrop-filter: blur(4px);
+}
+
+.waveform {
+    width: 40px;
+    height: 20px;
+    margin-left: 12px;
+    background:
+        repeating-linear-gradient(90deg,
+            #4a90e2 0px,
+            #4a90e2 3px,
+            transparent 3px,
+            transparent 6px);
+    animation: wave 1s infinite linear;
+}
+
+@keyframes wave {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 40px 0;
+    }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.5s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
 }
 </style>
