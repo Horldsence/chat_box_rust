@@ -17,18 +17,20 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2.2.0", features = [] }
-log = "0.4"
+log = "0.4.27"
 env_logger = "0.11.8"
-flate2 = "1.1.1"
-tar = "0.4"
-zip = "2.6.1"
-ureq = "2.6"
-reqwest = { version = "0.11", features = ["blocking"] }
+# flate2 = "1.1.1"
+# tar = "0.4.44"
+# zip = "2.6.1"
+# yoke = { version = "0.8.0" }
+# ureq = "3.0.11"
+# reqwest = { version = "0.12.15", features = ["blocking"] }
 
 [features]
 reqwest = []
 
 [dependencies]
+termcolor = "1.4.1"
 tauri = { version = "2.5.1", features = [] }
 tauri-plugin-opener = "2.2.6"
 serde = { version = "1.0.219", features = ["derive"] }
@@ -39,7 +41,7 @@ log = "0.4.27"
 futures = "0.3.31"
 env_logger = "0.11.8"
 ollama-rs = { git = "https://github.com/pepperoni21/ollama-rs.git", branch = "master", features = ["stream"] }
-tokio = { version = "1.44.2", features = ["full"] }
+tokio = { version = "1.45.0", features = ["full"] }
 tokio-stream = "0.1.17"
 smol = "2.0.2"
 pyo3 = { version = "0.24.2", features = ["auto-initialize", "full"] }

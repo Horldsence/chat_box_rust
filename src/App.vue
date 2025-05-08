@@ -45,7 +45,23 @@ onMounted(async () => {
 // 监听后端消息更新
 const setupMessageListeners = async () => {
     await listen<MessageChunk>('message_chunk', (event) => {
-        const { conversation_id, is_complete } = event.payload;
+        const { conversation_id, content, is_complete } = event.payload;
+
+        // 如果不是结束信号并且有内容，将内容追加到当前消息
+        if (!is_complete && content) {
+            // 查找当前消息集中最后一条机器人消息
+            const messages = allMessages.value.filter(
+                m => m.conversation_id === conversation_id
+            );
+            const lastBotMessage = messages
+                .filter(m => m.sender === 'bot')
+                .sort((a, b) => b.timestamp - a.timestamp)[0];
+
+            if (lastBotMessage) {
+                // 直接修改消息内容，Vue 会检测到变化
+                lastBotMessage.content += content;
+            }
+        }
 
         // 更新对话最后消息时间
         if (is_complete) {

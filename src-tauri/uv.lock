@@ -373,7 +373,7 @@ sdist = { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/a2/55/8f
 
 [[package]]
 name = "edge-tts"
-version = "7.0.1"
+version = "7.0.2"
 source = { registry = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/" }
 dependencies = [
     { name = "aiohttp" },
@@ -382,9 +382,9 @@ dependencies = [
     { name = "tabulate" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/a1/93/7b3e27239285fa2142fea58eafa9d08c9e1da0e9df74dd46e73729c39e9c/edge_tts-7.0.1.tar.gz", hash = "sha256:2ad5321c19682430f9e7cbf61783e0d4b3156cb9bc2313f270511be08a9270a6", size = 23543 }
+sdist = { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/f1/12/32554080d0d03ca0b874677fc4548ea9042ddfeb0b3f38cd107c760aff28/edge_tts-7.0.2.tar.gz", hash = "sha256:1374f493c170e6fe432d04012061c279e518c495524fa51b1b9da7368cc6b21b", size = 23581 }
 wheels = [
-    { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/ab/be/9fcf0876035b79b3bf0a9d6daca8802989c6bc5ed9910cfcc63ee403d2f4/edge_tts-7.0.1-py3-none-any.whl", hash = "sha256:86d69b1d72e279ba5e09aaf771f5c54d51d56b054a32fe4a395a11cf1a651b3e", size = 26267 },
+    { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/33/21/6ebbc7fc6a4e58bcd49130273a072f7c2e4e6dc03735e078895b47148e30/edge_tts-7.0.2-py3-none-any.whl", hash = "sha256:effc554c249f02bd5013f28cd1faa22802e0757b031a7759be5960084ccb8d76", size = 26274 },
 ]
 
 [[package]]
@@ -582,11 +582,11 @@ wheels = [
 
 [[package]]
 name = "joblib"
-version = "1.4.2"
+version = "1.5.0"
 source = { registry = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/" }
-sdist = { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/64/33/60135848598c076ce4b231e1b1895170f45fbcaeaa2c9d5e38b04db70c35/joblib-1.4.2.tar.gz", hash = "sha256:2382c5816b2636fbd20a09e0f4e9dad4736765fdfb7dca582943b9c1366b3f0e", size = 2116621 }
+sdist = { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/30/08/8bd4a0250247861420a040b33ccf42f43c426ac91d99405374ef117e5872/joblib-1.5.0.tar.gz", hash = "sha256:d8757f955389a3dd7a23152e43bc297c2e0c2d3060056dad0feefc88a06939b5", size = 330234 }
 wheels = [
-    { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/91/29/df4b9b42f2be0b623cbd5e2140cafcaa2bef0759a00b7b70104dcfe2fb51/joblib-1.4.2-py3-none-any.whl", hash = "sha256:06d478d5674cbc267e7496a410ee875abd68e4340feff4490bcb7afb88060ae6", size = 301817 },
+    { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/da/d3/13ee227a148af1c693654932b8b0b02ed64af5e1f7406d56b088b57574cd/joblib-1.5.0-py3-none-any.whl", hash = "sha256:206144b320246485b712fc8cc51f017de58225fa8b414a1fe1764a7231aca491", size = 307682 },
 ]
 
 [[package]]
@@ -1566,11 +1566,11 @@ wheels = [
 
 [[package]]
 name = "setuptools"
-version = "80.2.0"
+version = "80.3.1"
 source = { registry = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/" }
-sdist = { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/24/65/19a02e93da9d9f118ecb311419a353ae68a8e236c057bf164c866daa227f/setuptools-80.2.0.tar.gz", hash = "sha256:16a390b41627e1455567193435e7cafa9101803ffaa2fdd9ecd0af098301981d", size = 1354232 }
+sdist = { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/70/dc/3976b322de9d2e87ed0007cf04cc7553969b6c7b3f48a565d0333748fbcd/setuptools-80.3.1.tar.gz", hash = "sha256:31e2c58dbb67c99c289f51c16d899afedae292b978f8051efaf6262d8212f927", size = 1315082 }
 wheels = [
-    { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/51/95/522fb99f76ecf2efe0a372ee02665a3cda1e5653b37514fd05c98f05a9cf/setuptools-80.2.0-py3-none-any.whl", hash = "sha256:5f982284ad5d644764e1985baca205e235651b55f9a7ea8d46878d37104aa5e5", size = 1240763 },
+    { url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/packages/53/7e/5d8af3317ddbf9519b687bd1c39d8737fde07d97f54df65553faca5cffb1/setuptools-80.3.1-py3-none-any.whl", hash = "sha256:ea8e00d7992054c4c592aeb892f6ad51fe1b4d90cc6947cc45c45717c40ec537", size = 1201172 },
 ]
 
 [[package]]
@@ -1974,6 +1974,7 @@ name = "voice-assitent"
 version = "0.1.1"
 source = { virtual = "." }
 dependencies = [
+    { name = "cffi" },
     { name = "edge-tts" },
     { name = "ipython" },
     { name = "kokoro" },
@@ -1985,6 +1986,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cffi", specifier = ">=1.17.1" },
     { name = "edge-tts", specifier = ">=7.0.0" },
     { name = "ipython", specifier = ">=9.2.0" },
     { name = "kokoro" },

@@ -76,10 +76,6 @@
                     rows="1"></textarea>
 
                 <div class="input-actions">
-                    <button class="input-action" title="语音输入" @click="startVoiceInput"
-                        :class="{ 'recording': isVoiceRecording }" :disabled="isLoading || !conversation">
-                        <img :src="isVoiceRecording ? micActiveIcon : micIcon" alt="Voice" />
-                    </button>
                     <button class="input-action" title="添加表情">
                         <img :src="emojiIcon" alt="Emoji" />
                     </button>
@@ -90,6 +86,19 @@
                         <img :src="sendIcon" alt="Send" />
                     </button>
                 </div>
+
+                <button class="voice-input-button" 
+                    :class="{ 'recording': isVoiceRecording, 'error': hasVoiceError }" 
+                    @click="toggleVoiceInput"
+                    :disabled="isLoading || !conversation">
+                    <img :src="isVoiceRecording ? micActiveIcon : micIcon" alt="Voice" />
+                </button>
+            </div>
+
+            <!-- 在输入框旁边添加状态指示器 -->
+            <div class="voice-status" v-if="isVoiceRecording">
+                <div class="voice-indicator"></div>
+                <span>{{ realTimeText || '正在聆听...' }}</span>
             </div>
         </div>
     </div>
@@ -112,27 +121,70 @@ import exportIcon from '../../assets/download.svg';
 import emojiIcon from '../../assets/emoticon.svg';
 import attachmentIcon from '../../assets/image.svg';
 import moreIcon from '../../assets/more.svg';
-import chatIcon from '../../assets/chat.svg'; // 需添加此图标
+import chatIcon from '../../assets/chat.svg';
 import micIcon from '../../assets/microphone.svg'; // 添加麦克风图标
-import micActiveIcon from '../../assets/microphone-active.svg'; // 添加激活状态的麦克风图标
+import micActiveIcon from '../../assets/microphone-outline.svg'; // 添加激活状态的麦克风图标
 
 const realTimeText = ref('');
 const isProcessing = ref(false);
+const hasVoiceError = ref(false); // 添加错误状态追踪
 
 // 监听实时识别事件
 onMounted(async () => {
     await listen('voice_partial', (event) => {
         const text = event.payload as string;
+
+        // 实时更新输入框
+        if (!text.startsWith("[") || !text.endsWith("]")) {
+            // 只在非特殊标记消息时更新输入框
+            inputMessage.value = text;
+        }
+
+        if (text == "booting") {
+            // 处理特殊标记消息
+            realTimeText.value = "正在启动...";
+            return;
+        } else if (text == "error") {
+            // 处理错误消息
+            hasVoiceError.value = true;
+            isVoiceRecording.value = false;
+            return;
+        }
+
+        // 保存实时识别文本（用于显示状态等）
         realTimeText.value = text;
         isProcessing.value = true;
 
         // 自动滚动到底部
         nextTick(() => {
-            const container = messageListRef.value;
-            if (container && autoScrollEnabled) {
-                container.scrollTop = container.scrollHeight;
-            }
+            scrollToBottom();
         });
+    });
+
+    // 添加到 onMounted 中
+    // 监听消息块事件
+    await listen('message_chunk', (event) => {
+        const payload = event.payload as { conversation_id: number, content: string, is_complete: boolean };
+
+        // 确保这是当前对话的消息
+        if (payload.conversation_id === props.conversation?.id) {
+            // 如果是完成信号
+            if (payload.is_complete) {
+                // 可以在这里添加完成处理代码
+                return;
+            }
+
+            // 将消息块添加到当前显示
+            const lastMessage = props.messages[props.messages.length - 1];
+            if (lastMessage && lastMessage.sender === 'bot') {
+                // 更新最后一条消息的内容（即使它在父组件中）
+                // 这会触发视图更新
+                lastMessage.content += payload.content;
+            }
+
+            // 滚动到底部
+            nextTick(scrollToBottom);
+        }
     });
 });
 
@@ -206,23 +258,49 @@ const copyMessage = (content: string) => {
         });
 };
 
-// 修改后的语音输入方法
-const startVoiceInput = async () => {
-    try {
-        realTimeText.value = ''; // 重置实时文本
-        isProcessing.value = true;
+// 修改语音输入方法为切换模式
+const toggleVoiceInput = async () => {
+    // 如果当前正在录音，则停止录音
+    if (isVoiceRecording.value) {
+        try {
+            await invoke('stop_voice_input', {
+                conversationId: props.conversation?.id
+            });
+            // 停止命令已发送，UI状态将通过事件通知更新
+        } catch (error) {
+            console.error('停止语音输入失败:', error);
+            isVoiceRecording.value = false;
+            hasVoiceError.value = true;
+        }
+        return;
+    }
 
-        const result = await invoke<string>('voice_input', {
+    // 否则开始新的录音
+    try {
+        // 重置状态
+        realTimeText.value = '';
+        isProcessing.value = true;
+        isVoiceRecording.value = true;
+        hasVoiceError.value = false;
+
+        // 清空输入框，让用户看到实时输入效果
+        inputMessage.value = '';
+
+        // 启动语音识别
+        invoke<string>('voice_input', {
             conversationId: props.conversation?.id
+        }).catch(error => {
+            console.error('语音识别错误:', error);
+            hasVoiceError.value = true;
+            isVoiceRecording.value = false;
+            return null;
         });
 
-        // 最终结果处理
-        if (result) {
-            inputMessage.value = result;
-            realTimeText.value = ''; // 清空实时显示
-        }
-    } finally {
-        isProcessing.value = false;
+        // 注意：不等待结果返回，因为现在用户可以手动停止
+    } catch (error) {
+        console.error('语音输入发生错误:', error);
+        hasVoiceError.value = true;
+        isVoiceRecording.value = false;
     }
 };
 
@@ -571,6 +649,27 @@ textarea {
     animation: pulse 1.5s infinite;
 }
 
+.voice-input-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #93c9ff;
+    border: none;
+    cursor: pointer;
+}
+
+.voice-input-button.recording {
+    background-color: #78ffdd;
+    animation: pulse 1.5s infinite;
+}
+
+.voice-input-button.error {
+    background-color: #ffcccc;
+}
+
 @keyframes pulse {
     0% {
         box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4);
@@ -663,5 +762,28 @@ textarea {
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
+}
+
+.voice-status {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    color: #5c6bc0;
+    font-size: 12px;
+}
+
+.voice-indicator {
+    width: 8px;
+    height: 8px;
+    background-color: #5c6bc0;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.7; }
 }
 </style>

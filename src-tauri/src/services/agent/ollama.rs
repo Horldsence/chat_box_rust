@@ -4,6 +4,7 @@ use ollama_rs::{
 };
 use tokio_stream::{Stream, StreamExt};
 
+#[allow(unused_variables)]
 pub struct OllamaAgent {
     model: String,
     host: String,
@@ -12,6 +13,7 @@ pub struct OllamaAgent {
     ollama: Ollama,
 }
 
+#[allow(dead_code)]
 impl OllamaAgent {
     pub fn new(model: &str, host: &str, port: &u16) -> Self {
         let host = host.to_string();
