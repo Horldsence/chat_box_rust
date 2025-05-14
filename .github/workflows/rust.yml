@@ -25,7 +25,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-          cache: "npm"
+          cache: "pnpm"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -37,10 +37,10 @@ jobs:
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Install frontend dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Build frontend
-        run: npm run build
+        run: pnpm run build
 
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
