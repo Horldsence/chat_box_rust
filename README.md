@@ -92,8 +92,8 @@
 1. 克隆仓库
 
 ```bash
-git clone https://github.com/username/chat_box.git
-cd chat_box
+git clone https://github.com/horldsence/chat_box_vue.git
+cd chat_box_vue
 ```
 
 2. 安装依赖
@@ -198,7 +198,7 @@ npm run tauri build -- --target riscv64gc-unknown-linux-gnu
 ## 项目结构
 
 ```
-chat_box/
+chat_box_vue/
 ├── src/                       # 前端代码
 │   ├── components/           # Vue组件
 │   ├── styles/               # 样式文件
@@ -216,7 +216,7 @@ chat_box/
 - [ ] 优化离线模式体验
 - [ ] 增加插件系统
 
-查看[open issues](https://github.com/username/chat_box/issues)获取更多信息。
+查看[open issues](https://github.com/horldsence/chat_box_vue/issues)获取更多信息。
 
 ## 贡献
 
@@ -236,7 +236,7 @@ chat_box/
 
 项目维护者: 王鹏恒 - email@example.com
 
-项目链接: [https://github.com/username/chat_box](https://github.com/username/chat_box)
+项目链接: [https://github.com/horldsence/chat_box_vue](https://github.com/horldsence/chat_box_vue)
 
 ## 致谢
 
