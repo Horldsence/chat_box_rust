@@ -32,6 +32,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
+      
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10 # change this to the version you want to use.
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -47,6 +52,14 @@ jobs:
         # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
         # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
 
+      - name: Generate build number
+        id: buildnumber
+        run: echo "build_number=$(date +'%Y%m%d%H%M')" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Generate Changelog
+        run: echo "Auto Release" > ${{ github.workspace }}-CHANGELOG.txt
+
       - name: install frontend dependencies
         run: pnpm install # change this to npm, pnpm or bun depending on which one you use.
 
@@ -54,9 +67,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: 'App v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
+          tagName: app-v__VERSION__-beta.${{ steps.buildnumber.outputs.build_number }} # 添加beta标签和构建号
+          releaseName: 'App v__VERSION__ Beta (${{ steps.buildnumber.outputs.build_number }})' # 标题包含Beta
+          releaseBody: '这是一个Beta版本发布。请下载对应平台的安装包进行测试。'
+          releaseDraft: false
+          prerelease: true # 设置为预发布版本
           args: ${{ matrix.args }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          body_path: ${{ github.workspace }}-CHANGELOG.txt
+          repository: Horldsence/chat_box_rust
+          # note you'll typically need to create a personal access token
+          # with permissions to create releases in the other repo
+          token: ${{ secrets.GITHUB_TOKEN }}
