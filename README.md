@@ -234,7 +234,7 @@ chat_box_vue/
 
 ## 联系方式
 
-项目维护者: 王鹏恒 - email@example.com
+项目维护者: Peng - horldjason@outlook.com
 
 项目链接: [https://github.com/horldsence/chat_box_vue](https://github.com/horldsence/chat_box_vue)
 
