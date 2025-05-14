@@ -86,6 +86,14 @@ import CollapsePanel from "./components/menu/CollapsePanel.vue";
 import SettingsView from "./components/settings/SettingsView.vue";
 import type { Message, Conversation, MessageChunk } from "./types";
 
+// 应用配置接口
+interface AppConfig {
+  ui: {
+    sidebar_width: string;
+  };
+  // 其他配置属性
+}
+
 // 状态
 const conversations = ref<Conversation[]>([]);
 const currentConversation = ref<Conversation | null>(null);
@@ -118,18 +126,10 @@ const currentMessages = computed(() => {
 });
 
 // 初始化
-onMounted(async () => {
-  await Promise.all([
-    loadConfig(),
-    loadConversations(),
-    setupMessageListeners(),
-  ]);
-});
-
 // 加载配置
 const loadConfig = async () => {
   try {
-    const config = await invoke("get_app_config");
+    const config = await invoke<AppConfig>("get_app_config");
     sidebarWidth.value = config.ui.sidebar_width;
   } catch (error) {
     console.error("加载配置失败:", error);

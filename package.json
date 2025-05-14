@@ -11,24 +11,23 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2",
-    "@varlet/touch-emulator": "^3.10.5",
-    "@varlet/ui": "^3.10.5",
-    "@vueuse/core": "^13.1.0",
-    "element-plus": "^2.9.9",
+    "@tauri-apps/api": "^2.5.0",
+    "@tauri-apps/plugin-opener": "^2.2.6",
+    "@varlet/touch-emulator": "^3.10.6",
+    "@varlet/ui": "^3.10.6",
+    "@vueuse/core": "^13.2.0",
+    "element-plus": "^2.9.10",
     "highlight.js": "^11.11.1",
-    "pnpm": "^10.10.0",
+    "pnpm": "^10.11.0",
     "vue": "^3.5.13",
     "vue-markdown": "^2.2.4",
     "vue-markdown-render": "^2.2.1"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.5.0",
-    "@types/marked": "^6.0.0",
-    "@vitejs/plugin-vue": "^5.2.1",
-    "typescript": "~5.6.2",
-    "vite": "^6.0.3",
-    "vue-tsc": "^2.1.10"
+    "@vitejs/plugin-vue": "^5.2.4",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vue-tsc": "^2.2.10"
   }
 }

@@ -72,14 +72,14 @@ onMounted(async () => {
 
 const loadConfig = async () => {
   try {
-    const appConfig = await invoke("get_app_config");
+    const appConfig = await invoke("get_app_config") as typeof config.value;
     config.value = appConfig;
   } catch (error) {
     ElMessage.error(`加载配置失败: ${error}`);
   }
 };
 
-const saveConfig = async (newConfig) => {
+const saveConfig = async (newConfig: { ai_model: { model_name: string; server_url: string; server_port: number; system_prompt: string; }; voice: { enabled: boolean; model_path: string; timeout_seconds: number; }; ui: { sidebar_width: string; theme: string; language: string; }; app_behavior: { log_level: string; default_conversation_title: string; welcome_message: string; message_chunk_buffer_size: number; message_chunk_send_interval_ms: number; }; } | { ai_model: { model_name: string; server_url: string; server_port: number; system_prompt: string; }; voice: { enabled: boolean; model_path: string; timeout_seconds: number; }; ui: { sidebar_width: string; theme: string; language: string; }; app_behavior: { log_level: string; default_conversation_title: string; welcome_message: string; message_chunk_buffer_size: number; message_chunk_send_interval_ms: number; }; }) => {
   try {
     await invoke("save_app_config", { config: newConfig });
     config.value = newConfig;
