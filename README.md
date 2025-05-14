@@ -1,5 +1,5 @@
 # 聊天盒子
-# Chat Box
+# Chat Box Rust
 
 <!-- PROJECT SHIELDS -->
 
@@ -18,7 +18,7 @@
     <img src="src-tauri/icons/128x128@2x.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Chat_Box</h3>
+  <h3 align="center">Chat_Box_Rust</h3>
   <p align="center">
     由rust构建的跨平台高性能聊天应用
     <br />
