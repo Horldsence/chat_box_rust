@@ -14,7 +14,7 @@
 <br />
 
 <p align="center">
-  <a href="https://github.com/horldsence/chat_box_vue/">
+  <a href="https://github.com/horldsence/chat_box_rust/">
     <img src="src-tauri/icons/128x128@2x.png" alt="Logo" width="80" height="80">
   </a>
 
@@ -22,14 +22,14 @@
   <p align="center">
     由rust构建的跨平台高性能聊天应用
     <br />
-    <a href="https://github.com/horldsence/chat_box_vue"><strong>探索本项目的文档 »</strong></a>
+    <a href="https://github.com/horldsence/chat_box_rust"><strong>探索本项目的文档 »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/horldsence/chat_box_vue">查看Demo</a>
+    <a href="https://github.com/horldsence/chat_box_rust">查看Demo</a>
     ·
-    <a href="https://github.com/horldsence/chat_box_vue/issues">报告Bug</a>
+    <a href="https://github.com/horldsence/chat_box_rust/issues">报告Bug</a>
     ·
-    <a href="https://github.com/horldsence/chat_box_vue/issues">提出新特性</a>
+    <a href="https://github.com/horldsence/chat_box_rust/issues">提出新特性</a>
   </p>
 
 </p>
@@ -92,8 +92,8 @@
 1. 克隆仓库
 
 ```bash
-git clone https://github.com/horldsence/chat_box_vue.git
-cd chat_box_vue
+git clone https://github.com/horldsence/chat_box_rust.git
+cd chat_box_rust
 ```
 
 2. 安装依赖
@@ -198,7 +198,7 @@ npm run tauri build -- --target riscv64gc-unknown-linux-gnu
 ## 项目结构
 
 ```
-chat_box_vue/
+chat_box_rust/
 ├── src/                       # 前端代码
 │   ├── components/           # Vue组件
 │   ├── styles/               # 样式文件
@@ -216,7 +216,7 @@ chat_box_vue/
 - [ ] 优化离线模式体验
 - [ ] 增加插件系统
 
-查看[open issues](https://github.com/horldsence/chat_box_vue/issues)获取更多信息。
+查看[open issues](https://github.com/horldsence/chat_box_rust/issues)获取更多信息。
 
 ## 贡献
 
@@ -236,7 +236,7 @@ chat_box_vue/
 
 项目维护者: Peng - horldjason@outlook.com
 
-项目链接: [https://github.com/horldsence/chat_box_vue](https://github.com/horldsence/chat_box_vue)
+项目链接: [https://github.com/horldsence/chat_box_rust](https://github.com/horldsence/chat_box_rust)
 
 ## 致谢
 
@@ -247,16 +247,16 @@ chat_box_vue/
 - [RISC-V 基金会](https://riscv.org/)
 
 <!-- links -->
-[your-project-path]:horldsence/chat_box_vue
-[contributors-shield]: https://img.shields.io/github/contributors/horldsence/chat_box_vue.svg?style=flat-square
-[contributors-url]: https://github.com/horldsence/chat_box_vue/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/horldsence/chat_box_vue.svg?style=flat-square
-[forks-url]: https://github.com/horldsence/chat_box_vue/network/members
-[stars-shield]: https://img.shields.io/github/stars/horldsence/chat_box_vue.svg?style=flat-square
-[stars-url]: https://github.com/horldsence/chat_box_vue/stargazers
-[issues-shield]: https://img.shields.io/github/issues/horldsence/chat_box_vue.svg?style=flat-square
-[issues-url]: https://img.shields.io/github/issues/horldsence/chat_box_vue.svg
-[license-shield]: https://img.shields.io/github/license/horldsence/chat_box_vue.svg?style=flat-square
-[license-url]: https://github.com/horldsence/chat_box_vue/blob/master/LICENSE.txt
+[your-project-path]:horldsence/chat_box_rust
+[contributors-shield]: https://img.shields.io/github/contributors/horldsence/chat_box_rust.svg?style=flat-square
+[contributors-url]: https://github.com/horldsence/chat_box_rust/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/horldsence/chat_box_rust.svg?style=flat-square
+[forks-url]: https://github.com/horldsence/chat_box_rust/network/members
+[stars-shield]: https://img.shields.io/github/stars/horldsence/chat_box_rust.svg?style=flat-square
+[stars-url]: https://github.com/horldsence/chat_box_rust/stargazers
+[issues-shield]: https://img.shields.io/github/issues/horldsence/chat_box_rust.svg?style=flat-square
+[issues-url]: https://img.shields.io/github/issues/horldsence/chat_box_rust.svg
+[license-shield]: https://img.shields.io/github/license/horldsence/chat_box_rust.svg?style=flat-square
+[license-url]: https://github.com/horldsence/chat_box_rust/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=flat-square&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/shaojintian
