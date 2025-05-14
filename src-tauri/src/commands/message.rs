@@ -1,6 +1,6 @@
 use crate::models::Message;
 use crate::state::AppState;
-use log::{info, debug};
+use log::{info, debug, error};
 use tauri::State;
 use chrono::Utc;
 
@@ -27,6 +27,15 @@ pub fn send_user_message(
     // 存储用户消息
     state.messages.lock().unwrap().push(user_message.clone());
 
+    // 尝试保存到数据库
+    if let Ok(mut db_guard) = state.db.lock() {
+        if let Some(ref mut db) = *db_guard {
+            if let Err(e) = db.save_message(&user_message) {
+                error!("保存用户消息到数据库失败: {}", e);
+            }
+        }
+    }
+
     // 更新对话的最后消息时间
     if let Some(conv) = state
         .conversations
@@ -38,6 +47,14 @@ pub fn send_user_message(
         conv.last_message = content;
         debug!("更新对话 {} 的时间戳", conversation_id);
         conv.timestamp = user_message.timestamp;
+        // 更新数据库中的对话
+        if let Ok(mut db_guard) = state.db.lock() {
+            if let Some(ref mut db) = *db_guard {
+                if let Err(e) = db.save_conversation(conv) {
+                    error!("更新对话到数据库失败: {}", e);
+                }
+            }
+        }
     } else {
         info!("未找到对话ID: {}", conversation_id);
     }

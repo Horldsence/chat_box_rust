@@ -1,5 +1,8 @@
+use std::sync::Arc;
 use crate::models::{Message, MessageChunk};
 use crate::state::AppState;
+use crate::utils::config::AppConfig;
+use chrono::Utc;
 use log::{debug, error, info};
 use tauri::{Emitter, State, Window};
 
@@ -9,16 +12,17 @@ pub async fn generate_ai_response(
     user_message_content: String,
     conversation_id: u64,
     state: State<'_, AppState>,
+    config: State<'_, Arc<AppConfig>>,
 ) -> Result<(), String> {
     info!("开始生成AI回复，对话ID: {}", conversation_id);
 
     // 创建机器人消息占位符
-    let bot_message_id = chrono::Utc::now().timestamp_millis() as u64;
+    let bot_message_id = Utc::now().timestamp_millis() as u64;
     let bot_message = Message {
         id: bot_message_id,
-        content: String::new(), // 初始为空，将通过流式更新
+        content: String::new(),
         sender: "bot".to_string(),
-        timestamp: chrono::Utc::now().timestamp_millis() as u64,
+        timestamp: Utc::now().timestamp_millis() as u64,
         conversation_id,
     };
 
@@ -27,12 +31,20 @@ pub async fn generate_ai_response(
     // 保存初始的空机器人消息
     state.messages.lock().unwrap().push(bot_message);
 
-    // 开始流式生成
+    // 获取Ollama代理
     let agent = state.ollama_agent.clone();
+
+    let history = state.get_conversation_history(conversation_id);
+    let user_messages = history.iter()
+        .filter(|msg| msg.sender == "user")
+        .map(|msg| msg.content.clone())
+        .collect::<Vec<String>>()
+        .join("\n\n");
+    debug!("从database中加载: {}", user_messages);
 
     // 生成消息流
     debug!("调用Ollama生成响应流");
-    let mut stream = match agent.generate_stream(&user_message_content).await {
+    let mut stream = match agent.generate_stream(&user_messages).await {
         Ok(stream) => {
             info!("成功创建Ollama响应流");
             stream
@@ -50,6 +62,10 @@ pub async fn generate_ai_response(
     let msg_arc = state.messages.clone();
     let window_clone = window.clone();
 
+    // 从配置中获取缓冲设置
+    let buffer_size = config.app_behavior.message_chunk_buffer_size;
+    let send_interval_ms = config.app_behavior.message_chunk_send_interval_ms;
+
     // 启动另一个任务处理流
     debug!("启动异步任务处理响应流");
     tokio::spawn(async move {
@@ -64,21 +80,22 @@ pub async fn generate_ai_response(
             buffer.push_str(&chunk);
             chunk_count += 1;
 
-            // 使用缓冲策略: 每收集一定数量的内容，或者经过一定时间后发送
+            // 使用缓冲策略: 从配置获取缓冲大小和发送间隔
             let now = std::time::Instant::now();
             let should_emit =
-                buffer.len() >= 2 || now.duration_since(last_emit_time).as_millis() >= 3;
+                buffer.len() >= buffer_size || now.duration_since(last_emit_time).as_millis() >= send_interval_ms as u128;
 
             if should_emit && !buffer.is_empty() {
                 match window.emit(
                     "message_chunk",
                     MessageChunk {
                         conversation_id,
-                        content: chunk.to_owned(),
+                        content: buffer.clone(),
                         is_complete: false,
                     },
                 ) {
                     Ok(_) => {
+                        buffer.clear();
                         last_emit_time = now;
                     }
                     Err(e) => error!("发送消息块到前端失败: {}", e),
@@ -105,7 +122,7 @@ pub async fn generate_ai_response(
             let mut convs = conv_arc.lock().unwrap();
             if let Some(conv) = convs.iter_mut().find(|c| c.id == conversation_id) {
                 conv.last_message = full_response.clone();
-                conv.timestamp = chrono::Utc::now().timestamp_millis() as u64;
+                conv.timestamp = Utc::now().timestamp_millis() as u64;
             }
         }
 

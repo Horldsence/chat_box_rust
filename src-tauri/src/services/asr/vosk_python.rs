@@ -98,7 +98,7 @@ impl VoskASR {
 
     // 完全释放资源
     pub fn release_resources(&mut self) {
-        if let Some(instance) = &self.instance {
+        if let Some(_instance) = &self.instance {
             self.stop_recording().ok();
             self.instance = None;
             debug!("Released VoskASR resources");

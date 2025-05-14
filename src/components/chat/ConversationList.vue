@@ -1,98 +1,106 @@
 <template>
-    <div class="conversation-list">
-        <!-- 头部 -->
-        <div class="list-header">
-            <h1>聊天</h1>
-            <button class="new-chat-btn" @click="showCreateDialog">
-                <img :src="addIcon" alt="New chat" />
-                新对话
-            </button>
-        </div>
-
-        <!-- 搜索框 -->
-        <div class="search-container">
-            <img :src="searchIcon" alt="Search" class="search-icon" />
-            <input type="text" v-model="searchQuery" placeholder="搜索对话..." class="search-input" />
-        </div>
-
-        <!-- 对话列表 -->
-        <div class="conversations">
-            <div v-for="conversation in filteredConversations" :key="conversation.id" class="conversation-item"
-                :class="{ active: conversation.id === currentConversationId }"
-                @click="selectConversation(conversation.id)">
-                <div class="conversation-avatar">
-                    <img :src="defaultAvatar" alt="Conversation" />
-                </div>
-
-                <div class="conversation-info">
-                    <div class="conversation-title">{{ conversation.title }}</div>
-                    <div class="conversation-preview">{{ conversation.lastMessage }}</div>
-                </div>
-
-                <div class="conversation-meta">
-                    <div class="conversation-time">
-                        {{ formatTime(conversation.timestamp) }}
-                    </div>
-                    <button class="delete-btn" @click.stop="confirmDelete(conversation)"
-                        :aria-label="'删除 ' + conversation.title">
-                        <img :src="trashIcon" alt="Delete" />
-                    </button>
-                </div>
-            </div>
-
-            <div v-if="filteredConversations.length === 0" class="empty-list">
-                <p v-if="searchQuery">没有找到匹配的对话</p>
-                <p v-else>没有对话，点击"新对话"开始聊天</p>
-            </div>
-        </div>
-
-        <!-- 创建对话对话框 -->
-        <el-dialog v-model="createDialogVisible" title="创建新对话" width="300px" :append-to-body="true">
-            <el-input v-model="newConversationTitle" placeholder="对话标题" autofocus />
-            <template #footer>
-                <span class="dialog-footer">
-                    <el-button @click="createDialogVisible = false">取消</el-button>
-                    <el-button type="primary" @click="createConversation">
-                        创建
-                    </el-button>
-                </span>
-            </template>
-        </el-dialog>
-
-        <!-- 删除确认 -->
-        <el-dialog v-model="deleteDialogVisible" title="删除对话" width="300px" :append-to-body="true">
-            <p>确定要删除"{{ conversationToDelete?.title }}"吗？此操作不可撤销。</p>
-            <template #footer>
-                <span class="dialog-footer">
-                    <el-button @click="deleteDialogVisible = false">取消</el-button>
-                    <el-button type="danger" @click="deleteConversation">
-                        删除
-                    </el-button>
-                </span>
-            </template>
-        </el-dialog>
+  <div class="conversation-list-container">
+    <!-- 头部 -->
+    <div class="header-wrapper">
+      <el-row :gutter="20" align="middle" justify="space-between">
+        <el-col :span="12">
+          <h2>聊天</h2>
+        </el-col>
+        <el-col :span="12" style="text-align: right">
+          <el-button type="primary" size="small" @click="showCreateDialog" :icon="Plus">
+            新对话
+          </el-button>
+        </el-col>
+      </el-row>
     </div>
+
+    <!-- 搜索框 -->
+    <div class="search-wrapper">
+      <el-input
+        v-model="searchQuery"
+        placeholder="搜索对话..."
+        clearable
+        :prefix-icon="Search"
+      />
+    </div>
+
+    <!-- 对话列表 -->
+    <el-scrollbar class="scrollbar-wrapper">
+      <el-empty v-if="filteredConversations.length === 0" description="没有找到对话" />
+      
+      <el-menu
+        v-else
+        :default-active="currentConversationId ? currentConversationId.toString() : ''"
+      >
+        <el-menu-item
+          v-for="conversation in filteredConversations"
+          :key="conversation.id"
+          :index="conversation.id.toString()"
+          @click="selectConversation(conversation.id)"
+        >
+          <div class="conversation-item">
+            <el-avatar :size="40" :icon="UserFilled" class="conversation-avatar" />
+            
+            <div class="conversation-content">
+              <div class="conversation-title">{{ conversation.title }}</div>
+              <div class="conversation-preview">{{ conversation.lastMessage }}</div>
+            </div>
+            
+            <div class="conversation-meta">
+              <span class="conversation-time">{{ formatTime(conversation.timestamp) }}</span>
+              <el-button
+                class="delete-button"
+                type="danger"
+                :icon="Delete"
+                circle
+                size="small"
+                plain
+                @click.stop="confirmDelete(conversation)"
+              />
+            </div>
+          </div>
+        </el-menu-item>
+      </el-menu>
+    </el-scrollbar>
+
+    <!-- 创建对话对话框 -->
+    <el-dialog v-model="createDialogVisible" title="创建新对话" width="300px" :append-to-body="true">
+      <el-input v-model="newConversationTitle" placeholder="对话标题" autofocus />
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="createDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="createConversation">创建</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 删除确认 -->
+    <el-dialog v-model="deleteDialogVisible" title="删除对话" width="300px" :append-to-body="true">
+      <p>确定要删除"{{ conversationToDelete?.title }}"吗？此操作不可撤销。</p>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="deleteDialogVisible = false">取消</el-button>
+          <el-button type="danger" @click="deleteConversation">删除</el-button>
+        </span>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import type { Conversation } from '../../types';
-
-// 图标导入
-import defaultAvatar from '../../assets/account.svg';
-import addIcon from '../../assets/plus.svg'; // 需添加此图标
-import searchIcon from '../../assets/text-search.svg';
-import trashIcon from '../../assets/trash-can.svg'; // 需添加此图标
+import { Search, Plus, Delete, UserFilled } from '@element-plus/icons-vue';
 
 const props = defineProps<{
-    conversations: Conversation[];
-    currentConversationId: number | null;
+  conversations: Conversation[];
+  currentConversationId: number | null;
 }>();
 
 const emit = defineEmits<{
-    select: [id: number];
-    create: [title: string];
-    delete: [id: number];
+  select: [id: number];
+  create: [title: string];
+  delete: [id: number];
 }>();
 
 // 状态
@@ -104,270 +112,173 @@ const conversationToDelete = ref<Conversation | null>(null);
 
 // 过滤后的对话列表
 const filteredConversations = computed(() => {
-    if (!searchQuery.value) {
-        // 按时间戳排序，最新的在前面
-        return [...props.conversations].sort((a, b) => b.timestamp - a.timestamp);
-    }
+  if (!searchQuery.value) {
+    // 按时间戳排序，最新的在前面
+    return [...props.conversations].sort((a, b) => b.timestamp - a.timestamp);
+  }
 
-    const query = searchQuery.value.toLowerCase();
-    return props.conversations
-        .filter(conv =>
-            conv.title.toLowerCase().includes(query) ||
-            conv.lastMessage.toLowerCase().includes(query)
-        )
-        .sort((a, b) => b.timestamp - a.timestamp);
+  const query = searchQuery.value.toLowerCase();
+  return props.conversations
+    .filter(conv =>
+      conv.title.toLowerCase().includes(query) ||
+      conv.lastMessage?.toLowerCase().includes(query)
+    )
+    .sort((a, b) => b.timestamp - a.timestamp);
 });
 
 // 格式化时间
 const formatTime = (timestamp: number): string => {
-    const date = new Date(timestamp);
-    const now = new Date();
+  const date = new Date(timestamp);
+  const now = new Date();
 
-    // 如果是今天
-    if (date.toDateString() === now.toDateString()) {
-        return date.toLocaleTimeString('zh-CN', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-
-    // 如果是昨天
-    const yesterday = new Date(now);
-    yesterday.setDate(now.getDate() - 1);
-    if (date.toDateString() === yesterday.toDateString()) {
-        return '昨天';
-    }
-
-    // 如果是7天内
-    const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-    if (now.getTime() - date.getTime() < 7 * 24 * 60 * 60 * 1000) {
-        return days[date.getDay()];
-    }
-
-    // 其他情况显示日期
-    return date.toLocaleDateString('zh-CN', {
-        month: 'short',
-        day: 'numeric'
+  // 如果是今天
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit'
     });
+  }
+
+  // 如果是昨天
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return '昨天';
+  }
+
+  // 如果是7天内
+  const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  if (now.getTime() - date.getTime() < 7 * 24 * 60 * 60 * 1000) {
+    return days[date.getDay()];
+  }
+
+  // 其他情况显示日期
+  return date.toLocaleDateString('zh-CN', {
+    month: 'short',
+    day: 'numeric'
+  });
 };
 
 // 选择对话
 const selectConversation = (id: number) => {
-    emit('select', id);
+  emit('select', id);
 };
 
 // 显示创建对话框
 const showCreateDialog = () => {
-    newConversationTitle.value = '';
-    createDialogVisible.value = true;
+  newConversationTitle.value = '';
+  createDialogVisible.value = true;
 };
 
 // 创建对话
 const createConversation = () => {
-    if (newConversationTitle.value.trim()) {
-        emit('create', newConversationTitle.value.trim());
-        createDialogVisible.value = false;
-    }
+  if (newConversationTitle.value.trim()) {
+    emit('create', newConversationTitle.value.trim());
+    createDialogVisible.value = false;
+  }
 };
 
 // 确认删除
 const confirmDelete = (conversation: Conversation) => {
-    conversationToDelete.value = conversation;
-    deleteDialogVisible.value = true;
+  conversationToDelete.value = conversation;
+  deleteDialogVisible.value = true;
 };
 
 // 删除对话
 const deleteConversation = () => {
-    if (conversationToDelete.value) {
-        emit('delete', conversationToDelete.value.id);
-        deleteDialogVisible.value = false;
-    }
+  if (conversationToDelete.value) {
+    emit('delete', conversationToDelete.value.id);
+    deleteDialogVisible.value = false;
+  }
 };
 </script>
 
 <style scoped>
-.conversation-list {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    background-color: #ffffff;
-    border-right: 1px solid #eaeaea;
+.conversation-list-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.list-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    border-bottom: 1px solid #eaeaea;
+.header-wrapper {
+  padding: 16px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
-.list-header h1 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
+.search-wrapper {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
-.new-chat-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background-color: #1976d2;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.new-chat-btn:hover {
-    background-color: #1565c0;
-}
-
-.new-chat-btn img {
-    width: 16px;
-    height: 16px;
-    filter: brightness(0) invert(1);
-}
-
-.search-container {
-    position: relative;
-    padding: 12px 20px;
-    border-bottom: 1px solid #eaeaea;
-}
-
-.search-icon {
-    position: absolute;
-    left: 30px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
-    opacity: 0.5;
-}
-
-.search-input {
-    width: 100%;
-    padding: 8px 12px 8px 36px;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.search-input:focus {
-    border-color: #1976d2;
-}
-
-.conversations {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px 0;
+.scrollbar-wrapper {
+  flex: 1;
+  overflow: hidden;
 }
 
 .conversation-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    border-left: 3px solid transparent;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
 }
 
-.conversation-item:hover {
-    background-color: #f5f5f5;
-}
-
-.conversation-item.active {
-    background-color: #e3f2fd;
-    border-left-color: #1976d2;
-}
-
-.conversation-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.conversation-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.conversation-info {
-    flex: 1;
-    min-width: 0;
+.conversation-content {
+  flex: 1;
+  overflow: hidden;
 }
 
 .conversation-title {
-    font-size: 14px;
-    font-weight: 500;
-    color: #333;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  font-size: var(--el-font-size-base);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
 }
 
 .conversation-preview {
-    font-size: 12px;
-    color: #888;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 2px;
+  font-size: var(--el-font-size-extra-small);
+  color: var(--el-text-color-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .conversation-meta {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
 }
 
 .conversation-time {
-    font-size: 11px;
-    color: #888;
+  font-size: var(--el-font-size-extra-small);
+  color: var(--el-text-color-secondary);
 }
 
-.delete-btn {
-    padding: 0;
-    background: transparent;
-    border: none;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.2s, background-color 0.2s;
+.delete-button {
+  padding: 2px;
+  font-size: 12px;
+  visibility: hidden;
 }
 
-.conversation-item:hover .delete-btn {
-    opacity: 0.5;
+.el-menu-item:hover .delete-button {
+  visibility: visible;
 }
 
-.delete-btn:hover {
-    opacity: 1 !important;
-    background-color: #f0f0f0;
+/* 覆盖一些Element Plus默认样式 */
+.el-menu-item {
+  height: auto;
+  line-height: normal;
+  padding: 10px 16px;
 }
 
-.delete-btn img {
-    width: 16px;
-    height: 16px;
+.el-menu {
+  border-right: none;
 }
 
-.empty-list {
-    padding: 20px;
-    text-align: center;
-    color: #888;
+/* 处理选中项样式 */
+.el-menu-item.is-active {
+  background-color: var(--el-menu-hover-bg-color);
 }
 </style>

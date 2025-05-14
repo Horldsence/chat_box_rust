@@ -1,6 +1,6 @@
 use crate::models::{Conversation, Message};
 use crate::state::AppState;
-use log::{info, debug};
+use log::{info, error};
 use tauri::State;
 use chrono::Utc;
 
@@ -11,7 +11,7 @@ pub fn get_conversations(state: State<AppState>) -> Vec<Conversation> {
 
 #[tauri::command]
 pub fn get_conversation_messages(conversation_id: u64, state: State<AppState>) -> Vec<Message> {
-    let messages = state.messages.lock().unwrap();
+    let messages = state.get_conversation_history(conversation_id);
     messages
         .iter()
         .filter(|m| m.conversation_id == conversation_id)
@@ -24,15 +24,24 @@ pub fn create_conversation(title: String, state: State<AppState>) -> Result<Conv
     let mut conversations = state.conversations.lock().unwrap();
 
     // 生成新ID
-    let id = Utc::now().timestamp_millis() as u64;
+    let new_id = conversations.iter().map(|c| c.id).max().unwrap_or(0) + 1;
 
     // 创建新对话
     let new_conversation = Conversation {
-        id,
+        id: new_id,
         title,
-        last_message: String::from("新对话已创建"),
+        last_message: "开始新的对话".to_string(),
         timestamp: Utc::now().timestamp_millis() as u64,
     };
+
+    // 创建对话后尝试保存到数据库
+    if let Ok(mut db_guard) = state.db.lock() {
+        if let Some(ref mut db) = *db_guard {
+            if let Err(e) = db.save_conversation(&new_conversation) {
+                error!("保存新对话到数据库失败: {}", e);
+            }
+        }
+    }
 
     // 添加到对话列表
     conversations.push(new_conversation.clone());

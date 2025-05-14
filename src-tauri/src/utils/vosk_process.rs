@@ -1,5 +1,6 @@
 use log::{info, debug, warn};
 
+#[allow(dead_code)]
 pub fn vosk_result_to_string(json_string: &str) -> String {
     // Parse the JSON string
     if let Ok(result) = serde_json::from_str::<serde_json::Value>(&json_string) {

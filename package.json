@@ -10,10 +10,12 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
     "@varlet/touch-emulator": "^3.10.5",
     "@varlet/ui": "^3.10.5",
+    "@vueuse/core": "^13.1.0",
     "element-plus": "^2.9.9",
     "highlight.js": "^11.11.1",
     "pnpm": "^10.10.0",
