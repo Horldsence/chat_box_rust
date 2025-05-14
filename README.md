@@ -39,7 +39,7 @@
 
 基于 Tauri、Vue3 和 Rust 构建的现代化桌面 AI 聊天应用，支持多平台部署，包括 RISC-V 架构。
 
-演示截图
+![演示图片](image/present.png)
 
 ## 目录
 
