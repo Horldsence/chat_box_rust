@@ -30,6 +30,15 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "resources": {
+      "model/vosk-model-small-cn-0.22/am/*": "model/vosk-model-small-cn-0.22/am/",
+      "model/vosk-model-small-cn-0.22/graph/*": "model/vosk-model-small-cn-0.22/graph/",
+      "model/vosk-model-small-cn-0.22/ivector/*": "model/vosk-model-small-cn-0.22/ivector/",
+      "model/vosk-model-small-cn-0.22/conf/*": "model/vosk-model-small-cn-0.22/conf/",
+      "model/vosk-model-small-cn-0.22/graph/phones/*": "model/vosk-model-small-cn-0.22/graph/phones/",
+      "database/chat_database.db": "database/chat_database.db",
+      "config.yaml": "config.yaml"
+    }
   }
 }

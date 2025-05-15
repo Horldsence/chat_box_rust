@@ -14,7 +14,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue';
 import VueMarkdown from 'vue-markdown-render';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/atom-one-dark.css';

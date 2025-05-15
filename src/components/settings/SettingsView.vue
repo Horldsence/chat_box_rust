@@ -16,6 +16,7 @@ import AiModelSettings from "./AiModelSettings.vue";
 import VoiceSettings from "./VoiceSettings.vue";
 import UiSettings from "./UiSettings.vue";
 import AppBehaviorSettings from "./AppBehaviorSettings.vue";
+import DatabaseConfigPanel from "./DatabaseConfigPanel.vue";
 
 const props = defineProps({
   settingType: {
@@ -57,6 +58,8 @@ const currentSettingComponent = computed(() => {
       return AiModelSettings;
     case "ai-behavior":
       return AppBehaviorSettings;
+    case "database":
+      return DatabaseConfigPanel;
     case "voice":
       return VoiceSettings;
     case "ui":

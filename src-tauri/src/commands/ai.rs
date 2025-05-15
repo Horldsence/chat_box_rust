@@ -1,7 +1,5 @@
-use std::sync::Arc;
 use crate::models::{Message, MessageChunk};
 use crate::state::AppState;
-use crate::utils::config::AppConfig;
 use chrono::Utc;
 use log::{debug, error, info};
 use tauri::{Emitter, State, Window};
@@ -12,7 +10,6 @@ pub async fn generate_ai_response(
     user_message_content: String,
     conversation_id: u64,
     state: State<'_, AppState>,
-    config: State<'_, Arc<AppConfig>>,
 ) -> Result<(), String> {
     info!("开始生成AI回复，对话ID: {}", conversation_id);
 
@@ -60,8 +57,10 @@ pub async fn generate_ai_response(
 
     let conv_arc = state.conversations.clone();
     let msg_arc = state.messages.clone();
+    let config_arc = state.config.clone();
     let window_clone = window.clone();
 
+    let config = config_arc.lock().unwrap();
     // 从配置中获取缓冲设置
     let buffer_size = config.app_behavior.message_chunk_buffer_size;
     let send_interval_ms = config.app_behavior.message_chunk_send_interval_ms;
