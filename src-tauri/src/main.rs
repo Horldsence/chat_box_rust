@@ -7,17 +7,17 @@ mod services;
 mod state;
 mod utils;
 
-use std::path::Path;
 use chrono::Utc;
 use log::{error, info};
 use models::{Conversation, Message};
 use services::agent::ollama::OllamaAgent;
 use services::asr::vosk_python::VoskASR;
 use state::AppState;
+use std::path::Path;
 use tauri::path::BaseDirectory;
 use tauri::Manager;
-use utils::logger::init_logger; // 导入配置相关函数
 use utils::config::{get_app_config, save_app_config, AppConfig};
+use utils::logger::init_logger; // 导入配置相关函数
 
 // 导入所有命令
 use commands::*;
@@ -25,6 +25,7 @@ use commands::*;
 #[tokio::main]
 async fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let app_state = match init_config(app.handle().clone()) {
                 Ok(state) => state,
@@ -60,8 +61,13 @@ async fn main() {
 }
 
 fn init_config(handle: tauri::AppHandle) -> Result<AppState, std::io::Error> {
+    // TODO:添加资源检查
+    // check_resource(handle.path().resource_dir())
+    //     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
     // 获取设置目录
-    let config_path = handle.path().resolve("config.yaml", BaseDirectory::Resource)
+    let config_path = handle
+        .path()
+        .resolve("config.yaml", BaseDirectory::Resource)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
     // 加载配置
     let config = AppConfig::new(config_path.clone()).load_config();
@@ -86,7 +92,9 @@ fn init_config(handle: tauri::AppHandle) -> Result<AppState, std::io::Error> {
             config.voice.model_path.clone()
         } else {
             // 使用相对路径，根据应用资源目录解析
-            handle.path().resolve(&config.voice.model_path, BaseDirectory::Resource)
+            handle
+                .path()
+                .resolve(&config.voice.model_path, BaseDirectory::Resource)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
                 .to_string_lossy()
                 .to_string()
@@ -96,21 +104,28 @@ fn init_config(handle: tauri::AppHandle) -> Result<AppState, std::io::Error> {
             Ok(asr) => asr,
             Err(e) => {
                 error!("VoskASR initialization failed: {}", e);
-                return Err(std::io::Error::new(std::io::ErrorKind::Other, e.to_string()));
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    e.to_string(),
+                ));
             }
         }
     } else {
-        let vosk_model_path = handle.path().resolve("model", BaseDirectory::Resource)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
-        .join("vosk-model-small-cn-0.22")
-        .to_string_lossy()
-        .to_string();
+        let vosk_model_path = handle
+            .path()
+            .resolve("model/vosk-model-small-cn-0.22", BaseDirectory::Resource)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
+            .to_string_lossy()
+            .to_string();
         info!("Vosk model path: {:?}", vosk_model_path);
         match VoskASR::new(Some(&vosk_model_path)) {
             Ok(asr) => asr,
             Err(e) => {
                 error!("VoskASR initialization failed: {}", e);
-                return Err(std::io::Error::new(std::io::ErrorKind::Other, e.to_string()));
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    e.to_string(),
+                ));
             }
         }
     };
@@ -133,14 +148,22 @@ fn init_config(handle: tauri::AppHandle) -> Result<AppState, std::io::Error> {
         conversation_id: default_conversation_id,
     }];
 
-    let state = AppState::new(config.clone(), conversations, messages, ollama_agent, vosk_asr);
+    let state = AppState::new(
+        config.clone(),
+        conversations,
+        messages,
+        ollama_agent,
+        vosk_asr,
+    );
 
     // 初始化数据库
     if config.database.enabled {
         let db_path = if Path::new(&config.database.path).is_absolute() {
             config.database.path.clone()
         } else {
-            handle.path().resolve(&config.database.path, BaseDirectory::Resource)
+            handle
+                .path()
+                .resolve(&config.database.path, BaseDirectory::Resource)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
                 .to_string_lossy()
                 .to_string()

@@ -1,8 +1,8 @@
 use crate::models::{Conversation, Message};
 use crate::state::AppState;
-use log::{info, error};
-use tauri::State;
 use chrono::Utc;
+use log::{error, info};
+use tauri::State;
 
 #[tauri::command]
 pub fn get_conversations(state: State<AppState>) -> Vec<Conversation> {

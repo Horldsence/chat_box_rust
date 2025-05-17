@@ -37,6 +37,8 @@
       "model/vosk-model-small-cn-0.22/ivector/*": "model/vosk-model-small-cn-0.22/ivector/",
       "model/vosk-model-small-cn-0.22/conf/*": "model/vosk-model-small-cn-0.22/conf/",
       "model/vosk-model-small-cn-0.22/graph/phones/*": "model/vosk-model-small-cn-0.22/graph/phones/",
+      "model/vosk-model-small-cn-0.22/*": "model/vosk-model-small-cn-0.22/",
+      "model/vosk-model-small-cn-0.22": "model/vosk-model-small-cn-0.22/",
       "database/chat_database.db": "database/chat_database.db",
       "config.yaml": "config.yaml"
     }

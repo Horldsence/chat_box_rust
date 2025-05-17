@@ -1,0 +1,22 @@
+config_path: config.yaml
+ai_model:
+  model_name: qwen2.5:0.5b
+  server_url: http://localhost
+  server_port: 11434
+  system_prompt: 你是一个友好、乐于助人的AI助手，使用中文回答问题。
+voice:
+  enabled: false
+  model_path: model/vosk-model-small-cn-0.22
+  timeout_seconds: 15
+ui:
+  theme: light
+  language: zh-CN
+database:
+  enabled: true
+  path: database/chat_database.db
+app_behavior:
+  log_level: info
+  default_conversation_title: 新对话
+  welcome_message: 欢迎使用聊天应用!
+  message_chunk_buffer_size: 2
+  message_chunk_send_interval_ms: 3

@@ -210,11 +210,9 @@ impl VoskStream {
 
         // 使用AssertUnwindSafe包裹可能不安全的操作
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            Python::with_gil(|py| {
-                match instance.call_method0(py, "stop_recognition") {
-                    Ok(_) => debug!("成功调用stop_recognition方法"),
-                    Err(e) => error!("调用stop_recognition出错: {:?}", e),
-                }
+            Python::with_gil(|py| match instance.call_method0(py, "stop_recognition") {
+                Ok(_) => debug!("成功调用stop_recognition方法"),
+                Err(e) => error!("调用stop_recognition出错: {:?}", e),
             })
         }));
 

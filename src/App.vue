@@ -35,7 +35,7 @@
         <!-- 设置视图 -->
         <SettingsView
           v-else-if="
-            ['ai-model', 'ai-behavior', 'voice', 'ui'].includes(currentView)
+            ['ai-model', 'ai-behavior', 'voice', 'ui', 'database'].includes(currentView)
           "
           :settingType="currentView"
         />

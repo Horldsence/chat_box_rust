@@ -32,7 +32,8 @@ pub async fn generate_ai_response(
     let agent = state.ollama_agent.clone();
 
     let history = state.get_conversation_history(conversation_id);
-    let user_messages = history.iter()
+    let user_messages = history
+        .iter()
         .filter(|msg| msg.sender == "user")
         .map(|msg| msg.content.clone())
         .collect::<Vec<String>>()
@@ -81,8 +82,8 @@ pub async fn generate_ai_response(
 
             // 使用缓冲策略: 从配置获取缓冲大小和发送间隔
             let now = std::time::Instant::now();
-            let should_emit =
-                buffer.len() >= buffer_size || now.duration_since(last_emit_time).as_millis() >= send_interval_ms as u128;
+            let should_emit = buffer.len() >= buffer_size
+                || now.duration_since(last_emit_time).as_millis() >= send_interval_ms as u128;
 
             if should_emit && !buffer.is_empty() {
                 match window.emit(

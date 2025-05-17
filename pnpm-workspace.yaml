@@ -1,2 +1,4 @@
+ignoredBuiltDependencies:
+  - vue-demi
 onlyBuiltDependencies:
   - vue-material
