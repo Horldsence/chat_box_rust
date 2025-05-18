@@ -1,8 +1,8 @@
 use crate::models::Message;
 use crate::state::AppState;
-use log::{info, debug, error};
-use tauri::State;
 use chrono::Utc;
+use log::{debug, error, info};
+use tauri::State;
 
 #[tauri::command]
 pub fn send_user_message(

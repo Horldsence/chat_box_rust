@@ -1,4 +1,4 @@
-use log::{info, debug, warn};
+use log::{debug, info, warn};
 
 #[allow(dead_code)]
 pub fn vosk_result_to_string(json_string: &str) -> String {

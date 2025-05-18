@@ -23,6 +23,9 @@ jobs:
             args: ''
           - platform: 'windows-latest'
             args: ''
+          - platform: 'ubuntu-22.04' # for RISC-V support
+            args: '--target riscv64gc-unknown-linux-gnu'
+            target: 'riscv64gc-unknown-linux-gnu'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -41,8 +44,8 @@ jobs:
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          # Add RISC-V target to the targets list
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || (matrix.target == 'riscv64gc-unknown-linux-gnu' && 'riscv64gc-unknown-linux-gnu' || '') }}
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
@@ -50,7 +53,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf alsa-utils libasound2-dev
           # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
-        # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
+
+      - name: install RISC-V cross-compilation tools
+        if: matrix.target == 'riscv64gc-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu
 
       - name: Generate build number
         id: buildnumber
@@ -66,6 +74,8 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Set CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER for RISC-V cross-compilation
+          ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER' || '' }}: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'riscv64-linux-gnu-gcc' || '' }}
         with:
           tagName: app-v__VERSION__-beta.${{ steps.buildnumber.outputs.build_number }} # 添加beta标签和构建号
           releaseName: 'App v__VERSION__ Beta (${{ steps.buildnumber.outputs.build_number }})' # 标题包含Beta

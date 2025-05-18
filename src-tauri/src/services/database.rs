@@ -162,4 +162,17 @@ impl ChatDatabase {
         );
         Ok(messages)
     }
+
+    pub fn delete_conversation(&mut self, conversation_id: u64) -> Result<()> {
+        self.conn.execute(
+            "DELETE FROM conversations WHERE id = ?",
+            params![conversation_id],
+        )?;
+        self.conn.execute(
+            "DELETE FROM messages WHERE conversation_id = ?",
+            params![conversation_id],
+        )?;
+        info!("删除对话及其消息: {}", conversation_id);
+        Ok(())
+    }
 }

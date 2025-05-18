@@ -12,7 +12,7 @@ ui:
   theme: light
   language: zh-CN
 database:
-  enabled: false
+  enabled: true
   path: database/chat_database.db
 app_behavior:
   log_level: info

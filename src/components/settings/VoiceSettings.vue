@@ -2,7 +2,7 @@
   <div class="settings-form">
     <h2>语音识别设置</h2>
     <el-form :model="form" label-position="top">
-      <el-form-item label="启用语音识别">
+      <el-form-item label="启用自定义语音识别">
         <el-switch v-model="form.voice.enabled" />
       </el-form-item>
       

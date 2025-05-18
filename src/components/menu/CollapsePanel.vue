@@ -28,6 +28,12 @@
         <template #title>语音识别</template>
       </el-menu-item>
 
+      <!-- 数据库功能设置 -->
+      <el-menu-item index="database">
+        <el-icon><ChatLineSquare /></el-icon>
+        <template #title>历史聊天</template>
+      </el-menu-item>
+
       <!-- 界面设置 -->
       <el-menu-item index="ui">
         <el-icon><Operation /></el-icon>
@@ -52,8 +58,8 @@
         size="small"
         @click="toggleCollapse"
       >
-        <el-icon v-if="isCollapse"><Setting /></el-icon>
-        <el-icon v-else><Minus /></el-icon>
+        <el-icon v-if="isCollapse"><ArrowLeftBold /></el-icon>
+        <el-icon v-else><ArrowRightBold /></el-icon>
       </el-button>
     </div>
   </div>
@@ -67,7 +73,9 @@ import {
   Microphone,
   Operation,
   QuestionFilled,
-  Setting,
+  ChatLineSquare,
+  ArrowLeftBold,
+  ArrowRightBold
 } from "@element-plus/icons-vue";
 
 const isCollapse = ref(true);

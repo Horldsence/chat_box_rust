@@ -2,10 +2,12 @@ use crate::models::{Conversation, Message};
 use crate::services::agent::ollama::OllamaAgent;
 use crate::services::asr::vosk_python::VoskASR;
 use crate::services::database::ChatDatabase;
+use crate::utils::config::AppConfig;
 use log::{error, info};
 use std::sync::{Arc, Mutex};
 
 pub struct AppState {
+    pub config: Arc<Mutex<AppConfig>>,
     pub conversations: Arc<Mutex<Vec<Conversation>>>,
     pub messages: Arc<Mutex<Vec<Message>>>,
     pub ollama_agent: Arc<OllamaAgent>,
@@ -13,14 +15,17 @@ pub struct AppState {
     pub db: Arc<Mutex<Option<ChatDatabase>>>, // 添加数据库支持
 }
 
+#[allow(dead_code)]
 impl AppState {
     pub fn new(
+        config: AppConfig,
         conversations: Vec<Conversation>,
         messages: Vec<Message>,
         ollama_agent: OllamaAgent,
         vosk_asr: VoskASR,
     ) -> Self {
         AppState {
+            config: Arc::new(Mutex::new(config)),
             conversations: Arc::new(Mutex::new(conversations)),
             messages: Arc::new(Mutex::new(messages)),
             ollama_agent: Arc::new(ollama_agent),

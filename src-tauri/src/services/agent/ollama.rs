@@ -1,7 +1,4 @@
-use ollama_rs::{
-    generation::completion::request::GenerationRequest,
-    Ollama,
-};
+use ollama_rs::{generation::completion::request::GenerationRequest, Ollama};
 use tokio_stream::{Stream, StreamExt};
 
 #[allow(unused_variables)]
@@ -41,7 +38,10 @@ impl OllamaAgent {
         self
     }
 
-    pub async fn generate_response(&self, user_prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn generate_response(
+        &self,
+        user_prompt: &str,
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let full_prompt = format!("{}\n\n{}", self.system_prompt, user_prompt);
         let request = GenerationRequest::new(self.model.clone(), full_prompt);
 
@@ -58,22 +58,23 @@ impl OllamaAgent {
         Ok(response_output)
     }
 
-    pub async fn generate_stream(&self, user_prompt: &str) -> Result<impl Stream<Item = String>, Box<dyn std::error::Error>> {
+    pub async fn generate_stream(
+        &self,
+        user_prompt: &str,
+    ) -> Result<impl Stream<Item = String>, Box<dyn std::error::Error>> {
         let full_prompt = format!("{}\n\n{}", self.system_prompt, user_prompt);
         let request = GenerationRequest::new(self.model.clone(), full_prompt);
 
         let stream = self.ollama.generate_stream(request).await?;
-        Ok(stream.map(|res| {
-            match res {
-                Ok(responses) => {
-                    let mut combined = String::new();
-                    for resp in responses {
-                        combined.push_str(&resp.response);
-                    }
-                    combined
-                },
-                Err(_) => String::new(),
+        Ok(stream.map(|res| match res {
+            Ok(responses) => {
+                let mut combined = String::new();
+                for resp in responses {
+                    combined.push_str(&resp.response);
+                }
+                combined
             }
+            Err(_) => String::new(),
         }))
     }
 }

@@ -1,8 +1,8 @@
-use env_logger::Env;
-use log::LevelFilter;
 use chrono::Local;
-use std::io::Write;
+use env_logger::Env;
 use log::info;
+use log::LevelFilter;
+use std::io::Write;
 
 pub fn init_logger() {
     print_magic();
@@ -25,8 +25,9 @@ pub fn init_logger() {
     info!("env_logger initialized.");
 }
 
-pub fn print_magic(){
-    println!(r#"
+pub fn print_magic() {
+    println!(
+        r#"
 ==============================================================================
   /$$$$$$  /$$   /$$  /$$$$$$  /$$$$$$$$         /$$$$$$$   /$$$$$$  /$$   /$$
  /$$__  $$| $$  | $$ /$$__  $$|__  $$__/        | $$__  $$ /$$__  $$| $$  / $$
@@ -39,5 +40,6 @@ pub fn print_magic(){
                 佛祖保佑                               永无BUG
 ==============================================================================
                                 starting up...
-    "#);
+    "#
+    );
 }

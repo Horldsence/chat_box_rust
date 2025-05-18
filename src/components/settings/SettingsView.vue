@@ -16,6 +16,7 @@ import AiModelSettings from "./AiModelSettings.vue";
 import VoiceSettings from "./VoiceSettings.vue";
 import UiSettings from "./UiSettings.vue";
 import AppBehaviorSettings from "./AppBehaviorSettings.vue";
+import DatabaseConfigPanel from "./DatabaseConfigPanel.vue";
 
 const props = defineProps({
   settingType: {
@@ -32,7 +33,7 @@ const config = ref({
     system_prompt: "",
   },
   voice: {
-    enabled: true,
+    enabled: false,
     model_path: "",
     timeout_seconds: 15,
   },
@@ -48,6 +49,10 @@ const config = ref({
     message_chunk_buffer_size: 2,
     message_chunk_send_interval_ms: 3,
   },
+  database: {
+    enable: false,
+    path: "database/chat_database.db"
+  }
 });
 
 // 根据当前选中的设置类型显示对应组件
@@ -57,6 +62,8 @@ const currentSettingComponent = computed(() => {
       return AiModelSettings;
     case "ai-behavior":
       return AppBehaviorSettings;
+    case "database":
+      return DatabaseConfigPanel;
     case "voice":
       return VoiceSettings;
     case "ui":
@@ -79,7 +86,7 @@ const loadConfig = async () => {
   }
 };
 
-const saveConfig = async (newConfig: { ai_model: { model_name: string; server_url: string; server_port: number; system_prompt: string; }; voice: { enabled: boolean; model_path: string; timeout_seconds: number; }; ui: { sidebar_width: string; theme: string; language: string; }; app_behavior: { log_level: string; default_conversation_title: string; welcome_message: string; message_chunk_buffer_size: number; message_chunk_send_interval_ms: number; }; } | { ai_model: { model_name: string; server_url: string; server_port: number; system_prompt: string; }; voice: { enabled: boolean; model_path: string; timeout_seconds: number; }; ui: { sidebar_width: string; theme: string; language: string; }; app_behavior: { log_level: string; default_conversation_title: string; welcome_message: string; message_chunk_buffer_size: number; message_chunk_send_interval_ms: number; }; }) => {
+const saveConfig = async (newConfig: typeof config.value) => {
   try {
     await invoke("save_app_config", { config: newConfig });
     config.value = newConfig;

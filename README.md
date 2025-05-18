@@ -9,6 +9,7 @@
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Horldsence/chat_box_rust)
 
 <!-- PROJECT LOGO -->
 <br />
