@@ -3,14 +3,14 @@
     <h2>数据库配置</h2>
     
     <el-form label-position="top">
-      <el-form-item label="启用数据库">
+      <el-form-item label="启用数据库自定义路径">
         <el-switch
           v-model="localConfig.database.enabled"
           active-text="启用"
           inactive-text="禁用"
         />
       </el-form-item>
-      
+    
       <template v-if="localConfig.database.enabled">
         <el-form-item label="数据库路径">
           <el-input v-model="localConfig.database.path" placeholder="请输入数据库路径">
@@ -28,7 +28,8 @@
     </div>
 
     <!-- 数据库内容管理 -->
-    <div v-if="localConfig.database.enabled" class="database-management">
+    <!-- <div v-if="localConfig.database.enabled" class="database-management"> -->
+    <div class="database-management">
       <h3>数据库内容管理</h3>
       
       <el-table 
