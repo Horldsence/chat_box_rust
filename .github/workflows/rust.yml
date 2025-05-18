@@ -75,7 +75,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Set CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER for RISC-V cross-compilation
-          ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER' || '' }}: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'riscv64-linux-gnu-gcc' || '' }}
+          CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'riscv64-linux-gnu-gcc' || '' }}
         with:
           tagName: app-v__VERSION__-beta.${{ steps.buildnumber.outputs.build_number }} # 添加beta标签和构建号
           releaseName: 'App v__VERSION__ Beta (${{ steps.buildnumber.outputs.build_number }})' # 标题包含Beta
