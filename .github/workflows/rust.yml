@@ -71,11 +71,27 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install # change this to npm, pnpm or bun depending on which one you use.
 
+      - name: Install SQLite (Windows)
+        if: matrix.platform == 'windows-latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # SQLite environment variables for Windows
+          SQLITE3_LIB_DIR: ${{ env.SQLITE3_LIB_DIR }}
+          LIBSQLITE3_LINK_LIB: ${{ env.LIBSQLITE3_LINK_LIB }}
+          # Set CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER for RISC-V cross-compilation
+          CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'riscv64-linux-gnu-gcc' || '' }}
+        run: |
+          echo "LIBSQLITE3_LINK_LIB=sqlite3" >> $env:GITHUB_ENV
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Set CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER for RISC-V cross-compilation
           CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'riscv64-linux-gnu-gcc' || '' }}
+          # Configure pkg-config for cross-compilation
+          PKG_CONFIG_ALLOW_CROSS: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'true' || '' }}
+          PKG_CONFIG_PATH: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/lib/riscv64-linux-gnu/pkgconfig:/usr/share/pkgconfig' || '' }}
+          PKG_CONFIG_SYSROOT_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu' || '' }}
         with:
           tagName: app-v__VERSION__-beta.${{ steps.buildnumber.outputs.build_number }} # 添加beta标签和构建号
           releaseName: 'App v__VERSION__ Beta (${{ steps.buildnumber.outputs.build_number }})' # 标题包含Beta
