@@ -1,7 +1,8 @@
 [package]
 name = "chat_box"
 version = "0.1.0"
-description = "A Tauri App"
+description = "A ai chat application build with rust and tauri"
+license = "MIT"
 authors = ["pengheng"]
 edition = "2021"
 build = "build.rs"
@@ -19,6 +20,9 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.2.0", features = [] }
 log = "0.4.27"
 env_logger = "0.11.8"
+
+[target.'cfg(target_arch = "riscv64")'.dependencies]
+# Dependencies specific to RISC-V 64-bit architecture
 # flate2 = "1.1.1"
 # tar = "0.4.44"
 # zip = "2.6.1"
@@ -30,7 +34,7 @@ env_logger = "0.11.8"
 reqwest = []
 
 [dependencies]
-serde_yaml = "0.9.34+deprecated"
+serde_yaml = "0.9.34-deprecated"
 termcolor = "1.4.1"
 tauri = { version = "2.5.1", features = [] }
 tauri-plugin-opener = "2.2.6"
