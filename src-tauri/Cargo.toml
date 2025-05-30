@@ -37,7 +37,8 @@ reqwest = []
 serde_yaml = "0.9.34-deprecated"
 termcolor = "1.4.1"
 tauri = { version = "2.5.1", features = [] }
-tauri-plugin-opener = "2.2.6"
+tauri-plugin-opener = "2.2.7"
+async-trait = "0.1.88"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 chrono = "0.4.41"
@@ -45,11 +46,11 @@ async-stream = "0.3.6"
 log = "0.4.27"
 futures = "0.3.31"
 env_logger = "0.11.8"
-ollama-rs = { git = "https://github.com/pepperoni21/ollama-rs.git", branch = "master", features = ["stream"] }
-tokio = { version = "1.45.0", features = ["full"] }
+ollama-rs = { version = "0.3.1", features = ["stream"] }
+tokio = { version = "1.45.1", features = ["full"] }
 tokio-stream = "0.1.17"
 smol = "2.0.2"
-pyo3 = { version = "0.24.2", features = ["auto-initialize", "full"] }
+pyo3 = { version = "0.25.0", features = ["auto-initialize", "full"] }
 rodio = "0.20.1"
 config = "0.15.11"
 anyhow = "1.0.98"
@@ -58,6 +59,12 @@ once_cell = "1.21.3"
 vosk = "0.3.1"
 cpal = "0.15.3"
 num-traits = "0.2.19"
-rusqlite = { version = "0.35.0", features = ["bundled"] }
+rusqlite = { version = "0.36.0", features = ["bundled"] }
 scopeguard = "1.2.0"
-tauri-plugin-dialog = "2"
+tauri-plugin-dialog = "2.2.2"
+candle-core = "0.9.1"
+candle-nn = "0.9.1"
+candle-transformers = "0.9.1"
+candle-examples = "0.9.1"
+hf-hub = "0.4.2"
+tokenizers = "0.21.1"

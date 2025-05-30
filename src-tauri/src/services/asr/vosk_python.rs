@@ -36,7 +36,6 @@ impl VoskASR {
             return Ok(());
         }
 
-        #[allow(deprecated)]
         Python::with_gil(|py| {
             let sys = py.import("sys")?;
             let path = sys.getattr("path")?.downcast_into::<PyList>()?;
@@ -59,8 +58,8 @@ impl VoskASR {
 
             // 创建实例
             let instance: Py<PyAny> = match &self.model_path {
-                Some(p) => class.call1((p,))?.into_py(py),
-                None => class.call0()?.into_py(py),
+                Some(p) => class.call1((p,))?.into(),
+                None => class.call0()?.into(),
             };
 
             debug!("VoskASR instance created: {:?}", instance);
@@ -105,7 +104,6 @@ impl VoskASR {
         }
     }
 
-    #[allow(deprecated)]
     pub async fn listen_and_transcribe(&mut self, timeout_ms: Option<u64>) -> PyResult<VoskStream> {
         self.ensure_initialized()?;
         self.start_recording()?; // 确保在开始转录前启动录音
@@ -117,8 +115,8 @@ impl VoskASR {
 
             // Start recognition with the timeout parameter and set end_on_silence=false
             let timeout_py = match timeout_ms {
-                Some(ms) => ms.into_py(py),
-                None => py.None(),
+                Some(ms) => (ms as i64).into_pyobject(py)?.into_any(), // Convert u64 to i64 then to PyObject
+                None => py.None().into_bound(py),
             };
 
             // 传递第二个参数false，表示检测到静默时不要自动结束录音
