@@ -1,6 +1,7 @@
 pub mod candle;
 
 use anyhow::Result;
+use ollama_rs::generation::chat::request;
 use std::io::Write;
 use log::{info, warn};
 
@@ -82,11 +83,9 @@ pub fn run_cli_test() -> Result<()> {
 
     // 流式生成并打印到标准输出
     println!("生成中...");
-    generator.generate_streaming(&args.prompt, args.sample_len, |chunk| {
-        print!("{}", chunk);
-        std::io::stdout().flush()?;
-        Ok(())
-    })?;
+    let output = generator.generate_tokens(&args.prompt, args.sample_len)?;
+
+    println!("\n生成结果:{:?}", output);
 
     println!("\n完成生成");
 
@@ -119,7 +118,7 @@ mod tests {
 
         // 测试初始化不应该panic
         let result = QwenCandleGenerator::new(params);
-        warn!(result.is_ok(), "模型初始化失败: {:?}", result.err());
+        assert!(result.is_ok(), "模型初始化失败: {:?}", result.err());
     }
 
     /// 测试字符串生成功能
@@ -147,17 +146,13 @@ mod tests {
 
         // 简单提示词
         let prompt = "介绍自己";
-        let mut output = String::new();
 
         // 收集流式输出
-        generator.generate_streaming(prompt, 10, |chunk| {
-            output.push_str(chunk);
-            Ok(())
-        })?;
+        let output = generator.generate_tokens(prompt, 10)?;
 
         // 验证生成了文本
-        warn!(!output.is_empty(), "流式生成的文本不应为空");
-        info!("流式生成文本: {}", output);
+        assert!(!output.is_empty(), "流式生成的文本不应为空");
+        info!("流式生成文本: {:?}", output);
 
         Ok(())
     }
@@ -173,7 +168,7 @@ mod tests {
         let tokens = generator.generate_tokens(prompt, 5)?;
 
         // 验证生成了token
-        warn!(!tokens.is_empty(), "生成的token不应为空");
+        assert!(!tokens.is_empty(), "生成的token不应为空");
         info!("生成token数量: {}", tokens.len());
 
         Ok(())
