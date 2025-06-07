@@ -7,7 +7,6 @@ extern crate accelerate_src;
 use anyhow::{Error as E, Result};
 use clap::Parser;
 
-use std::path::PathBuf;
 
 use candle_transformers::models::qwen2::{Config as ConfigBase, ModelForCausalLM as ModelBase};
 use candle_transformers::models::qwen2_moe::{Config as ConfigMoe, Model as ModelMoe};
@@ -242,9 +241,9 @@ pub enum WhichModel {
     W3_8b,
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
-pub struct Args {
+pub struct QwenInferenceParams {
     /// Run on CPU rather than on GPU.
     #[arg(long)]
     pub cpu: bool,
@@ -299,37 +298,18 @@ pub struct Args {
     pub model: WhichModel,
 }
 
-#[allow(unused)]
-pub struct QwenInferenceParams {
-    pub model_id: Option<String>,
-    pub revision: String,
-    pub tokenizer_file: Option<PathBuf>,
-    pub weight_files: Option<Vec<PathBuf>>,
-    pub config_file: Option<PathBuf>,  // 添加配置文件路径
-    pub which_model: WhichModel,
-    pub device: Device, // 直接传入设备对象
-    pub dtype: DType,   // 直接传入数据类型
-    pub seed: u64,
-    pub temperature: Option<f64>,
-    pub top_p: Option<f64>,
-    pub repeat_penalty: f32,
-    pub repeat_last_n: usize,
-    pub use_flash_attn: bool,  // 添加FlashAttention支持
-    pub sample_len: usize,
-}
-
 // Implement default for QwenInferenceParams
 impl Default for QwenInferenceParams {
     fn default() -> Self {
         Self {
+            cpu: true,
+            tracing: false,
+            prompt: "Hello".to_string(),
+            model: WhichModel::W0_5b,
             model_id: None,
             revision: "main".to_string(),
             tokenizer_file: None,
             weight_files: None,
-            config_file: None,
-            which_model: WhichModel::W0_5b,
-            device: Device::Cpu,
-            dtype: DType::F32,
             seed: 299792458,
             temperature: Some(0.7),
             top_p: Some(0.9),
@@ -352,7 +332,7 @@ impl QwenCandleGenerator {
         use tracing_chrome::ChromeLayerBuilder;
         use tracing_subscriber::prelude::*;
 
-        let args = Args::parse();
+        let args = params.clone();
         let _guard = if args.tracing {
             let (chrome_layer, guard) = ChromeLayerBuilder::new().build();
             tracing_subscriber::registry().with(chrome_layer).init();
@@ -471,6 +451,7 @@ impl QwenCandleGenerator {
     }
 
     pub fn generate_string(&mut self, prompt: &str, sample_len: usize) -> Result<String> {
+        let device = candle_examples::device(self.params.cpu)?;
         let mut pipeline = TextGeneration::new(
             self.model.clone(),
             self.tokenizer.clone(),
@@ -479,7 +460,7 @@ impl QwenCandleGenerator {
             self.params.top_p,
             self.params.repeat_penalty,
             self.params.repeat_last_n,
-            &self.params.device,
+            &device,
         );
 
         let mut output = String::new();
@@ -490,8 +471,8 @@ impl QwenCandleGenerator {
         
         Ok(output)
     }
-
     pub fn generate_tokens(&mut self, prompt: &str, sample_len: usize) -> Result<Vec<u32>> {
+        let device = candle_examples::device(self.params.cpu)?;
         let mut pipeline = TextGeneration::new(
             self.model.clone(),
             self.tokenizer.clone(),
@@ -500,7 +481,7 @@ impl QwenCandleGenerator {
             self.params.top_p,
             self.params.repeat_penalty,
             self.params.repeat_last_n,
-            &self.params.device,
+            &device,
         );
 
         pipeline.tokenizer.clear();
