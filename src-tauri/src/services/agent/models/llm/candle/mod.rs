@@ -119,8 +119,7 @@ mod tests {
         unsafe {
             INIT.call_once(|| {
                 let params = QwenInferenceParams {
-                    which_model: WhichModel::W0_5b,
-                    device: Device::Cpu,
+                    model: WhichModel::W0_5b,
                     sample_len: 10,
                     temperature: Some(0.0), // 确定性输出
                     ..Default::default()
