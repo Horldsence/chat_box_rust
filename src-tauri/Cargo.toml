@@ -1,3 +1,11 @@
+[workspace]
+members = [
+  "crates/agent",
+]
+
+[workspace.dependencies]
+agent = { path = "crates/agent" }
+
 [package]
 name = "chat_box"
 version = "0.1.0"
@@ -20,15 +28,6 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.2.0", features = [] }
 log = "0.4.27"
 env_logger = "0.11.8"
-
-[target.'cfg(target_arch = "riscv64")'.dependencies]
-# Dependencies specific to RISC-V 64-bit architecture
-# flate2 = "1.1.1"
-# tar = "0.4.44"
-# zip = "2.6.1"
-# yoke = { version = "0.8.0" }
-# ureq = "3.0.11"
-# reqwest = { version = "0.12.15", features = ["blocking"] }
 
 [features]
 reqwest = []
@@ -63,7 +62,6 @@ rusqlite = { version = "0.36.0", features = ["bundled"] }
 scopeguard = "1.2.0"
 tauri-plugin-dialog = "2.2.2"
 candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
-# candle-core = { version = "0.9.1", features = ["mkl"] }
 candle-transformers = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
 candle-nn = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
 candle-examples = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
