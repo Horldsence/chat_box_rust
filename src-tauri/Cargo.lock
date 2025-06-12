@@ -29,6 +29,7 @@ dependencies = [
  "candle-transformers",
  "chrono",
  "clap",
+ "env_logger",
  "hf-hub",
  "log",
  "mockito",
@@ -838,6 +839,7 @@ checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 name = "chat_box"
 version = "0.1.0"
 dependencies = [
+ "agent",
  "anyhow",
  "async-stream",
  "async-trait",
@@ -852,6 +854,7 @@ dependencies = [
  "env_logger",
  "futures",
  "hf-hub",
+ "initialize",
  "log",
  "num-traits",
  "ollama-rs",
@@ -3009,6 +3012,34 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a588916bfdfd92e71cacef98a63d9b1f0d74d6599980d11894290e7ddefffcf7"
 dependencies = [
  "cfb",
+]
+
+[[package]]
+name = "initialize"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "candle-core",
+ "candle-nn",
+ "candle-transformers",
+ "chrono",
+ "futures",
+ "hf-hub",
+ "log",
+ "ollama-rs",
+ "once_cell",
+ "pyo3",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tauri",
+ "tauri-plugin-dialog",
+ "tempfile",
+ "tokenizers",
+ "tokio",
+ "tokio-test",
+ "vosk",
 ]
 
 [[package]]

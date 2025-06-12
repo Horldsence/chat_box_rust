@@ -1,5 +1,6 @@
 use crate::models::{Message, MessageChunk};
 use crate::state::AppState;
+use agent::StreamGenerator;
 use chrono::Utc;
 use log::{debug, error, info};
 use tauri::{Emitter, State, Window};
@@ -28,27 +29,33 @@ pub async fn generate_ai_response(
     // 保存初始的空机器人消息
     state.messages.lock().unwrap().push(bot_message);
 
-    // 获取Ollama代理
-    let agent = state.ollama_agent.clone();
+    // 获取LLM管理器
+    let llm_manager = state.llm_manager.clone();
 
     let history = state.get_conversation_history(conversation_id);
-    let user_messages = history
-        .iter()
-        .filter(|msg| msg.sender == "user")
-        .map(|msg| msg.content.clone())
-        .collect::<Vec<String>>()
-        .join("\n\n");
-    debug!("从database中加载: {}", user_messages);
+
+    // 构建完整的对话历史提示
+    let mut prompt = String::new();
+    for msg in &history {
+        match msg.sender.as_str() {
+            "user" => prompt.push_str(&format!("User: {}\n", msg.content)),
+            "bot" => prompt.push_str(&format!("Assistant: {}\n", msg.content)),
+            _ => {}
+        }
+    }
+    prompt.push_str(&format!("User: {}\nAssistant: ", user_message_content));
+
+    debug!("构建的对话提示: {}", prompt);
 
     // 生成消息流
-    debug!("调用Ollama生成响应流");
-    let mut stream = match agent.generate_stream(&user_messages).await {
+    debug!("调用LLM管理器生成响应流");
+    let mut stream = match llm_manager.generate_stream(&prompt).await {
         Ok(stream) => {
-            info!("成功创建Ollama响应流");
+            info!("成功创建LLM响应流");
             stream
         }
         Err(e) => {
-            error!("创建Ollama响应流失败: {}", e);
+            error!("创建LLM响应流失败: {}", e);
             return Err(format!("创建响应流失败: {}", e));
         }
     };

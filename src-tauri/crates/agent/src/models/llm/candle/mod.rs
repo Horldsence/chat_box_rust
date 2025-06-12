@@ -1,6 +1,10 @@
 #![cfg_attr(test, allow(unused_imports))]
 
 pub mod candle;
+pub mod provider;
+
+// 重新导出主要类型
+pub use provider::{CandleConfig, CandleProvider};
 
 use anyhow::Result;
 use log::{info, warn};
@@ -8,7 +12,6 @@ use ollama_rs::generation::chat::request;
 use std::io::Write;
 
 /// 测试 Qwen Candle 模型是否可用
-///
 /// 此函数会:
 /// 1. 初始化最小的 Qwen 0.5B 模型
 /// 2. 生成简短文本响应
@@ -24,7 +27,7 @@ pub fn test_candle_model() -> Result<()> {
     // 设置简单的测试参数
     let params = QwenInferenceParams {
         model: WhichModel::W0_5b, // 使用最小的模型进行测试
-        sample_len: 100,                // 限制生成的长度
+        sample_len: 100,          // 限制生成的长度
         ..Default::default()
     };
 
@@ -57,7 +60,7 @@ pub fn test_candle_model() -> Result<()> {
 /// 运行命令行测试工具
 ///
 /// 允许用户通过命令行指定参数并测试模型
-#[cfg(not(test))]  // 只在非测试环境下编译
+#[cfg(not(test))] // 只在非测试环境下编译
 pub fn run_cli_test() -> Result<()> {
     use candle::QwenCandleGenerator;
     use candle::QwenInferenceParams;
@@ -93,19 +96,20 @@ pub fn run_cli_test() -> Result<()> {
     Ok(())
 }
 
-#[cfg(test)]  // 测试环境下的替代实现
+#[cfg(test)] // 测试环境下的替代实现
 pub fn run_cli_test() -> Result<()> {
     // 提供一个不需要命令行参数的简单实现
     Ok(())
 }
 
-#[cfg(test)]    
+#[cfg(test)]
 mod tests {
     use super::*;
     use candle::QwenCandleGenerator;
     use candle::QwenInferenceParams;
     use candle::WhichModel;
     use candle_core::Device;
+    use log::info;
     use std::sync::Once;
 
     // 确保初始化代码只运行一次的静态变量
@@ -194,7 +198,7 @@ mod tests {
         let result = generator.generate_string(prompt, 10)?;
 
         assert!(!result.is_empty(), "生成的文本不应为空");
-        info!("生成文本: {}", result);
+        println!("生成文本: {}", result);
 
         Ok(())
     }
@@ -220,9 +224,10 @@ mod tests {
 
         let prompt = "1+1=";
         let tokens = generator.generate_tokens(prompt, 5)?;
+        println!("生成token: {:?}", tokens);
 
         assert!(!tokens.is_empty(), "生成的token不应为空");
-        info!("生成token数量: {}", tokens.len());
+        println!("生成token数量: {}", tokens.len());
 
         Ok(())
     }

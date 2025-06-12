@@ -7,10 +7,9 @@ extern crate accelerate_src;
 use anyhow::{Error as E, Result};
 use clap::Parser;
 
-
 use candle_transformers::models::qwen2::{Config as ConfigBase, ModelForCausalLM as ModelBase};
 use candle_transformers::models::qwen2_moe::{Config as ConfigMoe, Model as ModelMoe};
-// use candle_transformers::models::qwen3::{Config as Config3, ModelForCausalLM as Model3};
+use candle_transformers::models::qwen3::{Config as Config3, ModelForCausalLM as Model3};
 
 use candle_core::{DType, Device, Tensor};
 use candle_examples::token_output_stream::TokenOutputStream;
@@ -23,7 +22,7 @@ use tokenizers::Tokenizer;
 pub enum Model {
     Base(ModelBase),
     Moe(ModelMoe),
-    // Base3(Model3),
+    Base3(Model3),
 }
 
 impl Model {
@@ -31,7 +30,7 @@ impl Model {
         match self {
             Self::Moe(ref mut m) => m.forward(xs, s),
             Self::Base(ref mut m) => m.forward(xs, s),
-            // Self::Base3(ref mut m) => m.forward(xs, s),
+            Self::Base3(ref mut m) => m.forward(xs, s),
         }
     }
 }
@@ -137,7 +136,12 @@ impl TextGeneration {
     }
 
     // Modify TextGeneration to support streaming via callback
-    fn run_with_callback<F>(&mut self, prompt: &str, sample_len: usize, mut callback: F) -> Result<()>
+    fn run_with_callback<F>(
+        &mut self,
+        prompt: &str,
+        sample_len: usize,
+        mut callback: F,
+    ) -> Result<()>
     where
         F: FnMut(&str) -> Result<()>,
     {
@@ -207,7 +211,9 @@ impl TextGeneration {
     }
 }
 
-#[derive(Clone, Copy, Debug, clap::ValueEnum, PartialEq, Eq)]
+#[derive(
+    Clone, Copy, Debug, clap::ValueEnum, PartialEq, Eq, serde::Serialize, serde::Deserialize,
+)]
 pub enum WhichModel {
     #[value(name = "0.5b")]
     W0_5b,
@@ -432,10 +438,10 @@ impl QwenCandleGenerator {
                 let config: ConfigMoe = serde_json::from_slice(&std::fs::read(config_file)?)?;
                 Model::Moe(ModelMoe::new(&config, vb)?)
             }
-            // WhichModel::W3_0_6b | WhichModel::W3_1_7b | WhichModel::W3_4b | WhichModel::W3_8b => {
-            //     let config: Config3 = serde_json::from_slice(&std::fs::read(config_file)?)?;
-            //     Model::Base3(Model3::new(&config, vb)?)
-            // }
+            WhichModel::W3_0_6b | WhichModel::W3_1_7b | WhichModel::W3_4b | WhichModel::W3_8b => {
+                let config: Config3 = serde_json::from_slice(&std::fs::read(config_file)?)?;
+                Model::Base3(Model3::new(&config, vb)?)
+            }
             _ => {
                 let config: ConfigBase = serde_json::from_slice(&std::fs::read(config_file)?)?;
                 Model::Base(ModelBase::new(&config, vb)?)
@@ -468,7 +474,7 @@ impl QwenCandleGenerator {
             output.push_str(chunk);
             Ok(())
         })?;
-        
+
         Ok(output)
     }
     pub fn generate_tokens(&mut self, prompt: &str, sample_len: usize) -> Result<Vec<u32>> {
@@ -485,19 +491,24 @@ impl QwenCandleGenerator {
         );
 
         pipeline.tokenizer.clear();
-        let mut tokens = pipeline.tokenizer
+        let mut tokens = pipeline
+            .tokenizer
             .tokenizer()
             .encode(prompt, true)
             .map_err(E::msg)?
             .get_ids()
             .to_vec();
-        
+
         let initial_len = tokens.len();
-        let eos_token = pipeline.tokenizer.get_token("<|endoftext|>")
+        let eos_token = pipeline
+            .tokenizer
+            .get_token("<|endoftext|>")
             .ok_or_else(|| E::msg("cannot find the <|endoftext|> token"))?;
-        let eos_token2 = pipeline.tokenizer.get_token("<|im_end|>")
+        let eos_token2 = pipeline
+            .tokenizer
+            .get_token("<|im_end|>")
             .ok_or_else(|| E::msg("cannot find the <|im_end|> token"))?;
-        
+
         for index in 0..sample_len {
             let context_size = if index > 0 { 1 } else { tokens.len() };
             let start_pos = tokens.len().saturating_sub(context_size);
@@ -518,12 +529,12 @@ impl QwenCandleGenerator {
 
             let next_token = pipeline.logits_processor.sample(&logits)?;
             tokens.push(next_token);
-            
+
             if next_token == eos_token || next_token == eos_token2 {
                 break;
             }
         }
-        
+
         // Return only the newly generated tokens
         Ok(tokens[initial_len..].to_vec())
     }
@@ -553,7 +564,7 @@ impl QwenCandleGenerator {
 // impl QwenCandleGenerator {
 //     pub fn new(params: QwenInferenceParams) -> Result<Self> {
 //         let api = Api::new()?;
-        
+
 //         // Determine model ID
 //         let model_id = params.model_id.clone().unwrap_or_else(|| {
 //             let (version, size) = match params.which_model {
@@ -575,21 +586,21 @@ impl QwenCandleGenerator {
 //             };
 //             format!("Qwen/Qwen{version}-{size}")
 //         });
-        
+
 //         // Create repository
 //         let repo = api.repo(Repo::with_revision(
 //             model_id,
 //             RepoType::Model,
 //             params.revision.clone(),
 //         ));
-        
+
 //         // Get tokenizer
 //         let tokenizer_filename = match &params.tokenizer_file {
 //             Some(file) => file.clone(),
 //             None => repo.get("tokenizer.json")?,
 //         };
 //         let tokenizer = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
-        
+
 //         // Get model weights
 //         let filenames = match &params.weight_files {
 //             Some(files) => files.clone(),
@@ -606,18 +617,18 @@ impl QwenCandleGenerator {
 //                 }
 //             },
 //         };
-        
+
 //         // Get config file
 //         let config_file = match &params.config_file {
 //             Some(file) => std::fs::read(file)?,
 //             None => std::fs::read(repo.get("config.json")?)?,
 //         };
-        
+
 //         // Create variable builder
-//         let vb = unsafe { 
-//             VarBuilder::from_mmaped_safetensors(&filenames, params.dtype, &params.device)? 
+//         let vb = unsafe {
+//             VarBuilder::from_mmaped_safetensors(&filenames, params.dtype, &params.device)?
 //         };
-        
+
 //         // Create model
 //         let model = match params.which_model {
 //             WhichModel::MoeA27b => {
@@ -634,7 +645,7 @@ impl QwenCandleGenerator {
 //                 Model::Base(ModelBase::new(&config, vb)?)
 //             }
 //         };
-        
+
 //         // Create text generation pipeline
 //         let pipeline = TextGeneration::new(
 //             model,
@@ -646,22 +657,22 @@ impl QwenCandleGenerator {
 //             params.repeat_last_n,
 //             &params.device,
 //         );
-        
+
 //         Ok(Self { pipeline })
 //     }
-    
+
 //     // Generate text and collect into a string
 //     pub fn generate_string(&mut self, prompt: &str, sample_len: usize) -> Result<String> {
 //         let mut output = String::new();
-        
+
 //         .pipeline.run_with_callback(prompt, sample_len, |chunk| {
 //             output.push_str(chunk);
 //             Ok(())
 //         })?;
-        
+
 //         Ok(output)
 //     }
-    
+
 //     // Generate text with streaming via callback
 //     pub fn generate_streaming<F>(&mut self, prompt: &str, sample_len: usize, callback: F) -> Result<()>
 //     where
@@ -669,7 +680,7 @@ impl QwenCandleGenerator {
 //     {
 //         .pipeline.run_with_callback(prompt, sample_len, callback)
 //     }
-    
+
 //     // Generate tokens
 //     pub fn generate_tokens(&mut self, prompt: &str, sample_len: usize) -> Result<Vec<u32>> {
 //         .pipeline.tokenizer.clear();
@@ -679,13 +690,13 @@ impl QwenCandleGenerator {
 //             .map_err(E::msg)?
 //             .get_ids()
 //             .to_vec();
-        
+
 //         let initial_len = tokens.len();
 //         let eos_token = .pipeline.tokenizer.get_token("<|endoftext|>")
 //             .ok_or_else(|| E::msg("cannot find the <|endoftext|> token"))?;
 //         let eos_token2 = .pipeline.tokenizer.get_token("<|im_end|>")
 //             .ok_or_else(|| E::msg("cannot find the <|im_end|> token"))?;
-        
+
 //         for index in 0..sample_len {
 //             let context_size = if index > 0 { 1 } else { tokens.len() };
 //             let start_pos = tokens.len().saturating_sub(context_size);
@@ -706,12 +717,12 @@ impl QwenCandleGenerator {
 
 //             let next_token = .pipeline.logits_processor.sample(&logits)?;
 //             tokens.push(next_token);
-            
+
 //             if next_token == eos_token || next_token == eos_token2 {
 //                 break;
 //             }
 //         }
-        
+
 //         // Return only the newly generated tokens
 //         Ok(tokens[initial_len..].to_vec())
 //     }

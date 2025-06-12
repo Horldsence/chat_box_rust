@@ -1,10 +1,5 @@
-use log::{error, info};
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::path::PathBuf;
-use tauri::State;
-
-use crate::state::AppState;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DatabaseConfig {
@@ -50,7 +45,7 @@ pub struct AppBehaviorConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct AppConfig {
+pub struct InitConfig {
     pub config_path: PathBuf,
     pub ai_model: AiModelConfig,
     pub voice: VoiceConfig,
@@ -59,7 +54,7 @@ pub struct AppConfig {
     pub app_behavior: AppBehaviorConfig,
 }
 
-impl Default for AppConfig {
+impl Default for InitConfig {
     fn default() -> Self {
         Self {
             config_path: "config.yaml".into(),
@@ -99,7 +94,7 @@ impl Default for AppConfig {
     }
 }
 
-impl AppConfig {
+impl InitConfig {
     pub fn new(config_path: PathBuf) -> Self {
         Self {
             config_path,
@@ -107,45 +102,45 @@ impl AppConfig {
         }
     }
 
-    pub fn load_config(self) -> AppConfig {
+    pub fn load_config(self) -> InitConfig {
         // 尝试从配置文件加载配置
         match self.clone().get_config_file_path() {
             Some(config_path) => {
                 if config_path.exists() {
-                    match fs::read_to_string(&config_path) {
+                    match std::fs::read_to_string(&config_path) {
                         Ok(yaml_str) => match serde_yaml::from_str(&yaml_str) {
                             Ok(config) => {
-                                info!("配置已从 {:?} 加载", config_path);
+                                log::info!("配置已从 {:?} 加载", config_path);
                                 return config;
                             }
                             Err(e) => {
-                                error!("解析配置文件失败: {}", e);
+                                log::error!("解析配置文件失败: {}", e);
                             }
                         },
                         Err(e) => {
-                            error!("读取配置文件失败: {}", e);
+                            log::error!("读取配置文件失败: {}", e);
                         }
                     }
                 }
 
                 // 文件不存在，创建默认配置文件
-                let default_config = AppConfig::default();
+                let default_config = InitConfig::default();
                 self.save_config(&default_config, &config_path);
                 default_config
             }
             None => {
-                error!("无法确定配置文件路径");
-                AppConfig::default()
+                log::error!("无法确定配置文件路径");
+                InitConfig::default()
             }
         }
     }
 
-    pub fn save_config(&self, config: &AppConfig, path: &PathBuf) {
+    pub fn save_config(&self, config: &InitConfig, path: &PathBuf) {
         // 确保目录存在
         if let Some(parent) = path.parent() {
             if !parent.exists() {
-                if let Err(e) = fs::create_dir_all(parent) {
-                    error!("创建配置目录失败: {}", e);
+                if let Err(e) = std::fs::create_dir_all(parent) {
+                    log::error!("创建配置目录失败: {}", e);
                     return;
                 }
             }
@@ -153,43 +148,22 @@ impl AppConfig {
 
         // 写入配置文件
         match serde_yaml::to_string(config) {
-            Ok(yaml_str) => match fs::write(path, yaml_str) {
+            Ok(yaml_str) => match std::fs::write(path, yaml_str) {
                 Ok(_) => {
-                    info!("配置已保存到 {:?}", path);
+                    log::info!("配置已保存到 {:?}", path);
                 }
                 Err(e) => {
-                    error!("写入配置文件失败: {}", e);
+                    log::error!("写入配置文件失败: {}", e);
                 }
             },
             Err(e) => {
-                error!("序列化配置失败: {}", e);
+                log::error!("序列化配置失败: {}", e);
             }
         }
     }
 
     pub fn get_config_file_path(self) -> Option<PathBuf> {
-        let config_path = AppConfig::default().config_path.clone();
+        let config_path = self.config_path.clone();
         Some(config_path)
-    }
-}
-
-// 导出配置更改API用于前端调用
-#[tauri::command]
-pub fn get_app_config(state: State<'_, AppState>) -> Result<AppConfig, String> {
-    let binding = state.config.clone();
-    let config = binding.lock().expect("获取配置失败");
-    Ok(config.clone().load_config())
-}
-
-#[tauri::command]
-pub fn save_app_config(state: State<'_, AppState>, save_config: AppConfig) -> Result<(), String> {
-    let binding = state.config.clone();
-    let config = binding.lock().expect("获取配置失败");
-    match config.clone().get_config_file_path() {
-        Some(path) => {
-            config.save_config(&save_config, &path);
-            Ok(())
-        }
-        None => Err("无法确定配置文件路径".to_string()),
     }
 }

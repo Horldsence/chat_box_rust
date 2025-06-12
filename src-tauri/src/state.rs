@@ -1,37 +1,64 @@
 use crate::models::{Conversation, Message};
-use crate::services::agent::ollama::OllamaAgent;
 use crate::services::asr::vosk_python::VoskASR;
 use crate::services::database::ChatDatabase;
 use crate::utils::config::AppConfig;
+use agent::{LLMManager, LLMManagerConfig, OllamaConfig, ProviderConfig};
 use log::{error, info};
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 pub struct AppState {
     pub config: Arc<Mutex<AppConfig>>,
     pub conversations: Arc<Mutex<Vec<Conversation>>>,
     pub messages: Arc<Mutex<Vec<Message>>>,
-    pub ollama_agent: Arc<OllamaAgent>,
+    pub llm_manager: Arc<LLMManager>,
     pub vosk_asr: Arc<tokio::sync::Mutex<VoskASR>>,
     pub db: Arc<Mutex<Option<ChatDatabase>>>, // 添加数据库支持
 }
 
 #[allow(dead_code)]
 impl AppState {
-    pub fn new(
+    pub async fn new(
         config: AppConfig,
         conversations: Vec<Conversation>,
         messages: Vec<Message>,
-        ollama_agent: OllamaAgent,
         vosk_asr: VoskASR,
-    ) -> Self {
-        AppState {
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        // 创建 LLM 管理器配置
+        let mut providers = HashMap::new();
+
+        // 从应用配置中获取 Ollama 配置
+        let ollama_config = OllamaConfig {
+            host: config.ai_model.server_url.clone(),
+            port: config.ai_model.server_port,
+            default_model: config.ai_model.model_name.clone(),
+            default_temperature: Some(0.7),
+            default_max_tokens: Some(2048),
+            timeout_seconds: Some(30),
+            system_prompt: Some(config.ai_model.system_prompt.clone()),
+        };
+
+        providers.insert("ollama".to_string(), ProviderConfig::Ollama(ollama_config));
+
+        let llm_manager_config = LLMManagerConfig {
+            default_provider: "ollama".to_string(),
+            fallback_providers: vec![],
+            auto_fallback: true,
+            health_check_interval_seconds: 300,
+            providers,
+        };
+
+        // 创建 LLM 管理器
+        let llm_manager = LLMManager::new(llm_manager_config).await?;
+
+        Ok(AppState {
             config: Arc::new(Mutex::new(config)),
             conversations: Arc::new(Mutex::new(conversations)),
             messages: Arc::new(Mutex::new(messages)),
-            ollama_agent: Arc::new(ollama_agent),
+            llm_manager: Arc::new(llm_manager),
             vosk_asr: Arc::new(tokio::sync::Mutex::new(vosk_asr)),
             db: Arc::new(Mutex::new(None)), // 初始时数据库为None
-        }
+        })
     }
 
     // 初始化数据库

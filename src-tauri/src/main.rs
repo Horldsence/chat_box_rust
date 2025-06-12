@@ -7,10 +7,11 @@ mod services;
 mod state;
 mod utils;
 
+use agent::OllamaAgent;
 use chrono::Utc;
-use log::{error, info};
+use initialize::{initialize_app, InitConfig};
+use log::{error, info, warn};
 use models::{Conversation, Message};
-use services::agent::ollama::OllamaAgent;
 use services::asr::vosk_python::VoskASR;
 use state::AppState;
 use std::path::Path;
@@ -22,19 +23,29 @@ use utils::logger::init_logger; // 导入配置相关函数
 // 导入所有命令
 use commands::*;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
-            let app_state = match init_config(app.handle().clone()) {
-                Ok(state) => state,
-                Err(e) => {
-                    error!("初始化配置失败: {}", e);
-                    return Err(e.into());
-                }
-            };
-            app.manage(app_state);
+            let handle = app.handle().clone();
+
+            // Initialize app using the new initialization system
+            std::thread::spawn(move || {
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                rt.block_on(async move {
+                    match init_with_new_system(handle.clone()).await {
+                        Ok(app_state) => {
+                            handle.manage(app_state);
+                            info!("App state initialized successfully");
+                        }
+                        Err(e) => {
+                            error!("初始化失败: {}", e);
+                            panic!("Failed to initialize app: {}", e);
+                        }
+                    }
+                });
+            });
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -60,23 +71,48 @@ async fn main() {
         .expect("error while running tauri application");
 }
 
-fn init_config(handle: tauri::AppHandle) -> Result<AppState, std::io::Error> {
-    // TODO:添加资源检查
-    // check_resource(handle.path().resource_dir())
-    //     .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-    // 获取设置目录
+async fn init_with_new_system(
+    handle: tauri::AppHandle,
+) -> Result<AppState, Box<dyn std::error::Error>> {
+    // 获取配置文件路径
     let config_path = handle
         .path()
         .resolve("config.yaml", BaseDirectory::Resource)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-    // 加载配置
-    let config = AppConfig::new(config_path.clone()).load_config();
+        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
 
-    // 设置日志级别（从配置中读取）
+    // 使用新的初始化系统加载配置
+    let init_config = InitConfig::new(config_path.clone()).load_config();
+
+    // 设置日志级别
     init_logger();
-    info!("应用启动，配置加载完成");
+    info!("应用启动，开始新的初始化流程");
 
-    // 创建OllamaAgent实例（使用配置中的值）
+    // 使用新的初始化系统
+    match initialize_app(init_config.clone(), handle.clone()).await {
+        Ok(result) => {
+            if !result.success {
+                warn!("初始化完成，但有组件失败或被忽略");
+                for component in &result.failed_components {
+                    warn!("失败组件: {}", component);
+                }
+                for component in &result.ignored_components {
+                    warn!("忽略组件: {}", component);
+                }
+            }
+        }
+        Err(e) => {
+            error!("初始化系统执行失败: {}", e);
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                e.to_string(),
+            )));
+        }
+    }
+
+    // 转换为旧的 AppConfig 格式以保持兼容性
+    let config = convert_init_config_to_app_config(init_config);
+
+    // 创建 OllamaAgent 实例
     let ollama_agent = OllamaAgent::new(
         &config.ai_model.model_name,
         &config.ai_model.server_url,
@@ -86,53 +122,12 @@ fn init_config(handle: tauri::AppHandle) -> Result<AppState, std::io::Error> {
 
     info!("OllamaAgent initialized");
 
-    // 创建Vosk ASR实例（使用配置中的值）
-    let vosk_asr = if config.voice.enabled {
-        let model_path = if Path::new(&config.voice.model_path).is_absolute() {
-            config.voice.model_path.clone()
-        } else {
-            // 使用相对路径，根据应用资源目录解析
-            handle
-                .path()
-                .resolve(&config.voice.model_path, BaseDirectory::Resource)
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
-                .to_string_lossy()
-                .to_string()
-        };
-
-        match VoskASR::new(Some(&model_path)) {
-            Ok(asr) => asr,
-            Err(e) => {
-                error!("VoskASR initialization failed: {}", e);
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    e.to_string(),
-                ));
-            }
-        }
-    } else {
-        let vosk_model_path = handle
-            .path()
-            .resolve("model/vosk-model-small-cn-0.22", BaseDirectory::Resource)
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
-            .to_string_lossy()
-            .to_string();
-        info!("Vosk model path: {:?}", vosk_model_path);
-        match VoskASR::new(Some(&vosk_model_path)) {
-            Ok(asr) => asr,
-            Err(e) => {
-                error!("VoskASR initialization failed: {}", e);
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    e.to_string(),
-                ));
-            }
-        }
-    };
+    // 创建 Vosk ASR 实例
+    let vosk_asr = create_vosk_asr(&config, &handle)?;
 
     let default_conversation_id = 1;
 
-    // 初始化应用状态（使用配置中的值）
+    // 初始化应用状态
     let conversations = vec![Conversation {
         id: default_conversation_id,
         title: config.app_behavior.default_conversation_title.clone(),
@@ -148,38 +143,131 @@ fn init_config(handle: tauri::AppHandle) -> Result<AppState, std::io::Error> {
         conversation_id: default_conversation_id,
     }];
 
-    let state = AppState::new(
-        config.clone(),
-        conversations,
-        messages,
-        ollama_agent,
-        vosk_asr,
-    );
+    let state = AppState::new(config.clone(), conversations, messages, vosk_asr).await?;
 
     // 初始化数据库
     if config.database.enabled {
-        let db_path = if Path::new(&config.database.path).is_absolute() {
-            config.database.path.clone()
-        } else {
-            handle
-                .path()
-                .resolve(&config.database.path, BaseDirectory::Resource)
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
-                .to_string_lossy()
-                .to_string()
-        };
-        if let Some(parent) = Path::new(&db_path).parent() {
-            std::fs::create_dir_all(parent).expect("无法创建数据库目录");
-        }
-        if let Err(e) = state.init_database(&db_path) {
-            error!("数据库初始化失败: {}", e);
-        } else {
-            // 从数据库加载对话和消息
-            if let Err(e) = state.load_from_database() {
-                error!("从数据库加载数据失败: {}", e);
-            }
-        }
+        let db_path = resolve_database_path(&config, &handle)?;
+        initialize_database(&state, &db_path)?;
     }
 
     Ok(state)
+}
+
+fn convert_init_config_to_app_config(init_config: InitConfig) -> AppConfig {
+    AppConfig {
+        config_path: init_config.config_path,
+        ai_model: utils::config::AiModelConfig {
+            model_type: init_config.ai_model.model_type,
+            model_name: init_config.ai_model.model_name,
+            server_url: init_config.ai_model.server_url,
+            server_port: init_config.ai_model.server_port,
+            system_prompt: init_config.ai_model.system_prompt,
+            candle_model_id: init_config.ai_model.candle_model_id,
+            candle_revision: init_config.ai_model.candle_revision,
+            candle_use_flash_attn: init_config.ai_model.candle_use_flash_attn,
+        },
+        voice: utils::config::VoiceConfig {
+            enabled: init_config.voice.enabled,
+            model_path: init_config.voice.model_path,
+            timeout_seconds: init_config.voice.timeout_seconds,
+        },
+        ui: utils::config::UiConfig {
+            theme: init_config.ui.theme,
+            language: init_config.ui.language,
+        },
+        database: utils::config::DatabaseConfig {
+            enabled: init_config.database.enabled,
+            path: init_config.database.path,
+        },
+        app_behavior: utils::config::AppBehaviorConfig {
+            log_level: init_config.app_behavior.log_level,
+            default_conversation_title: init_config.app_behavior.default_conversation_title,
+            welcome_message: init_config.app_behavior.welcome_message,
+            message_chunk_buffer_size: init_config.app_behavior.message_chunk_buffer_size,
+            message_chunk_send_interval_ms: init_config.app_behavior.message_chunk_send_interval_ms,
+            show_error_dialogs: init_config.app_behavior.show_error_dialogs,
+            auto_retry_failed_init: init_config.app_behavior.auto_retry_failed_init,
+        },
+    }
+}
+
+fn create_vosk_asr(
+    config: &AppConfig,
+    handle: &tauri::AppHandle,
+) -> Result<VoskASR, Box<dyn std::error::Error>> {
+    let model_path = if config.voice.enabled {
+        if Path::new(&config.voice.model_path).is_absolute() {
+            config.voice.model_path.clone()
+        } else {
+            handle
+                .path()
+                .resolve(&config.voice.model_path, BaseDirectory::Resource)
+                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?
+                .to_string_lossy()
+                .to_string()
+        }
+    } else {
+        handle
+            .path()
+            .resolve("model/vosk-model-small-cn-0.22", BaseDirectory::Resource)
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?
+            .to_string_lossy()
+            .to_string()
+    };
+
+    info!("Vosk model path: {:?}", model_path);
+
+    VoskASR::new(Some(&model_path)).map_err(|e| {
+        error!("VoskASR initialization failed: {}", e);
+        Box::new(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            e.to_string(),
+        )) as Box<dyn std::error::Error>
+    })
+}
+
+fn resolve_database_path(
+    config: &AppConfig,
+    handle: &tauri::AppHandle,
+) -> Result<String, Box<dyn std::error::Error>> {
+    if Path::new(&config.database.path).is_absolute() {
+        Ok(config.database.path.clone())
+    } else {
+        Ok(handle
+            .path()
+            .resolve(&config.database.path, BaseDirectory::AppData)
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?
+            .to_string_lossy()
+            .to_string())
+    }
+}
+
+fn initialize_database(state: &AppState, db_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    // 确保数据库目录存在
+    if let Some(parent) = Path::new(db_path).parent() {
+        std::fs::create_dir_all(parent).map_err(|e| {
+            Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("无法创建数据库目录: {}", e),
+            )) as Box<dyn std::error::Error>
+        })?;
+    }
+
+    // 初始化数据库
+    if let Err(e) = state.init_database(db_path) {
+        error!("数据库初始化失败: {}", e);
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("数据库初始化失败: {}", e),
+        )));
+    }
+
+    // 从数据库加载数据
+    if let Err(e) = state.load_from_database() {
+        error!("从数据库加载数据失败: {}", e);
+        // 这里不返回错误，因为数据库可能是空的
+    }
+
+    Ok(())
 }

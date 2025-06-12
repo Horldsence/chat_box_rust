@@ -1,10 +1,9 @@
 [workspace]
-members = [
-  "crates/agent",
-]
+members = ["crates/agent", "crates/initialize"]
 
 [workspace.dependencies]
 agent = { path = "crates/agent" }
+initialize = { path = "crates/initialize" }
 
 [package]
 name = "chat_box"
@@ -70,3 +69,5 @@ tokenizers = "0.21.1"
 clap = { version = "4.5.39", features = ["derive", "suggestions"] }
 tracing-subscriber = "0.3.19"
 tracing-chrome = "0.7.2"
+agent = { path = "crates/agent" }
+initialize = { path = "crates/initialize" }
