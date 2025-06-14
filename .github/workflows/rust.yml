@@ -1,4 +1,4 @@
-name: 'publish'
+name: "publish"
 
 on:
   push:
@@ -15,17 +15,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest' # for Arm based macs (M1 and above).
-            args: '--target aarch64-apple-darwin'
-          - platform: 'macos-latest' # for Intel based macs.
-            args: '--target x86_64-apple-darwin'
-          - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
-            args: ''
-          - platform: 'windows-latest'
-            args: ''
-          - platform: 'ubuntu-22.04' # for RISC-V support
-            args: '--target riscv64gc-unknown-linux-gnu'
-            target: 'riscv64gc-unknown-linux-gnu'
+          - platform: "macos-latest" # for Arm based macs (M1 and above).
+            args: "--target aarch64-apple-darwin"
+          - platform: "macos-latest" # for Intel based macs.
+            args: "--target x86_64-apple-darwin"
+          - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
+            args: ""
+          - platform: "windows-latest"
+            args: ""
+          - platform: "ubuntu-22.04" # for RISC-V support
+            args: "--target riscv64gc-unknown-linux-gnu"
+            target: "riscv64gc-unknown-linux-gnu"
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -69,7 +69,7 @@ jobs:
         run: echo "Auto Release" > ${{ github.workspace }}-CHANGELOG.txt
 
       - name: install frontend dependencies
-        run: pnpm install # change this to npm, pnpm or bun depending on which one you use.
+        run: pnpm install --no-frozen-lockfile # allow updating the lockfile when package.json has changed
 
       - name: Install SQLite (Windows)
         if: matrix.platform == 'windows-latest'
@@ -94,8 +94,8 @@ jobs:
           PKG_CONFIG_SYSROOT_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu' || '' }}
         with:
           tagName: app-v__VERSION__-beta.${{ steps.buildnumber.outputs.build_number }} # 添加beta标签和构建号
-          releaseName: 'App v__VERSION__ Beta (${{ steps.buildnumber.outputs.build_number }})' # 标题包含Beta
-          releaseBody: '这是一个Beta版本发布。请下载对应平台的安装包进行爆炸。'
+          releaseName: "App v__VERSION__ Beta (${{ steps.buildnumber.outputs.build_number }})" # 标题包含Beta
+          releaseBody: "这是一个Beta版本发布。请下载对应平台的安装包进行爆炸。"
           releaseDraft: false
           prerelease: true # 设置为预发布版本
           args: ${{ matrix.args }}
