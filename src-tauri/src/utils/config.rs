@@ -2,9 +2,6 @@ use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
-use tauri::State;
-
-use crate::state::AppState;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DatabaseConfig {
@@ -64,8 +61,8 @@ impl Default for AppConfig {
         Self {
             config_path: "config.yaml".into(),
             ai_model: AiModelConfig {
-                model_type: "ollama".to_string(),
-                model_name: "qwen2.5:0.5b".to_string(),
+                model_type: "candle".to_string(),
+                model_name: "microsoft/DialoGPT-medium".to_string(),
                 server_url: "http://localhost".to_string(),
                 server_port: 11434,
                 system_prompt: "你是一个友好、乐于助人的AI助手，使用中文回答问题。".to_string(),
@@ -173,23 +170,8 @@ impl AppConfig {
     }
 }
 
-// 导出配置更改API用于前端调用
-#[tauri::command]
-pub fn get_app_config(state: State<'_, AppState>) -> Result<AppConfig, String> {
-    let binding = state.config.clone();
-    let config = binding.lock().expect("获取配置失败");
-    Ok(config.clone().load_config())
-}
-
-#[tauri::command]
-pub fn save_app_config(state: State<'_, AppState>, save_config: AppConfig) -> Result<(), String> {
-    let binding = state.config.clone();
-    let config = binding.lock().expect("获取配置失败");
-    match config.clone().get_config_file_path() {
-        Some(path) => {
-            config.save_config(&save_config, &path);
-            Ok(())
-        }
-        None => Err("无法确定配置文件路径".to_string()),
-    }
+// 内部配置管理方法
+pub fn load_app_config(config_path: PathBuf) -> AppConfig {
+    let default_config = AppConfig::new(config_path.clone());
+    default_config.load_config()
 }

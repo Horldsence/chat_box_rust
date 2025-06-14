@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Chat Box - 关于</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    Oxygen, Ubuntu, Cantarell, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #333;
+                overflow: hidden;
+                position: relative;
+            }
+
+            #particle-canvas {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 1;
+                pointer-events: none;
+            }
+
+            .about-container {
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(20px);
+                border-radius: 20px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                padding: 40px;
+                width: 500px;
+                max-width: 90vw;
+                text-align: center;
+                position: relative;
+                overflow: hidden;
+                z-index: 2;
+            }
+
+            .about-container::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, #667eea, #764ba2);
+            }
+
+            .close-btn {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #a0aec0;
+                transition: color 0.3s ease;
+                z-index: 10;
+            }
+
+            .close-btn:hover {
+                color: #667eea;
+            }
+
+            .logo {
+                width: 80px;
+                height: 80px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                border-radius: 50%;
+                margin: 0 auto 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2.5em;
+                color: white;
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            }
+
+            .logo:hover {
+                transform: scale(1.1) rotate(10deg);
+            }
+
+            .app-name {
+                font-size: 2.5em;
+                font-weight: 300;
+                color: #667eea;
+                margin-bottom: 10px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+            .app-version {
+                font-size: 1.1em;
+                color: #666;
+                margin-bottom: 20px;
+                font-weight: 500;
+            }
+
+            .app-description {
+                font-size: 1.1em;
+                color: #555;
+                line-height: 1.6;
+                margin-bottom: 30px;
+            }
+
+            .info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+                margin-bottom: 30px;
+                text-align: left;
+            }
+
+            .info-item {
+                background: rgba(102, 126, 234, 0.1);
+                padding: 15px;
+                border-radius: 10px;
+                border-left: 4px solid #667eea;
+            }
+
+            .info-label {
+                font-size: 0.9em;
+                color: #666;
+                font-weight: 500;
+                margin-bottom: 5px;
+            }
+
+            .info-value {
+                font-size: 1em;
+                color: #333;
+                font-weight: 600;
+            }
+
+            .features {
+                text-align: left;
+                margin-bottom: 30px;
+            }
+
+            .features h3 {
+                color: #667eea;
+                margin-bottom: 15px;
+                font-size: 1.2em;
+            }
+
+            .feature-list {
+                list-style: none;
+                padding: 0;
+            }
+
+            .feature-list li {
+                padding: 8px 0;
+                position: relative;
+                padding-left: 25px;
+                color: #555;
+            }
+
+            .feature-list li::before {
+                content: "✓";
+                position: absolute;
+                left: 0;
+                color: #48bb78;
+                font-weight: bold;
+            }
+
+            .action-buttons {
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                padding: 12px 24px;
+                border: none;
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .btn-primary {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+            }
+
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            }
+
+            .btn-secondary {
+                background: #f7fafc;
+                color: #667eea;
+                border: 2px solid #667eea;
+            }
+
+            .btn-secondary:hover {
+                background: #667eea;
+                color: white;
+                transform: translateY(-2px);
+            }
+
+            .btn-success {
+                background: #48bb78;
+                color: white;
+            }
+
+            .btn-success:hover {
+                background: #38a169;
+                transform: translateY(-2px);
+            }
+
+            .copyright {
+                margin-top: 20px;
+                font-size: 0.9em;
+                color: #888;
+                text-align: center;
+            }
+
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .about-container {
+                animation: fadeInUp 0.6s ease-out;
+            }
+
+            @media (max-width: 600px) {
+                .about-container {
+                    padding: 30px 20px;
+                }
+
+                .app-name {
+                    font-size: 2em;
+                }
+
+                .info-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .action-buttons {
+                    flex-direction: column;
+                }
+
+                .btn {
+                    width: 100%;
+                    justify-content: center;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="particle-canvas"></canvas>
+
+        <div class="about-container">
+            <button class="close-btn" id="close-btn">&times;</button>
+
+            <div class="logo">🤖</div>
+
+            <h1 class="app-name">Chat Box</h1>
+            <div class="app-version">版本 <span id="version">1.0.0</span></div>
+
+            <p class="app-description">
+                一个现代化的 AI 聊天助手应用，基于 Tauri 和 Rust 构建，
+                为您提供智能、高效的对话体验。
+            </p>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">构建日期</div>
+                    <div class="info-value" id="build-date">2024-01-01</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">开发者</div>
+                    <div class="info-value">Chat Box Team</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">框架</div>
+                    <div class="info-value">Tauri + Rust</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">许可证</div>
+                    <div class="info-value">MIT License</div>
+                </div>
+            </div>
+
+            <div class="features">
+                <h3>✨ 主要特性</h3>
+                <ul class="feature-list">
+                    <li>智能 AI 对话，支持多种模型</li>
+                    <li>现代化的用户界面设计</li>
+                    <li>跨平台支持（Windows、macOS、Linux）</li>
+                    <li>轻量级，高性能</li>
+                    <li>隐私保护，数据安全</li>
+                    <li>可自定义设置</li>
+                </ul>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-success" id="check-update-btn">
+                    🔄 检查更新
+                </button>
+                <button class="btn btn-primary" id="github-btn">
+                    📦 GitHub
+                </button>
+                <button class="btn btn-secondary" id="feedback-btn">
+                    💬 反馈
+                </button>
+            </div>
+
+            <div class="copyright">
+                © 2024 Chat Box Team. All rights reserved.
+            </div>
+        </div>
+
+        <script type="module" src="./about.ts"></script>
+    </body>
+</html>

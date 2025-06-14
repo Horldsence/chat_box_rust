@@ -1,13 +1,12 @@
 use super::models::llm::{
-    ChatMessage, ChatRequest, ChatResponse, LLMError, LLMManager, LLMManagerConfig, LLMProvider,
-    ModelInfo, StreamGenerator,
+    ChatMessage, ChatRequest, LLMManager, LLMManagerConfig, LLMProvider, ModelInfo,
 };
 use async_trait::async_trait;
-use log::{error, info, warn};
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
-use std::sync::Arc;
+
 use tokio_stream::Stream;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -268,7 +267,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_conversation_context() {
-        let mut context = ConversationContext {
+        let context = ConversationContext {
             conversation_id: "test_123".to_string(),
             messages: vec![],
             model: "llama2".to_string(),

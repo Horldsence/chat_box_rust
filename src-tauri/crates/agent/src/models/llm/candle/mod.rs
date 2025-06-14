@@ -7,9 +7,7 @@ pub mod provider;
 pub use provider::{CandleConfig, CandleProvider};
 
 use anyhow::Result;
-use log::{info, warn};
-use ollama_rs::generation::chat::request;
-use std::io::Write;
+use log::info;
 
 /// 测试 Qwen Candle 模型是否可用
 /// 此函数会:
@@ -20,7 +18,6 @@ pub fn test_candle_model() -> Result<()> {
     use candle::QwenCandleGenerator;
     use candle::QwenInferenceParams;
     use candle::WhichModel;
-    use candle_core::Device;
 
     info!("=== Candle LLM 可用性测试 ===");
 
@@ -108,43 +105,33 @@ mod tests {
     use candle::QwenCandleGenerator;
     use candle::QwenInferenceParams;
     use candle::WhichModel;
-    use candle_core::Device;
     use log::info;
-    use std::sync::Once;
-
-    // 确保初始化代码只运行一次的静态变量
-    static INIT: Once = Once::new();
-
+    use std::sync::{Mutex, OnceLock};
     // 共享生成器，避免重复初始化
-    static mut SHARED_GENERATOR: Option<QwenCandleGenerator> = None;
+    static SHARED_GENERATOR: OnceLock<Mutex<QwenCandleGenerator>> = OnceLock::new();
 
     /// 获取或初始化共享生成器
-    fn get_shared_generator() -> Result<&'static mut QwenCandleGenerator> {
-        unsafe {
-            INIT.call_once(|| {
-                let params = QwenInferenceParams {
-                    model: WhichModel::W0_5b,
-                    sample_len: 10,
-                    temperature: Some(0.0), // 确定性输出
-                    ..Default::default()
-                };
+    fn get_shared_generator() -> Result<&'static Mutex<QwenCandleGenerator>> {
+        SHARED_GENERATOR.get_or_init(|| {
+            let params = QwenInferenceParams {
+                model: WhichModel::W0_5b,
+                sample_len: 10,
+                temperature: Some(0.0), // 确定性输出
+                ..Default::default()
+            };
 
-                match QwenCandleGenerator::new(params) {
-                    Ok(generator) => {
-                        SHARED_GENERATOR = Some(generator);
-                        info!("模型初始化成功，可用于所有测试");
-                    }
-                    Err(e) => {
-                        panic!("模型初始化失败，无法继续测试: {:?}", e);
-                    }
+            match QwenCandleGenerator::new(params) {
+                Ok(generator) => {
+                    info!("模型初始化成功，可用于所有测试");
+                    Mutex::new(generator)
                 }
-            });
-
-            match &mut SHARED_GENERATOR {
-                Some(generator) => Ok(generator),
-                None => Err(anyhow::anyhow!("模型初始化失败，共享生成器不可用")),
+                Err(e) => {
+                    panic!("模型初始化失败，无法继续测试: {:?}", e);
+                }
             }
-        }
+        });
+
+        Ok(SHARED_GENERATOR.get().unwrap())
     }
 
     /// 主测试函数 - 按顺序运行所有测试
@@ -154,27 +141,36 @@ mod tests {
 
         // 1. 测试模型初始化
         info!("1. 测试模型初始化...");
-        let generator = get_shared_generator()?;
+        let generator_mutex = get_shared_generator()?;
         info!("✓ 模型初始化成功");
 
         // 2. 测试字符串生成
         info!("2. 测试字符串生成...");
         let prompt = "你好";
-        let result = generator.generate_string(prompt, 10)?;
+        let result = {
+            let mut generator = generator_mutex.lock().unwrap();
+            generator.generate_string(prompt, 10)?
+        };
         assert!(!result.is_empty(), "生成的文本不应为空");
         info!("✓ 字符串生成成功: {}", result);
 
         // 3. 测试流式生成
         info!("3. 测试流式生成...");
         let prompt = "介绍自己";
-        let output = generator.generate_string(prompt, 10)?;
+        let output = {
+            let mut generator = generator_mutex.lock().unwrap();
+            generator.generate_string(prompt, 10)?
+        };
         assert!(!output.is_empty(), "流式生成的文本不应为空");
         info!("✓ 流式生成成功: {}", output);
 
         // 4. 测试Token生成
         info!("4. 测试Token生成...");
         let prompt = "1+1=";
-        let tokens = generator.generate_tokens(prompt, 5)?;
+        let tokens = {
+            let mut generator = generator_mutex.lock().unwrap();
+            generator.generate_tokens(prompt, 5)?
+        };
         assert!(!tokens.is_empty(), "生成的token不应为空");
         info!("✓ Token生成成功: {:?}", tokens);
 
@@ -192,10 +188,13 @@ mod tests {
 
     #[test]
     fn test_string_generation() -> Result<()> {
-        let generator = get_shared_generator()?;
+        let generator_mutex = get_shared_generator()?;
 
         let prompt = "你好";
-        let result = generator.generate_string(prompt, 10)?;
+        let result = {
+            let mut generator = generator_mutex.lock().unwrap();
+            generator.generate_string(prompt, 10)?
+        };
 
         assert!(!result.is_empty(), "生成的文本不应为空");
         println!("生成文本: {}", result);
@@ -205,12 +204,13 @@ mod tests {
 
     #[test]
     fn test_streaming_generation() -> Result<()> {
-        let generator = get_shared_generator()?;
+        let generator_mutex = get_shared_generator()?;
 
         let prompt = "介绍自己";
-        let mut output = String::new();
-
-        output = generator.generate_string(prompt, 10)?;
+        let output = {
+            let mut generator = generator_mutex.lock().unwrap();
+            generator.generate_string(prompt, 10)?
+        };
 
         assert!(!output.is_empty(), "流式生成的文本不应为空");
         info!("流式生成文本: {}", output);
@@ -220,10 +220,13 @@ mod tests {
 
     #[test]
     fn test_token_generation() -> Result<()> {
-        let generator = get_shared_generator()?;
+        let generator_mutex = get_shared_generator()?;
 
         let prompt = "1+1=";
-        let tokens = generator.generate_tokens(prompt, 5)?;
+        let tokens = {
+            let mut generator = generator_mutex.lock().unwrap();
+            generator.generate_tokens(prompt, 5)?
+        };
         println!("生成token: {:?}", tokens);
 
         assert!(!tokens.is_empty(), "生成的token不应为空");

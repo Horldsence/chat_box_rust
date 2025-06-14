@@ -1,12 +1,12 @@
 config_path: config.yaml
 ai_model:
-  model_type: "ollama" # "ollama" or "candle"
+  model_type: "candle" # "ollama" or "candle"
   model_name: "qwen2.5:0.5b"
   server_url: "http://localhost"
   server_port: 11434
   system_prompt: "你是一个友好、乐于助人的AI助手，使用中文回答问题。"
   # Candle specific settings (used when model_type is "candle")
-  candle_model_id: "microsoft/DialoGPT-medium"
+  # candle_model_id: "microsoft/DialoGPT-medium"
   candle_revision: "main"
   candle_use_flash_attn: false
 voice:

@@ -12,9 +12,19 @@
   "app": {
     "windows": [
       {
-        "title": "chat_box",
-        "width": 800,
-        "height": 600
+        "label": "main",
+        "title": "Chat Box - 智能聊天助手",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "url": "index.html",
+        "resizable": true,
+        "maximizable": true,
+        "minimizable": true,
+        "closable": true,
+        "center": true,
+        "visible": true
       }
     ],
     "security": {

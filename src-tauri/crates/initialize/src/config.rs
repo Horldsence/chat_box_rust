@@ -59,7 +59,7 @@ impl Default for InitConfig {
         Self {
             config_path: "config.yaml".into(),
             ai_model: AiModelConfig {
-                model_type: "ollama".to_string(),
+                model_type: "candle".to_string(),
                 model_name: "qwen2.5:0.5b".to_string(),
                 server_url: "http://localhost".to_string(),
                 server_port: 11434,
