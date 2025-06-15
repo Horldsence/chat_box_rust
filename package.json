@@ -1,36 +1,73 @@
 {
-  "name": "chat_box",
-  "private": true,
+  "name": "chat-box-svelte",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
+  "description": "A modern AI chat application built with SvelteKit and Rust/Tauri",
+  "author": "Chat Box Team",
+  "license": "MIT",
+  "keywords": [
+    "chat",
+    "ai",
+    "svelte",
+    "sveltekit",
+    "tauri",
+    "rust",
+    "desktop-app"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "dev": "vite dev",
+    "build": "vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "lint": "prettier --check . && eslint .",
+    "format": "prettier --write .",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "tauri:build:debug": "tauri build --debug",
+    "test": "vitest",
+    "test:unit": "vitest run",
+    "test:watch": "vitest --watch",
+    "clean": "rimraf build .svelte-kit dist"
   },
   "dependencies": {
-    "@element-plus/icons-vue": "^2.3.1",
-    "@tauri-apps/api": "^2.5.0",
-    "@tauri-apps/plugin-dialog": "~2",
-    "@tauri-apps/plugin-opener": "^2.2.6",
-    "@varlet/touch-emulator": "^3.10.6",
-    "@varlet/ui": "^3.10.6",
-    "@vueuse/core": "^13.2.0",
-    "element-plus": "^2.9.10",
-    "highlight.js": "^11.11.1",
-    "pinia": "^3.0.3",
-    "pnpm": "^10.11.0",
-    "run": "^1.5.0",
-    "vue": "^3.5.14",
-    "vue-markdown": "^2.2.4",
-    "vue-markdown-render": "^2.2.1"
+    "@tauri-apps/api": "^2.0.2",
+    "@tauri-apps/plugin-opener": "^2.0.0"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.5.0",
-    "@vitejs/plugin-vue": "^5.2.4",
-    "typescript": "~5.8.3",
-    "vite": "^6.3.5",
-    "vue-tsc": "^2.2.10"
-  }
+    "@sveltejs/adapter-static": "^3.0.6",
+    "@sveltejs/kit": "^2.9.0",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@tauri-apps/cli": "^2.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "@vitest/ui": "^2.1.5",
+    "eslint": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-svelte": "^2.46.0",
+    "jsdom": "^25.0.1",
+    "prettier": "^3.3.3",
+    "prettier-plugin-svelte": "^3.2.8",
+    "rimraf": "^6.0.1",
+    "simple-svelte-autocomplete": "^2.5.2",
+    "svelte": "^5.0.11",
+    "svelte-check": "^4.0.8",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.3",
+    "vitest": "^2.1.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/chat-box-svelte.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/chat-box-svelte/issues"
+  },
+  "homepage": "https://github.com/yourusername/chat-box-svelte#readme"
 }

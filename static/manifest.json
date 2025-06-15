@@ -1,0 +1,45 @@
+{
+  "name": "Chat Box - AI 聊天助手",
+  "short_name": "Chat Box",
+  "description": "基于 SvelteKit 和 Rust/Tauri 构建的现代化 AI 聊天应用",
+  "version": "0.1.0",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#667eea",
+  "background_color": "#667eea",
+  "categories": ["productivity", "utilities", "social"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "新建对话",
+      "short_name": "新对话",
+      "description": "开始一个新的AI对话",
+      "url": "/?action=new-chat",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  }
+}

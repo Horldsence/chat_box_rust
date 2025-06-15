@@ -60,6 +60,7 @@ num-traits = "0.2.19"
 rusqlite = { version = "0.36.0", features = ["bundled"] }
 scopeguard = "1.2.0"
 tauri-plugin-dialog = "2.2.2"
+uuid = { version = "1.0", features = ["v4"] }
 candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
 candle-transformers = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
 candle-nn = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
