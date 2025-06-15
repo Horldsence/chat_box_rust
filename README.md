@@ -16,6 +16,8 @@
 
 </div>
 
+![](/image/present.png)
+
 ## 📖 项目简介
 
 Chat Box 是一款基于 SvelteKit 和 Rust/Tauri 构建的现代化 AI 聊天桌面应用。它提供了简洁美观的用户界面，强大的性能，以及丰富的功能特性，让您能够轻松地与 AI 助手进行对话。
