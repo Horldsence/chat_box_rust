@@ -1,6 +1,5 @@
-import { writable, derived, type Writable } from "svelte/store";
+import { writable, derived } from "svelte/store";
 import { browser } from "$app/environment";
-import type { Theme } from "$lib/types";
 
 // 主题类型定义
 export type ThemeMode = "light" | "dark" | "auto";
@@ -22,6 +21,22 @@ function createThemeStore() {
 
   const { subscribe, set, update } = writable<ThemeState>(initialState);
 
+  // 应用主题到DOM
+  function applyTheme(theme: "light" | "dark") {
+    if (!browser) return;
+
+    // 设置 HTML 类
+    document.documentElement.classList.remove("light", "dark");
+    document.documentElement.classList.add(theme);
+
+    // 设置 body 类
+    if (theme === "dark") {
+      document.body.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark");
+    }
+  }
+
   return {
     subscribe,
 
@@ -40,8 +55,10 @@ function createThemeStore() {
         // 保存到 localStorage
         if (browser) {
           localStorage.setItem("theme-mode", mode);
-          document.documentElement.setAttribute("data-theme", newState.current);
         }
+
+        // 应用主题
+        applyTheme(newState.current);
 
         return newState;
       });
@@ -51,27 +68,33 @@ function createThemeStore() {
     toggle: () => {
       update((state) => {
         let newMode: ThemeMode;
+        let newCurrent: "light" | "dark";
 
         if (state.mode === "auto") {
           // 从自动模式切换到与系统偏好相反的主题
           newMode = state.systemPreference === "light" ? "dark" : "light";
+          newCurrent = newMode;
         } else if (state.mode === "light") {
           newMode = "dark";
+          newCurrent = "dark";
         } else {
           newMode = "light";
+          newCurrent = "light";
         }
 
         const newState = {
           ...state,
           mode: newMode,
-          current: newMode,
+          current: newCurrent,
         };
 
         // 保存到 localStorage
         if (browser) {
           localStorage.setItem("theme-mode", newMode);
-          document.documentElement.setAttribute("data-theme", newState.current);
         }
+
+        // 应用主题
+        applyTheme(newCurrent);
 
         return newState;
       });
@@ -85,10 +108,7 @@ function createThemeStore() {
         // 如果当前是自动模式，更新当前主题
         if (state.mode === "auto") {
           newState.current = preference;
-
-          if (browser) {
-            document.documentElement.setAttribute("data-theme", preference);
-          }
+          applyTheme(preference);
         }
 
         return newState;
@@ -108,7 +128,7 @@ function createThemeStore() {
       const mode = savedMode || "auto";
 
       // 计算当前主题
-      const current = mode === "auto" ? systemPreference : mode;
+      const current = mode === "auto" ? systemPreference : (mode as "light" | "dark");
 
       // 更新状态
       set({
@@ -118,7 +138,7 @@ function createThemeStore() {
       });
 
       // 应用主题到文档
-      document.documentElement.setAttribute("data-theme", current);
+      applyTheme(current);
 
       // 监听系统主题变化
       const handleSystemThemeChange = (e: MediaQueryListEvent) => {
@@ -129,7 +149,7 @@ function createThemeStore() {
           // 如果当前是自动模式，更新当前主题
           if (state.mode === "auto") {
             newState.current = newSystemPreference;
-            document.documentElement.setAttribute("data-theme", newSystemPreference);
+            applyTheme(newSystemPreference);
           }
 
           return newState;
@@ -162,9 +182,7 @@ function createThemeStore() {
         systemPreference,
       });
 
-      if (browser) {
-        document.documentElement.setAttribute("data-theme", systemPreference);
-      }
+      applyTheme(systemPreference);
     },
   };
 }

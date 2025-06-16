@@ -15,6 +15,12 @@ export interface Message {
   timestamp: number;
 }
 
+export interface MessageChunk {
+  conversation_id: number;
+  content: string;
+  is_complete: boolean;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -39,6 +45,43 @@ export interface AppSettings {
   autoSave: boolean;
   soundEnabled: boolean;
   notificationsEnabled: boolean;
+}
+
+export interface AppConfig {
+  ui: {
+    sidebar_width: string;
+    theme: string;
+    language: string;
+  };
+  app_behavior: {
+    message_chunk_buffer_size: number;
+    message_chunk_send_interval_ms: number;
+  };
+  llm: {
+    model_path: string;
+    temperature: number;
+    max_tokens: number;
+  };
+  voice: {
+    enabled: boolean;
+    model_path: string;
+    language: string;
+  };
+}
+
+export interface SystemInfo {
+  version: string;
+  platform: string;
+  arch: string;
+  memory: number;
+  disk_space: number;
+}
+
+export interface HealthStatus {
+  database: boolean;
+  llm: boolean;
+  voice: boolean;
+  overall: boolean;
 }
 
 export interface ChatSettings {
@@ -328,6 +371,7 @@ export interface SystemEvent {
 }
 
 // ===== API 相关 =====
+// ===== Tauri相关 =====
 
 export interface TauriCommand {
   command: string;
@@ -339,6 +383,29 @@ export interface TauriEventPayload<T = any> {
   event: string;
   payload: T;
   windowLabel?: string;
+}
+
+// ===== 对话框选项 =====
+
+export interface DialogOptions {
+  title?: string;
+  message?: string;
+  ok_label?: string;
+  cancel_label?: string;
+}
+
+export interface FileDialogOptions {
+  title?: string;
+  default_path?: string;
+  filters?: Array<{
+    name: string;
+    extensions: string[];
+  }>;
+}
+
+export interface FolderDialogOptions {
+  title?: string;
+  default_path?: string;
 }
 
 // ===== 工具函数类型 =====

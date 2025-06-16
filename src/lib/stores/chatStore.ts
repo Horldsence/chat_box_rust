@@ -1,6 +1,7 @@
 import { writable, derived } from "svelte/store";
 import { invoke } from "@tauri-apps/api/core";
-import type { Conversation, Message } from "$lib/types";
+import { listen } from "@tauri-apps/api/event";
+import type { Conversation, Message, MessageChunk } from "$lib/types";
 
 // ===== Store State Interface =====
 
@@ -13,6 +14,7 @@ interface ChatStoreState {
   error: string | null;
   searchResults: Message[];
   searchQuery: string;
+  isConnected: boolean;
 }
 
 // ===== Initial State =====
@@ -26,6 +28,7 @@ const initialState: ChatStoreState = {
   error: null,
   searchResults: [],
   searchQuery: "",
+  isConnected: false,
 };
 
 // ===== Create Chat Store =====
@@ -42,16 +45,23 @@ function createChatStore() {
       try {
         update((state) => ({ ...state, isLoading: true, error: null }));
 
+        // 设置消息块监听器
+        await this.setupMessageListeners();
+
+        // 检查连接状态
+        await this.checkConnection();
+
         // 加载对话列表
         await this.loadConversations();
 
-        update((state) => ({ ...state, isLoading: false }));
+        update((state) => ({ ...state, isLoading: false, isConnected: true }));
         console.log("Chat store initialized successfully");
       } catch (error) {
         console.error("Failed to initialize chat store:", error);
         update((state) => ({
           ...state,
           isLoading: false,
+          isConnected: false,
           error: `初始化失败: ${error instanceof Error ? error.message : String(error)}`,
         }));
       }
@@ -59,6 +69,83 @@ function createChatStore() {
 
     async destroy() {
       set(initialState);
+    },
+
+    // ===== 连接检查 =====
+
+    async checkConnection() {
+      try {
+        await invoke("ping");
+        update((state) => ({ ...state, isConnected: true, error: null }));
+        return true;
+      } catch (error) {
+        console.error("Connection check failed:", error);
+        update((state) => ({
+          ...state,
+          isConnected: false,
+          error: "与后端连接失败",
+        }));
+        return false;
+      }
+    },
+
+    // ===== 消息监听器设置 =====
+
+    async setupMessageListeners() {
+      try {
+        await listen<MessageChunk>("message_chunk", (event) => {
+          const { conversation_id, content, is_complete } = event.payload;
+
+          update((state) => {
+            const newState = { ...state };
+
+            if (!is_complete && content) {
+              // 查找当前对话的最后一条AI消息
+              const conversationMessages = newState.messages.filter(
+                (m) => m.conversation_id === conversation_id
+              );
+              const lastBotMessage = conversationMessages
+                .filter((m) => m.sender === "bot")
+                .sort((a, b) => b.timestamp - a.timestamp)[0];
+
+              if (lastBotMessage) {
+                // 更新消息内容
+                const messageIndex = newState.messages.findIndex((m) => m.id === lastBotMessage.id);
+                if (messageIndex !== -1) {
+                  newState.messages[messageIndex] = {
+                    ...lastBotMessage,
+                    content: lastBotMessage.content + content,
+                  };
+                }
+              }
+            }
+
+            if (is_complete) {
+              // 消息完成，停止加载状态
+              newState.isTyping = false;
+              newState.isLoading = false;
+
+              // 更新对话时间戳
+              const conversationIndex = newState.conversations.findIndex(
+                (c) => c.id === conversation_id
+              );
+              if (conversationIndex !== -1) {
+                newState.conversations[conversationIndex] = {
+                  ...newState.conversations[conversationIndex],
+                  timestamp: Date.now(),
+                };
+              }
+            }
+
+            return newState;
+          });
+        });
+
+        console.log("Message listeners setup successfully");
+      } catch (error) {
+        console.error("Failed to setup message listeners:", error);
+        throw error;
+      }
     },
 
     // ===== 对话管理 =====
@@ -79,6 +166,7 @@ function createChatStore() {
         }));
 
         console.log("Loaded conversations:", sortedConversations.length);
+        return sortedConversations;
       } catch (error) {
         console.error("Failed to load conversations:", error);
         update((state) => ({
@@ -86,6 +174,7 @@ function createChatStore() {
           isLoading: false,
           error: `加载对话失败: ${error instanceof Error ? error.message : String(error)}`,
         }));
+        throw error;
       }
     },
 
@@ -93,7 +182,9 @@ function createChatStore() {
       try {
         update((state) => ({ ...state, isLoading: true, error: null }));
 
-        const newConversation: Conversation = await invoke("create_conversation", { title });
+        const newConversation: Conversation = await invoke("create_conversation", {
+          title,
+        });
 
         update((state) => ({
           ...state,
@@ -135,6 +226,7 @@ function createChatStore() {
         }));
 
         console.log("Selected conversation:", conversation);
+        return conversation;
       } catch (error) {
         console.error("Failed to select conversation:", error);
         update((state) => ({
@@ -142,6 +234,7 @@ function createChatStore() {
           isLoading: false,
           error: `选择对话失败: ${error instanceof Error ? error.message : String(error)}`,
         }));
+        throw error;
       }
     },
 
@@ -149,7 +242,9 @@ function createChatStore() {
       try {
         update((state) => ({ ...state, isLoading: true, error: null }));
 
-        await invoke("delete_conversation", { conversation_id: conversationId });
+        await invoke("delete_conversation", {
+          conversation_id: conversationId,
+        });
 
         update((state) => {
           const filteredConversations = state.conversations.filter((c) => c.id !== conversationId);
@@ -172,6 +267,7 @@ function createChatStore() {
           isLoading: false,
           error: `删除对话失败: ${error instanceof Error ? error.message : String(error)}`,
         }));
+        throw error;
       }
     },
 
@@ -192,12 +288,14 @@ function createChatStore() {
         }));
 
         console.log("Loaded messages for conversation", conversationId, ":", sortedMessages.length);
+        return sortedMessages;
       } catch (error) {
         console.error("Failed to load messages:", error);
         update((state) => ({
           ...state,
           error: `加载消息失败: ${error instanceof Error ? error.message : String(error)}`,
         }));
+        throw error;
       }
     },
 
@@ -208,22 +306,31 @@ function createChatStore() {
       }
 
       try {
-        update((state) => ({ ...state, isLoading: true, isTyping: true, error: null }));
+        update((state) => ({ ...state, isLoading: true, isTyping: false, error: null }));
 
+        // 发送用户消息
         const userMessage: Message = await invoke("send_user_message", {
           content,
           conversation_id: state.currentConversation!.id,
         });
 
         // 添加用户消息到界面
-        this.addMessage(userMessage);
+        update((state) => ({
+          ...state,
+          messages: [...state.messages, userMessage],
+          isTyping: true, // 开始AI响应
+        }));
+
+        // 生成AI响应
+        await invoke("generate_ai_response", {
+          user_message_content: content,
+          conversation_id: state.currentConversation!.id,
+        });
 
         // 更新对话的最后消息
         this.updateConversationLastMessage(state.currentConversation!.id, content);
 
-        // TODO: 这里可以添加AI响应逻辑
-
-        update((state) => ({ ...state, isLoading: false, isTyping: false }));
+        update((state) => ({ ...state, isLoading: false }));
 
         console.log("Sent message:", userMessage);
         return userMessage;
@@ -255,9 +362,10 @@ function createChatStore() {
 
     getCurrentState(): ChatStoreState {
       let currentState: ChatStoreState = initialState;
-      subscribe((state) => {
+      const unsubscribe = subscribe((state) => {
         currentState = state;
-      })();
+      });
+      unsubscribe();
       return currentState;
     },
 
@@ -312,6 +420,7 @@ function createChatStore() {
         }));
 
         console.log("Search results:", results.length);
+        return results;
       } catch (error) {
         console.error("Search failed:", error);
         update((state) => ({
@@ -319,6 +428,7 @@ function createChatStore() {
           isLoading: false,
           error: `搜索失败: ${error instanceof Error ? error.message : String(error)}`,
         }));
+        throw error;
       }
     },
 
@@ -342,7 +452,7 @@ function createChatStore() {
     getStats() {
       const state = this.getCurrentState();
       const userMessages = state.messages.filter((m) => m.sender === "user");
-      const assistantMessages = state.messages.filter((m) => m.sender === "assistant");
+      const assistantMessages = state.messages.filter((m) => m.sender === "bot");
 
       return {
         totalConversations: state.conversations.length,
@@ -354,6 +464,61 @@ function createChatStore() {
             ? Math.round(state.messages.length / state.conversations.length)
             : 0,
       };
+    },
+
+    // ===== 系统功能 =====
+
+    async getSystemInfo() {
+      try {
+        return await invoke("get_system_info");
+      } catch (error) {
+        console.error("Failed to get system info:", error);
+        throw error;
+      }
+    },
+
+    async getHealthStatus() {
+      try {
+        return await invoke("get_health_status");
+      } catch (error) {
+        console.error("Failed to get health status:", error);
+        throw error;
+      }
+    },
+
+    async showNotification(title: string, message: string) {
+      try {
+        await invoke("show_notification", { title, message });
+      } catch (error) {
+        console.error("Failed to show notification:", error);
+        throw error;
+      }
+    },
+
+    // ===== 日志功能 =====
+
+    async logError(message: string, details?: string) {
+      try {
+        await invoke("log_error", { message, details });
+      } catch (error) {
+        console.error("Failed to log error:", error);
+      }
+    },
+
+    async logWarning(message: string, details?: string) {
+      try {
+        await invoke("log_warning", { message, details });
+      } catch (error) {
+        console.error("Failed to log warning:", error);
+      }
+    },
+
+    async logInfo(message: string, details?: string) {
+      try {
+        await invoke("log_info", { message, details });
+      } catch (error) {
+        console.error("Failed to log info:", error);
+      }
     },
   };
 }
@@ -371,6 +536,7 @@ export const isLoading = derived(chatStore, ($store) => $store.isLoading);
 export const isTyping = derived(chatStore, ($store) => $store.isTyping);
 export const chatError = derived(chatStore, ($store) => $store.error);
 export const searchResults = derived(chatStore, ($store) => $store.searchResults);
+export const isConnected = derived(chatStore, ($store) => $store.isConnected);
 export const hasActiveConversation = derived(
   chatStore,
   ($store) => $store.currentConversation !== null
