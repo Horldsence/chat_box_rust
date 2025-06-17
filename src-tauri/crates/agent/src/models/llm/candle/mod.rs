@@ -4,6 +4,7 @@ pub mod candle;
 pub mod provider;
 
 // 重新导出主要类型
+pub use candle::{QwenCandleGenerator, QwenInferenceParams, WhichModel};
 pub use provider::{CandleConfig, CandleProvider};
 
 use anyhow::Result;

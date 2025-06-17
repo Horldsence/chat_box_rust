@@ -64,7 +64,7 @@ impl Default for InitConfig {
                 server_url: "http://localhost".to_string(),
                 server_port: 11434,
                 system_prompt: "你是一个友好、乐于助人的AI助手，使用中文回答问题。".to_string(),
-                candle_model_id: Some("microsoft/DialoGPT-medium".to_string()),
+                candle_model_id: Some("Qwen/Qwen2.5-0.5B".to_string()),
                 candle_revision: Some("main".to_string()),
                 candle_use_flash_attn: false,
             },

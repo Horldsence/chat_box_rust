@@ -1,8 +1,10 @@
 use super::{
-    candle::{CandleConfig, CandleProvider},
     ollama::{OllamaConfig, OllamaProvider},
     ChatRequest, ChatResponse, LLMError, LLMProvider, ModelInfo,
 };
+
+#[cfg(feature = "candle")]
+use super::candle::{CandleConfig, CandleProvider};
 use async_trait::async_trait;
 use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
@@ -25,6 +27,7 @@ pub struct LLMManagerConfig {
 #[serde(tag = "type")]
 pub enum ProviderConfig {
     Ollama(OllamaConfig),
+    #[cfg(feature = "candle")]
     Candle(CandleConfig),
 }
 
@@ -39,6 +42,7 @@ impl Default for LLMManagerConfig {
         );
 
         // 默认 Candle 配置
+        #[cfg(feature = "candle")]
         providers.insert(
             "candle".to_string(),
             ProviderConfig::Candle(CandleConfig::default()),
@@ -46,7 +50,10 @@ impl Default for LLMManagerConfig {
 
         Self {
             default_provider: "ollama".to_string(),
+            #[cfg(feature = "candle")]
             fallback_providers: vec!["candle".to_string()],
+            #[cfg(not(feature = "candle"))]
+            fallback_providers: vec![],
             auto_fallback: true,
             health_check_interval_seconds: 300, // 5分钟
             providers,
@@ -151,6 +158,7 @@ impl LLMManager {
                 let provider = OllamaProvider::new(ollama_config.clone());
                 Ok(Arc::new(provider))
             }
+            #[cfg(feature = "candle")]
             ProviderConfig::Candle(candle_config) => {
                 let provider = CandleProvider::new(candle_config.clone())?;
                 Ok(Arc::new(provider))

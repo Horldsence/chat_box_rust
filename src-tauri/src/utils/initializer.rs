@@ -38,16 +38,6 @@ pub async fn init_app_state(
     // 转换为旧的 AppConfig 格式以保持兼容性
     let config = convert_init_config_to_app_config(init_config);
 
-    // 创建 OllamaAgent 实例
-    let _ollama_agent = OllamaAgent::new(
-        &config.ai_model.model_name,
-        &config.ai_model.server_url,
-        &config.ai_model.server_port,
-    )
-    .with_system_prompt(&config.ai_model.system_prompt);
-
-    info!("OllamaAgent initialized");
-
     // 创建 Vosk ASR 实例
     let vosk_asr = create_vosk_asr(&config, &handle)?;
 

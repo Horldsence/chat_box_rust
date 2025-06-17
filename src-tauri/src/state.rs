@@ -2,9 +2,12 @@ use crate::models::{Conversation, Message};
 use crate::services::asr::vosk_python::VoskASR;
 use crate::services::database::ChatDatabase;
 use crate::utils::config::AppConfig;
+#[cfg(feature = "candle")]
+use agent::models::llm::{CandleConfig, CandleProvider, WhichModel};
 use agent::{LLMManager, LLMManagerConfig, OllamaConfig, ProviderConfig};
 use log::{error, info};
 use std::collections::HashMap;
+
 use std::sync::{Arc, Mutex};
 
 pub struct AppState {
@@ -27,29 +30,60 @@ impl AppState {
         // 创建 LLM 管理器配置
         let mut providers = HashMap::new();
 
-        // 从应用配置中获取 Ollama 配置
-        let ollama_config = OllamaConfig {
-            host: config.ai_model.server_url.clone(),
-            port: config.ai_model.server_port,
-            default_model: config.ai_model.model_name.clone(),
-            default_temperature: Some(0.7),
-            default_max_tokens: Some(2048),
-            timeout_seconds: Some(30),
-            system_prompt: Some(config.ai_model.system_prompt.clone()),
+        let llm_manager = if config.ai_model.model_type == "candle" {
+            #[cfg(feature = "candle")]
+            {
+                let candle_config = CandleConfig {
+                    default_model: WhichModel::W0_5b, // 使用默认的小模型
+                    default_temperature: Some(0.7),
+                    default_max_tokens: Some(2048),
+                    cpu_only: true,
+                    repeat_penalty: 1.1,
+                    repeat_last_n: 64,
+                    seed: 299792458,
+                    system_prompt: Some(config.ai_model.system_prompt.clone()),
+                };
+
+                providers.insert("candle".to_string(), ProviderConfig::Candle(candle_config));
+
+                let llm_manager_config = LLMManagerConfig {
+                    default_provider: "candle".to_string(),
+                    fallback_providers: vec![],
+                    auto_fallback: true,
+                    health_check_interval_seconds: 300,
+                    providers,
+                };
+
+                LLMManager::new(llm_manager_config).await?
+            }
+            #[cfg(not(feature = "candle"))]
+            {
+                return Err("Candle feature not enabled".into());
+            }
+        } else {
+            // 从应用配置中获取 Ollama 配置
+            let ollama_config = OllamaConfig {
+                host: config.ai_model.server_url.clone(),
+                port: config.ai_model.server_port,
+                default_model: config.ai_model.model_name.clone(),
+                default_temperature: Some(0.7),
+                default_max_tokens: Some(2048),
+                timeout_seconds: Some(30),
+                system_prompt: Some(config.ai_model.system_prompt.clone()),
+            };
+
+            providers.insert("ollama".to_string(), ProviderConfig::Ollama(ollama_config));
+
+            let llm_manager_config = LLMManagerConfig {
+                default_provider: "ollama".to_string(),
+                fallback_providers: vec![],
+                auto_fallback: true,
+                health_check_interval_seconds: 300,
+                providers,
+            };
+
+            LLMManager::new(llm_manager_config).await?
         };
-
-        providers.insert("ollama".to_string(), ProviderConfig::Ollama(ollama_config));
-
-        let llm_manager_config = LLMManagerConfig {
-            default_provider: "ollama".to_string(),
-            fallback_providers: vec![],
-            auto_fallback: true,
-            health_check_interval_seconds: 300,
-            providers,
-        };
-
-        // 创建 LLM 管理器
-        let llm_manager = LLMManager::new(llm_manager_config).await?;
 
         Ok(AppState {
             config: Arc::new(Mutex::new(config)),

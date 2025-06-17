@@ -1,4 +1,5 @@
 pub mod ai;
+pub mod candle_test;
 pub mod conversation;
 pub mod database;
 pub mod dialog;
@@ -7,6 +8,7 @@ pub mod settings;
 pub mod voice;
 
 pub use ai::*;
+pub use candle_test::*;
 pub use conversation::*;
 pub use database::*;
 pub use dialog::*;

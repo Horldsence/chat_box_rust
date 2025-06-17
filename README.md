@@ -45,7 +45,7 @@ Chat Box is a local-first AI conversation app designed to provide secure, effici
 
 ## Features
 
-- 🌟 **NEW** Candle support for on-device AI inference  
+- 🌟 **NEW** Candle support for on-device AI inference with Qwen models
 - 📝 Multi-conversation management with history  
 - 🔊 Voice input and real-time speech-to-text  
 - 🖥️ Material You–inspired modern UI  
@@ -55,14 +55,18 @@ Chat Box is a local-first AI conversation app designed to provide secure, effici
 - 🌍 Cross-platform support, including RISC-V  
 - 🔧 Dual AI backends (Ollama & Candle)  
 - 💾 SQLite for persistent local storage  
-- 🎨 Element Plus UI components with Vue 3
+- 🎨 Modern Svelte UI with Tailwind CSS  
+- 🧪 Built-in testing interface for AI models  
+- ⚡ Hardware acceleration support (CPU/GPU)
 
 ## Tech Stack
 
-- **Frontend**: Vue 3 + TypeScript + Vite  
+- **Frontend**: SvelteKit + TypeScript + Tailwind CSS  
 - **Backend**: Rust + Tauri  
 - **Storage**: SQLite  
-- **AI Models**: Ollama framework support
+- **AI Models**: Ollama & Candle framework support
+- **Local Models**: Qwen 1.5/2.0/3.0 series via Candle
+- **Architecture**: Modular crate-based design
 
 ## Getting Started
 
@@ -198,6 +202,48 @@ ui:
 
 database:
   enabled: true
+```
+
+## Candle Local AI Features
+
+Chat Box now supports **Candle**, a Rust-based machine learning framework for running AI models locally:
+
+### Supported Models
+- **Qwen 1.5 Series**: 0.5B, 1.8B, 4B, 7B, 14B, 72B, MoE A2.7B
+- **Qwen 2 Series**: 0.5B, 1.5B, 7B, 72B  
+- **Qwen 3 Series**: 0.6B, 1.7B, 4B, 8B
+
+### Key Advantages
+- 🔒 **Complete Privacy**: All processing happens on your device
+- ⚡ **High Performance**: Optimized Rust implementation
+- 💻 **Hardware Flexibility**: CPU and GPU acceleration support
+- 📦 **No Dependencies**: No need for external AI services
+- 🎯 **Multiple Sizes**: Choose models based on your hardware capabilities
+
+### Getting Started with Candle
+
+1. **Enable Candle**: Set `model_type: "candle"` in your config
+2. **Choose Model**: Select from available Qwen models
+3. **Test Integration**: Use the built-in testing interface at "🧪 Candle Test"
+4. **First Run**: Models will be downloaded automatically on first use
+
+### Testing Interface
+
+Navigate to **"🧪 Candle Test"** in the sidebar to:
+- ✅ Check model health and status
+- 📦 View available models  
+- 🤖 Test basic text generation
+- 🌊 Test streaming responses
+- 🔧 Verify LLM manager integration
+- 🚀 Run comprehensive test suite
+
+### Performance Tips
+- Start with **0.5B model** for testing
+- Use **CPU mode** for compatibility
+- Enable **GPU acceleration** for better performance
+- Adjust **max_tokens** based on your needs
+
+For detailed technical documentation, see [CANDLE_COMPLETION.md](CANDLE_COMPLETION.md).
   path: "database/chat_database.db"
 ```
 
