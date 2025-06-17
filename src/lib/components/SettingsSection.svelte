@@ -24,14 +24,26 @@
 
 <style>
   .settings-section {
-    @apply mb-8 last:mb-0;
+    margin-bottom: 2rem;
+  }
+
+  .settings-section:last-child {
+    margin-bottom: 0;
   }
 
   .section-header {
-    @apply border-b border-gray-200 dark:border-gray-700 pb-4 mb-6;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  :global(.dark) .section-header {
+    border-bottom-color: #374151;
   }
 
   .section-content {
-    @apply space-y-4;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 </style>

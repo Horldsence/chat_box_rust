@@ -13,6 +13,7 @@
   } from "$lib/stores/chatStore";
   import { settingsStore, config, healthStatus } from "$lib/stores/settingsStore";
   import CollapsePanel from "$lib/components/CollapsePanel.svelte";
+  import CandleTest from "$lib/components/CandleTest.svelte";
   import type { Conversation, Message } from "$lib/types";
 
   // 应用状态
@@ -572,14 +573,19 @@
             </ul>
           </div>
         </div>
+      {:else if currentView === "candle-test"}
+        <!-- Candle测试视图 -->
+        <div class="view-container">
+          <CandleTest />
+        </div>
       {:else if currentView === "about"}
         <!-- 关于视图 -->
         <div class="view-container">
           <h1 class="view-title">关于</h1>
           <div class="about-card">
-            <h3>聊天应用</h3>
-            <p>版本: 0.1.0</p>
-            <p>基于Tauri、SvelteKit和AI模型实现的桌面聊天应用</p>
+            <h3>Chat Box Rust</h3>
+            <p>基于 Rust 和 Tauri 构建的现代化 AI 聊天应用</p>
+            <p>版本: 1.0.0</p>
           </div>
         </div>
       {/if}

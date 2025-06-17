@@ -15,7 +15,7 @@
 
   // Internal state
   let copied = false;
-  let copyTimeout: number;
+  let copyTimeout: ReturnType<typeof setTimeout>;
 
   // Format timestamp
   function formatTime(timestamp: number | string): string {
@@ -59,7 +59,7 @@
       clearTimeout(copyTimeout);
       copyTimeout = setTimeout(() => {
         copied = false;
-      }, 2000) as number;
+      }, 2000);
       dispatch("copy", { message });
     } catch (error) {
       console.error("Failed to copy message:", error);

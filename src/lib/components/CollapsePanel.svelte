@@ -50,6 +50,12 @@
       description: "数据存储管理",
     },
     {
+      id: "candle-test",
+      label: "Candle 测试",
+      icon: "🧪",
+      description: "本地模型测试",
+    },
+    {
       id: "guide",
       label: "使用指南",
       icon: "📖",

@@ -40,8 +40,8 @@ export interface AppConfig {
     server_url: string;
     server_port: string;
     system_prompt: string;
-    candle_model_id: string;
-    candle_revision: string;
+    candle_model_id?: string;
+    candle_revision?: string;
     candle_use_flash_attn: boolean;
   };
   voice: {

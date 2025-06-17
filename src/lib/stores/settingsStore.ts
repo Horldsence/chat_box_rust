@@ -177,7 +177,7 @@ function createSettingsStore() {
       });
     },
 
-    updateLLMConfig(updates: Partial<AppConfig["llm"]>) {
+    updateLLMConfig(updates: Partial<AppConfig["ai_model"]>) {
       update((state) => {
         if (!state.config) return state;
 
@@ -185,8 +185,8 @@ function createSettingsStore() {
           ...state,
           config: {
             ...state.config,
-            llm: {
-              ...state.config.llm,
+            ai_model: {
+              ...state.config.ai_model,
               ...updates,
             },
           },
@@ -304,7 +304,7 @@ function createSettingsStore() {
       try {
         const folderPath = await invoke("select_voice_model_folder");
         if (folderPath) {
-          this.updateVoiceConfig({ model_path: folderPath });
+          this.updateVoiceConfig({ model_path: folderPath as string });
         }
         return folderPath;
       } catch (error) {
@@ -422,19 +422,23 @@ export const isDirty = derived(settingsStore, ($store) => $store.isDirty);
 export const uiConfig = derived(config, ($config) => $config?.ui);
 export const themeConfig = derived(uiConfig, ($ui) => $ui?.theme || "auto");
 export const languageConfig = derived(uiConfig, ($ui) => $ui?.language || "zh-CN");
-export const sidebarWidth = derived(uiConfig, ($ui) => $ui?.sidebar_width || "280px");
+export const sidebarWidth = derived(uiConfig, ($ui) => "280px");
 
 // LLM相关派生状态
-export const llmConfig = derived(config, ($config) => $config?.llm);
-export const modelPath = derived(llmConfig, ($llm) => $llm?.model_path || "");
-export const temperature = derived(llmConfig, ($llm) => $llm?.temperature || 0.7);
-export const maxTokens = derived(llmConfig, ($llm) => $llm?.max_tokens || 2048);
+export const llmConfig = derived(config, ($config) => $config?.ai_model);
+export const modelPath = derived(llmConfig, ($llm) => $llm?.model_name || "");
+export const temperature = derived(llmConfig, ($llm) =>
+  typeof $llm?.temperature === "number" ? $llm.temperature : 0.7
+);
+export const maxTokens = derived(llmConfig, ($llm) =>
+  typeof $llm?.max_tokens === "number" ? $llm.max_tokens : 2048
+);
 
 // 语音相关派生状态
 export const voiceConfig = derived(config, ($config) => $config?.voice);
 export const voiceEnabled = derived(voiceConfig, ($voice) => $voice?.enabled || false);
 export const voiceModelPath = derived(voiceConfig, ($voice) => $voice?.model_path || "");
-export const voiceLanguage = derived(voiceConfig, ($voice) => $voice?.language || "zh-CN");
+export const voiceLanguage = derived(voiceConfig, ($voice) => "zh-CN");
 
 // 应用行为派生状态
 export const appBehaviorConfig = derived(config, ($config) => $config?.app_behavior);

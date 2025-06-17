@@ -34,7 +34,6 @@ declare module '$env/static/private' {
 	export const XDG_MENU_PREFIX: string;
 	export const TERM_PROGRAM_VERSION: string;
 	export const NODE: string;
-	export const TAURI_ENV_DEBUG: string;
 	export const LC_ADDRESS: string;
 	export const LC_NAME: string;
 	export const npm_package_engines_npm: string;
@@ -44,11 +43,9 @@ declare module '$env/static/private' {
 	export const XMODIFIERS: string;
 	export const DESKTOP_SESSION: string;
 	export const LC_MONETARY: string;
-	export const MACOSX_DEPLOYMENT_TARGET: string;
 	export const PWD: string;
 	export const XDG_SESSION_DESKTOP: string;
 	export const LOGNAME: string;
-	export const TAURI_ENV_PLATFORM: string;
 	export const XDG_SESSION_TYPE: string;
 	export const SYSTEMD_EXEC_PID: string;
 	export const XAUTHORITY: string;
@@ -73,9 +70,7 @@ declare module '$env/static/private' {
 	export const npm_lifecycle_script: string;
 	export const GJS_DEBUG_OUTPUT: string;
 	export const GNOME_SETUP_DISPLAY: string;
-	export const TAURI_ENV_PLATFORM_VERSION: string;
 	export const XDG_SESSION_CLASS: string;
-	export const TAURI_ENV_FAMILY: string;
 	export const TERM: string;
 	export const LC_IDENTIFICATION: string;
 	export const npm_package_name: string;
@@ -83,13 +78,12 @@ declare module '$env/static/private' {
 	export const USER: string;
 	export const npm_config_frozen_lockfile: string;
 	export const MANPAGER: string;
-	export const TAURI_ENV_TARGET_TRIPLE: string;
 	export const DISPLAY: string;
 	export const npm_lifecycle_event: string;
 	export const SHLVL: string;
+	export const PAGER: string;
 	export const LC_TELEPHONE: string;
 	export const QT_IM_MODULE: string;
-	export const TAURI_CLI_VERBOSITY: string;
 	export const LC_MEASUREMENT: string;
 	export const npm_config_user_agent: string;
 	export const PNPM_SCRIPT_SRC_DIR: string;
@@ -99,7 +93,7 @@ declare module '$env/static/private' {
 	export const NODE_PATH: string;
 	export const LC_TIME: string;
 	export const npm_package_json: string;
-	export const TAURI_ENV_ARCH: string;
+	export const ZED_ENVIRONMENT: string;
 	export const JOURNAL_STREAM: string;
 	export const XDG_DATA_DIRS: string;
 	export const PATH: string;
@@ -115,6 +109,7 @@ declare module '$env/static/private' {
 	export const npm_node_execpath: string;
 	export const GIO_LAUNCHED_DESKTOP_FILE: string;
 	export const LC_NUMERIC: string;
+	export const OLDPWD: string;
 	export const npm_package_engines_node: string;
 	export const TERM_PROGRAM: string;
 	export const NODE_ENV: string;
@@ -157,7 +152,6 @@ declare module '$env/dynamic/private' {
 		XDG_MENU_PREFIX: string;
 		TERM_PROGRAM_VERSION: string;
 		NODE: string;
-		TAURI_ENV_DEBUG: string;
 		LC_ADDRESS: string;
 		LC_NAME: string;
 		npm_package_engines_npm: string;
@@ -167,11 +161,9 @@ declare module '$env/dynamic/private' {
 		XMODIFIERS: string;
 		DESKTOP_SESSION: string;
 		LC_MONETARY: string;
-		MACOSX_DEPLOYMENT_TARGET: string;
 		PWD: string;
 		XDG_SESSION_DESKTOP: string;
 		LOGNAME: string;
-		TAURI_ENV_PLATFORM: string;
 		XDG_SESSION_TYPE: string;
 		SYSTEMD_EXEC_PID: string;
 		XAUTHORITY: string;
@@ -196,9 +188,7 @@ declare module '$env/dynamic/private' {
 		npm_lifecycle_script: string;
 		GJS_DEBUG_OUTPUT: string;
 		GNOME_SETUP_DISPLAY: string;
-		TAURI_ENV_PLATFORM_VERSION: string;
 		XDG_SESSION_CLASS: string;
-		TAURI_ENV_FAMILY: string;
 		TERM: string;
 		LC_IDENTIFICATION: string;
 		npm_package_name: string;
@@ -206,13 +196,12 @@ declare module '$env/dynamic/private' {
 		USER: string;
 		npm_config_frozen_lockfile: string;
 		MANPAGER: string;
-		TAURI_ENV_TARGET_TRIPLE: string;
 		DISPLAY: string;
 		npm_lifecycle_event: string;
 		SHLVL: string;
+		PAGER: string;
 		LC_TELEPHONE: string;
 		QT_IM_MODULE: string;
-		TAURI_CLI_VERBOSITY: string;
 		LC_MEASUREMENT: string;
 		npm_config_user_agent: string;
 		PNPM_SCRIPT_SRC_DIR: string;
@@ -222,7 +211,7 @@ declare module '$env/dynamic/private' {
 		NODE_PATH: string;
 		LC_TIME: string;
 		npm_package_json: string;
-		TAURI_ENV_ARCH: string;
+		ZED_ENVIRONMENT: string;
 		JOURNAL_STREAM: string;
 		XDG_DATA_DIRS: string;
 		PATH: string;
@@ -238,6 +227,7 @@ declare module '$env/dynamic/private' {
 		npm_node_execpath: string;
 		GIO_LAUNCHED_DESKTOP_FILE: string;
 		LC_NUMERIC: string;
+		OLDPWD: string;
 		npm_package_engines_node: string;
 		TERM_PROGRAM: string;
 		NODE_ENV: string;
