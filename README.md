@@ -46,24 +46,24 @@ Chat Box is a local-first AI conversation app designed to provide secure, effici
 ## Features
 
 - 🌟 **NEW** Candle support for on-device AI inference with Qwen models
-- 📝 Multi-conversation management with history  
-- 🔊 Voice input and real-time speech-to-text  
-- 🖥️ Material You–inspired modern UI  
-- 📊 Markdown rendering with code highlighting  
-- 🏎️ Streaming responses for live updates  
-- 🛡️ Local-first to safeguard data privacy  
-- 🌍 Cross-platform support, including RISC-V  
-- 🔧 Dual AI backends (Ollama & Candle)  
-- 💾 SQLite for persistent local storage  
-- 🎨 Modern Svelte UI with Tailwind CSS  
-- 🧪 Built-in testing interface for AI models  
+- 📝 Multi-conversation management with history
+- 🔊 Voice input and real-time speech-to-text
+- 🖥️ Material You–inspired modern UI
+- 📊 Markdown rendering with code highlighting
+- 🏎️ Streaming responses for live updates
+- 🛡️ Local-first to safeguard data privacy
+- 🌍 Cross-platform support, including RISC-V
+- 🔧 Dual AI backends (Ollama & Candle)
+- 💾 SQLite for persistent local storage
+- 🎨 Modern Svelte UI with Tailwind CSS
+- 🧪 Built-in testing interface for AI models
 - ⚡ Hardware acceleration support (CPU/GPU)
 
 ## Tech Stack
 
-- **Frontend**: SvelteKit + TypeScript + Tailwind CSS  
-- **Backend**: Rust + Tauri  
-- **Storage**: SQLite  
+- **Frontend**: SvelteKit + TypeScript + Tailwind CSS
+- **Backend**: Rust + Tauri
+- **Storage**: SQLite
 - **AI Models**: Ollama & Candle framework support
 - **Local Models**: Qwen 1.5/2.0/3.0 series via Candle
 - **Architecture**: Modular crate-based design
@@ -72,8 +72,8 @@ Chat Box is a local-first AI conversation app designed to provide secure, effici
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) ≥ 16.0.0  
-- [Rust](https://www.rust-lang.org/) ≥ 1.60.0  
+- [Node.js](https://nodejs.org/) ≥ 16.0.0
+- [Rust](https://www.rust-lang.org/) ≥ 1.60.0
 - Tauri development environment ([guide](https://tauri.app/v1/guides/getting-started/prerequisites))
 
 ### Standard Installation
@@ -105,8 +105,8 @@ Chat Box is a local-first AI conversation app designed to provide secure, effici
 To support RISC-V, follow these steps:
 
 1. System requirements:
-   - RISC-V 64 CPU  
-   - ≥ 4 GB RAM  
+   - RISC-V 64 CPU
+   - ≥ 4 GB RAM
    - Linux distribution with RISC-V support
 
 2. Install Rust toolchain:
@@ -146,11 +146,11 @@ To support RISC-V, follow these steps:
 
 ## Usage Guide
 
-1. **New Conversation**: Click the "+" in the sidebar  
-2. **Chat**: Type your message and press Enter or Send  
-3. **Voice Input**: Click the microphone icon  
-4. **Manage Conversations**: Rename or delete from the list  
-5. **Settings**: Configure AI model, UI, and voice options  
+1. **New Conversation**: Click the "+" in the sidebar
+2. **Chat**: Type your message and press Enter or Send
+3. **Voice Input**: Click the microphone icon
+4. **Manage Conversations**: Rename or delete from the list
+5. **Settings**: Configure AI model, UI, and voice options
 
 Refer to the full documentation for more advanced features.
 
@@ -210,7 +210,7 @@ Chat Box now supports **Candle**, a Rust-based machine learning framework for ru
 
 ### Supported Models
 - **Qwen 1.5 Series**: 0.5B, 1.8B, 4B, 7B, 14B, 72B, MoE A2.7B
-- **Qwen 2 Series**: 0.5B, 1.5B, 7B, 72B  
+- **Qwen 2 Series**: 0.5B, 1.5B, 7B, 72B
 - **Qwen 3 Series**: 0.6B, 1.7B, 4B, 8B
 
 ### Key Advantages
@@ -231,7 +231,7 @@ Chat Box now supports **Candle**, a Rust-based machine learning framework for ru
 
 Navigate to **"🧪 Candle Test"** in the sidebar to:
 - ✅ Check model health and status
-- 📦 View available models  
+- 📦 View available models
 - 🤖 Test basic text generation
 - 🌊 Test streaming responses
 - 🔧 Verify LLM manager integration
@@ -245,29 +245,28 @@ Navigate to **"🧪 Candle Test"** in the sidebar to:
 
 For detailed technical documentation, see [CANDLE_COMPLETION.md](CANDLE_COMPLETION.md).
   path: "database/chat_database.db"
-```
 
 ### AI Model Modes
 
-- **Ollama**: External Ollama server  
+- **Ollama**: External Ollama server
 - **Candle**: In-process Rust AI inference
 
 ## Multilingual Support
 
 Documentation is available in multiple languages:
 
-- [English (README.md)](README.md)  
+- [English (README.md)](README.md)
 - [中文 (README-CN.md)](README-CN.md)
 
 Switch UI language in `config.yaml` under `ui.language`.
 
 ## Roadmap
 
-- [ ] Support more LLMs  
-- [ ] RISC-V performance tuning  
-- [ ] Text-to-speech feature  
-- [ ] Improved offline mode  
-- [ ] Plugin ecosystem  
+- [ ] Support more LLMs
+- [ ] RISC-V performance tuning
+- [ ] Text-to-speech feature
+- [ ] Improved offline mode
+- [ ] Plugin ecosystem
 
 See [open issues](https://github.com/horldsence/chat_box_rust/issues) for details.
 
@@ -275,10 +274,10 @@ See [open issues](https://github.com/horldsence/chat_box_rust/issues) for detail
 
 We welcome your contributions!
 
-1. Fork the project  
-2. Create a feature branch (`git checkout -b feature/YourFeature`)  
-3. Commit changes (`git commit -m 'Add YourFeature'`)  
-4. Push to your branch (`git push origin feature/YourFeature`)  
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/YourFeature`)
+3. Commit changes (`git commit -m 'Add YourFeature'`)
+4. Push to your branch (`git push origin feature/YourFeature`)
 5. Open a Pull Request
 
 ## License
@@ -287,15 +286,15 @@ This project is licensed under the MIT License – see the [LICENSE](LICENSE) fi
 
 ## Contact
 
-Maintainer: Peng – horldjason@outlook.com  
+Maintainer: Peng – horldjason@outlook.com
 Repository: https://github.com/horldsence/chat_box_rust
 
 ## Acknowledgements
 
-- [Tauri](https://tauri.app/)  
-- [Vue 3](https://vuejs.org/)  
-- [Rust](https://www.rust-lang.org/)  
-- [Ollama](https://ollama.com/)  
+- [Tauri](https://tauri.app/)
+- [Vue 3](https://vuejs.org/)
+- [Rust](https://www.rust-lang.org/)
+- [Ollama](https://ollama.com/)
 - [RISC-V Foundation](https://riscv.org/)
 
 <!-- links -->
