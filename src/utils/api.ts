@@ -29,7 +29,11 @@ export const conversationApi = {
   },
 
   async delete(conversationId: number): Promise<void> {
-    return invoke("delete_conversation", { conversationId });
+    return invoke("delete_conversation", {
+      request: {
+        conversation_id: conversationId,
+      },
+    });
   },
 };
 
@@ -39,7 +43,12 @@ export const messageApi = {
     content: string,
     conversationId: number,
   ): Promise<Message> {
-    return invoke("send_user_message", { content, conversationId });
+    return invoke("send_user_message", {
+      request: {
+        content,
+        conversation_id: conversationId,
+      },
+    });
   },
 
   async generateAIResponse(
@@ -47,8 +56,10 @@ export const messageApi = {
     conversationId: number,
   ): Promise<void> {
     return invoke("generate_ai_response", {
-      userMessageContent,
-      conversationId,
+      request: {
+        user_message_content: userMessageContent,
+        conversation_id: conversationId,
+      },
     });
   },
 
@@ -63,7 +74,7 @@ export const messageApi = {
 // Voice API
 export const voiceApi = {
   async startVoiceInput(conversationId: number): Promise<string> {
-    return invoke("voice_input", { conversationId });
+    return invoke("voice_input", { conversation_id: conversationId });
   },
 
   // Listen for voice status updates
@@ -355,6 +366,25 @@ export const withErrorHandling = async <T>(
 };
 
 // Health check utility
+// Debug API
+export const debugApi = {
+  async getDatabaseStatus(): Promise<any> {
+    return invoke("debug_database_status");
+  },
+
+  async getMemoryState(): Promise<string> {
+    return invoke("debug_memory_state");
+  },
+
+  async clearDatabase(): Promise<string> {
+    return invoke("debug_clear_database");
+  },
+
+  async testDatabaseConnection(): Promise<string> {
+    return invoke("debug_test_database_connection");
+  },
+};
+
 export const healthCheck = {
   async checkConnection(): Promise<boolean> {
     try {

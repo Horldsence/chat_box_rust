@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/agent", "crates/initialize"]
+members = ["crates/agent", "crates/initialize", "crates/live2d"]
 
 [workspace.dependencies]
 agent = { path = "crates/agent" }
@@ -29,7 +29,9 @@ log = "0.4.27"
 env_logger = "0.11.8"
 
 [features]
+default = ["candle"]
 reqwest = []
+candle = ["agent/candle"]
 
 [dependencies]
 serde_yaml = "0.9.34-deprecated"
@@ -60,6 +62,7 @@ num-traits = "0.2.19"
 rusqlite = { version = "0.36.0", features = ["bundled"] }
 scopeguard = "1.2.0"
 tauri-plugin-dialog = "2.2.2"
+uuid = { version = "1.0", features = ["v4"] }
 candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
 candle-transformers = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
 candle-nn = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }

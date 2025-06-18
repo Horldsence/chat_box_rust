@@ -2,21 +2,77 @@ use crate::models::{Conversation, Message};
 use crate::state::AppState;
 use chrono::Utc;
 use log::{error, info};
+use serde::Deserialize;
 use tauri::State;
 
-#[tauri::command]
-pub fn get_conversations(state: State<AppState>) -> Vec<Conversation> {
-    state.conversations.lock().unwrap().clone()
+#[derive(Deserialize)]
+pub struct DeleteConversationRequest {
+    pub conversation_id: u64,
 }
 
 #[tauri::command]
-pub fn get_conversation_messages(conversation_id: u64, state: State<AppState>) -> Vec<Message> {
+pub fn get_conversations(state: State<AppState>) -> Result<Vec<Conversation>, String> {
+    // 优先从数据库查询
+    if let Ok(db_guard) = state.db.lock() {
+        if let Some(ref db) = *db_guard {
+            match db.get_all_conversations() {
+                Ok(conversations) => {
+                    info!("从数据库加载了{}个对话", conversations.len());
+                    return Ok(conversations);
+                }
+                Err(e) => {
+                    error!("从数据库查询对话失败: {}", e);
+                    // fallback to memory
+                }
+            }
+        }
+    }
+
+    // 如果数据库查询失败，从内存中获取
+    let conversations = state.conversations.lock().unwrap().clone();
+    info!("从内存加载了{}个对话", conversations.len());
+    Ok(conversations)
+}
+
+#[tauri::command]
+pub fn get_conversation_messages(
+    conversation_id: u64,
+    state: State<AppState>,
+) -> Result<Vec<Message>, String> {
+    // 优先从数据库查询
+    if let Ok(db_guard) = state.db.lock() {
+        if let Some(ref db) = *db_guard {
+            match db.get_conversation_messages(conversation_id) {
+                Ok(messages) => {
+                    info!(
+                        "从数据库加载了对话{}的{}条消息",
+                        conversation_id,
+                        messages.len()
+                    );
+                    return Ok(messages);
+                }
+                Err(e) => {
+                    error!("从数据库查询消息失败: {}", e);
+                    // fallback to memory
+                }
+            }
+        }
+    }
+
+    // 如果数据库查询失败，从内存中获取
     let messages = state.get_conversation_history(conversation_id);
-    messages
+    let filtered_messages: Vec<Message> = messages
         .iter()
         .filter(|m| m.conversation_id == conversation_id)
         .cloned()
-        .collect()
+        .collect();
+
+    info!(
+        "从内存加载了对话{}的{}条消息",
+        conversation_id,
+        filtered_messages.len()
+    );
+    Ok(filtered_messages)
 }
 
 #[tauri::command]
@@ -51,7 +107,11 @@ pub fn create_conversation(title: String, state: State<AppState>) -> Result<Conv
 }
 
 #[tauri::command]
-pub fn delete_conversation(conversation_id: u64, state: State<AppState>) -> Result<(), String> {
+pub fn delete_conversation(
+    request: DeleteConversationRequest,
+    state: State<AppState>,
+) -> Result<(), String> {
+    let conversation_id = request.conversation_id;
     // 删除对话
     {
         let mut conversations = state.conversations.lock().unwrap();

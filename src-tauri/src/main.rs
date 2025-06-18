@@ -81,6 +81,17 @@ fn main() {
             select_voice_model_folder,
             select_database_file,
             create_database_file,
+            // Candle测试命令
+            test_candle_model,
+            test_candle_stream,
+            get_candle_models,
+            check_candle_health,
+            test_candle_with_manager,
+            // 调试命令
+            debug_database_status,
+            debug_memory_state,
+            debug_clear_database,
+            debug_test_database_connection,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

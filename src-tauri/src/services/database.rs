@@ -68,8 +68,17 @@ impl ChatDatabase {
 
     // 保存消息
     pub fn save_message(&mut self, message: &Message) -> Result<()> {
-        self.conn.execute(
-            "INSERT OR REPLACE INTO messages (id, conversation_id, content, sender, timestamp) 
+        debug!(
+            "准备保存消息: ID={}, 对话ID={}, 发送者={}, 内容长度={}, 内容='{}'",
+            message.id,
+            message.conversation_id,
+            message.sender,
+            message.content.len(),
+            message.content
+        );
+
+        let rows_affected = self.conn.execute(
+            "INSERT OR REPLACE INTO messages (id, conversation_id, content, sender, timestamp)
              VALUES (?, ?, ?, ?, ?)",
             params![
                 message.id,
@@ -81,9 +90,21 @@ impl ChatDatabase {
         )?;
 
         debug!(
-            "保存消息: {} 到对话: {}",
-            message.id, message.conversation_id
+            "保存消息成功: ID={} 到对话: {}, 影响行数: {}",
+            message.id, message.conversation_id, rows_affected
         );
+
+        // 立即验证保存是否成功
+        let verify_count: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM messages WHERE id = ?",
+            params![message.id],
+            |row| row.get(0),
+        )?;
+        debug!(
+            "验证保存: 消息 {} 在数据库中存在 {} 条记录",
+            message.id, verify_count
+        );
+
         Ok(())
     }
 
@@ -93,7 +114,7 @@ impl ChatDatabase {
 
         for message in messages {
             tx.execute(
-                "INSERT OR REPLACE INTO messages (id, conversation_id, content, sender, timestamp) 
+                "INSERT OR REPLACE INTO messages (id, conversation_id, content, sender, timestamp)
                  VALUES (?, ?, ?, ?, ?)",
                 params![
                     message.id,
@@ -136,18 +157,39 @@ impl ChatDatabase {
 
     // 获取特定对话的所有消息
     pub fn get_conversation_messages(&self, conversation_id: u64) -> Result<Vec<Message>> {
+        debug!("开始查询对话 {} 的消息", conversation_id);
+
+        // 先检查数据库中总共有多少条消息
+        let total_count: i64 = self
+            .conn
+            .query_row("SELECT COUNT(*) FROM messages", [], |row| row.get(0))?;
+        debug!("数据库中总共有 {} 条消息", total_count);
+
+        // 检查特定对话的消息数量
+        let conv_count: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM messages WHERE conversation_id = ?",
+            params![conversation_id],
+            |row| row.get(0),
+        )?;
+        debug!(
+            "对话 {} 在数据库中有 {} 条消息",
+            conversation_id, conv_count
+        );
+
         let mut stmt = self.conn.prepare(
             "SELECT id, conversation_id, content, sender, timestamp FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC"
         )?;
 
         let rows = stmt.query_map(params![conversation_id], |row| {
-            Ok(Message {
+            let message = Message {
                 id: row.get(0)?,
                 conversation_id: row.get(1)?,
                 content: row.get(2)?,
                 sender: row.get(3)?,
                 timestamp: row.get(4)?,
-            })
+            };
+            debug!("查询到消息: ID={}, 内容='{}'", message.id, message.content);
+            Ok(message)
         })?;
 
         let mut messages = Vec::new();

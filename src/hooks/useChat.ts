@@ -206,6 +206,9 @@ export function useChat(
 
         // Generate AI response
         await messageApi.generateAIResponse(content, targetConversationId);
+
+        // Note: isGenerating will be set to false by the message chunk listener
+        // when the AI response is complete
       } catch (err) {
         const errorMsg = "Failed to send message";
         setError(errorMsg);
@@ -287,10 +290,23 @@ export function useChat(
           if (chunk.is_complete) {
             setIsGenerating(false);
             setPartialMessage("");
-            // Refresh messages to get the final AI response
-            if (currentConversation) {
-              selectConversation(currentConversation.id);
-            }
+
+            // Refresh messages to get the final AI response from database
+            setTimeout(async () => {
+              if (currentConversation) {
+                try {
+                  const msgs = await conversationApi.getMessages(
+                    currentConversation.id,
+                  );
+                  setMessages(msgs.sort((a, b) => a.timestamp - b.timestamp));
+
+                  // Also refresh conversations to update last_message
+                  await loadConversations();
+                } catch (err) {
+                  console.error("Failed to refresh messages:", err);
+                }
+              }
+            }, 1000);
           } else {
             setPartialMessage((prev) => prev + chunk.content);
           }
@@ -305,7 +321,12 @@ export function useChat(
         messageChunkUnlisten.current();
       }
     };
-  }, [enableStreaming, currentConversation, selectConversation]);
+  }, [
+    enableStreaming,
+    currentConversation,
+    selectConversation,
+    loadConversations,
+  ]);
 
   // Setup voice event listeners
   useEffect(() => {

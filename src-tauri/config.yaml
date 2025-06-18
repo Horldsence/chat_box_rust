@@ -1,6 +1,6 @@
 config_path: config.yaml
 ai_model:
-  model_type: ollama
+  model_type: candle
   model_name: qwen2.5:0.5b
   server_url: http://localhost
   server_port: 11434

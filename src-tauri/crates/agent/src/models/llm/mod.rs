@@ -4,10 +4,14 @@ use std::error::Error;
 use tokio_stream::Stream;
 
 // 重新导出主要类型
-pub use candle::{CandleConfig, CandleProvider};
+#[cfg(feature = "candle")]
+pub use candle::{
+    CandleConfig, CandleProvider, QwenCandleGenerator, QwenInferenceParams, WhichModel,
+};
 pub use manager::{LLMManager, LLMManagerConfig, ProviderConfig, ProviderHealth, ProviderStatus};
 pub use ollama::{OllamaAgent, OllamaConfig, OllamaProvider};
 
+#[cfg(feature = "candle")]
 pub mod candle;
 pub mod manager;
 pub mod ollama;

@@ -3,15 +3,23 @@ use crate::state::AppState;
 use agent::StreamGenerator;
 use chrono::Utc;
 use log::{debug, error, info};
+use serde::Deserialize;
 use tauri::{Emitter, State, Window};
+
+#[derive(Deserialize)]
+pub struct GenerateAIResponseRequest {
+    pub user_message_content: String,
+    pub conversation_id: u64,
+}
 
 #[tauri::command]
 pub async fn generate_ai_response(
     window: Window,
-    user_message_content: String,
-    conversation_id: u64,
+    request: GenerateAIResponseRequest,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
+    let user_message_content = request.user_message_content;
+    let conversation_id = request.conversation_id;
     info!("开始生成AI回复，对话ID: {}", conversation_id);
 
     // 创建机器人消息占位符
@@ -26,8 +34,19 @@ pub async fn generate_ai_response(
 
     debug!("创建AI消息占位符: {:?}", bot_message);
 
-    // 保存初始的空机器人消息
-    state.messages.lock().unwrap().push(bot_message);
+    // 保存初始的空机器人消息到内存和数据库
+    state.messages.lock().unwrap().push(bot_message.clone());
+
+    // 尝试保存初始消息到数据库
+    if let Ok(mut db_guard) = state.db.lock() {
+        if let Some(ref mut db) = *db_guard {
+            if let Err(e) = db.save_message(&bot_message) {
+                error!("保存初始AI消息到数据库失败: {}", e);
+            } else {
+                debug!("初始AI消息已保存到数据库: {}", bot_message.id);
+            }
+        }
+    }
 
     // 获取LLM管理器
     let llm_manager = state.llm_manager.clone();
@@ -66,6 +85,7 @@ pub async fn generate_ai_response(
     let conv_arc = state.conversations.clone();
     let msg_arc = state.messages.clone();
     let config_arc = state.config.clone();
+    let db_arc = state.db.clone();
     let window_clone = window.clone();
 
     let config = config_arc.lock().unwrap();
@@ -86,6 +106,13 @@ pub async fn generate_ai_response(
             full_response.push_str(&chunk);
             buffer.push_str(&chunk);
             chunk_count += 1;
+
+            debug!(
+                "接收到响应块 {}: '{}', 当前总长度: {}",
+                chunk_count,
+                chunk,
+                full_response.len()
+            );
 
             // 使用缓冲策略: 从配置获取缓冲大小和发送间隔
             let now = std::time::Instant::now();
@@ -123,6 +150,7 @@ pub async fn generate_ai_response(
             chunk_count,
             full_response.len()
         );
+        debug!("完整AI响应内容: '{}'", full_response);
 
         // 更新对话
         {
@@ -137,7 +165,47 @@ pub async fn generate_ai_response(
         {
             let mut msgs = msg_arc.lock().unwrap();
             if let Some(msg) = msgs.iter_mut().find(|m| m.id == bot_message_id) {
-                msg.content = full_response;
+                msg.content = full_response.clone();
+                debug!(
+                    "更新AI消息内容: ID={}, 内容长度={}, 内容='{}'",
+                    msg.id,
+                    msg.content.len(),
+                    msg.content
+                );
+
+                // 保存完整的AI响应到数据库
+                if let Ok(mut db_guard) = db_arc.lock() {
+                    if let Some(ref mut db) = *db_guard {
+                        if let Err(e) = db.save_message(msg) {
+                            error!("保存AI响应消息到数据库失败: {}", e);
+                        } else {
+                            debug!(
+                                "AI响应消息已保存到数据库: ID={}, 内容='{}'",
+                                msg.id, msg.content
+                            );
+                        }
+                    }
+                } else {
+                    error!("无法获取数据库锁来保存AI响应");
+                }
+            } else {
+                error!("未找到要更新的AI消息，ID: {}", bot_message_id);
+            }
+        }
+
+        // 保存更新后的对话到数据库
+        {
+            let convs = conv_arc.lock().unwrap();
+            if let Some(conv) = convs.iter().find(|c| c.id == conversation_id) {
+                if let Ok(mut db_guard) = db_arc.lock() {
+                    if let Some(ref mut db) = *db_guard {
+                        if let Err(e) = db.save_conversation(conv) {
+                            error!("保存更新的对话到数据库失败: {}", e);
+                        } else {
+                            debug!("对话已更新到数据库: {}", conv.id);
+                        }
+                    }
+                }
             }
         }
 

@@ -13,9 +13,11 @@ import {
   Info,
   CheckCircle,
   XCircle,
+  Bug,
 } from "lucide-react";
 import { cn } from "../utils/cn";
 import { useSettings } from "../hooks/useSettings";
+import { debugApi } from "../utils/api";
 import type { Theme } from "../types";
 
 interface SettingsProps {
@@ -52,6 +54,8 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
   const [settings, settingsActions] = useSettings();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [localConfig, setLocalConfig] = useState(settings.config);
+  const [debugOutput, setDebugOutput] = useState("");
+  const [isDebugging, setIsDebugging] = useState(false);
 
   const tabs = [
     {
@@ -78,6 +82,11 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
       id: "about",
       label: "About",
       icon: <Info size={16} />,
+    },
+    {
+      id: "debug",
+      label: "Debug",
+      icon: <Bug size={16} />,
     },
   ];
 
@@ -312,6 +321,93 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
     </div>
   );
 
+  const renderDebug = () => {
+    const handleDebugAction = async (action: string) => {
+      setIsDebugging(true);
+      setDebugOutput("正在执行调试操作...\n");
+
+      try {
+        let result;
+        switch (action) {
+          case "database":
+            result = await debugApi.getDatabaseStatus();
+            setDebugOutput(`数据库状态:\n${JSON.stringify(result, null, 2)}`);
+            break;
+          case "memory":
+            result = await debugApi.getMemoryState();
+            setDebugOutput(`内存状态:\n${result}`);
+            break;
+          case "connection":
+            result = await debugApi.testDatabaseConnection();
+            setDebugOutput(`数据库连接测试:\n${result}`);
+            break;
+          case "clear":
+            if (
+              window.confirm("确定要清空数据库吗？这将删除所有对话和消息！")
+            ) {
+              result = await debugApi.clearDatabase();
+              setDebugOutput(`清空数据库:\n${result}`);
+            } else {
+              setDebugOutput("操作已取消");
+            }
+            break;
+          default:
+            setDebugOutput("未知的调试操作");
+        }
+      } catch (error) {
+        setDebugOutput(`调试操作失败:\n${error}`);
+      } finally {
+        setIsDebugging(false);
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            调试工具
+          </h3>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <button
+              onClick={() => handleDebugAction("database")}
+              disabled={isDebugging}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+            >
+              检查数据库状态
+            </button>
+            <button
+              onClick={() => handleDebugAction("memory")}
+              disabled={isDebugging}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+            >
+              检查内存状态
+            </button>
+            <button
+              onClick={() => handleDebugAction("connection")}
+              disabled={isDebugging}
+              className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-50"
+            >
+              测试数据库连接
+            </button>
+            <button
+              onClick={() => handleDebugAction("clear")}
+              disabled={isDebugging}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+            >
+              清空数据库
+            </button>
+          </div>
+
+          <div className="bg-gray-900 text-green-400 p-4 rounded-lg h-64 overflow-y-auto font-mono text-sm">
+            <pre className="whitespace-pre-wrap">
+              {debugOutput || "选择一个调试操作来查看输出..."}
+            </pre>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "general":
@@ -324,6 +420,8 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
         return renderDatabaseSettings();
       case "about":
         return renderAbout();
+      case "debug":
+        return renderDebug();
       default:
         return renderGeneralSettings();
     }
