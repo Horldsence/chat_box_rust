@@ -5,7 +5,7 @@ use crate::services::database::ChatDatabase;
 use crate::services::live2d::Live2DService;
 use crate::utils::config::AppConfig;
 #[cfg(feature = "candle")]
-use agent::models::llm::{CandleConfig, CandleProvider, WhichModel};
+use agent::models::llm::{CandleConfig, WhichModel};
 use agent::{LLMManager, LLMManagerConfig, OllamaConfig, ProviderConfig};
 use log::{error, info};
 use std::collections::HashMap;

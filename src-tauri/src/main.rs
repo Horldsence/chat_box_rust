@@ -6,7 +6,6 @@ mod services;
 mod state;
 mod utils;
 
-use initialize::conditional_initialize_app;
 use log::{error, info};
 use tauri::Manager;
 
@@ -15,6 +14,7 @@ use utils::initializer::init_app_state;
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let handle = app.handle().clone();
@@ -143,6 +143,7 @@ fn main() {
             debug_clear_database,
             debug_test_database_connection,
         ])
+        .plugin(tauri_plugin_log::Builder::new().build())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

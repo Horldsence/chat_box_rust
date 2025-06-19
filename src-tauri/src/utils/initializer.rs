@@ -3,7 +3,6 @@ use crate::services;
 use crate::state;
 use crate::utils;
 
-use agent::OllamaAgent;
 use chrono::Utc;
 use initialize::InitConfig;
 use log::{error, info};

@@ -123,6 +123,7 @@ impl Default for AppConfig {
     }
 }
 
+#[allow(dead_code)]
 impl AppConfig {
     pub fn new(config_path: PathBuf) -> Self {
         Self {
@@ -197,8 +198,8 @@ impl AppConfig {
     }
 }
 
-// 内部配置管理方法
-pub fn load_app_config(config_path: PathBuf) -> AppConfig {
-    let default_config = AppConfig::new(config_path.clone());
-    default_config.load_config()
-}
+// // 内部配置管理方法
+// pub fn load_app_config(config_path: PathBuf) -> AppConfig {
+//     let default_config = AppConfig::new(config_path.clone());
+//     default_config.load_config()
+// }
