@@ -1,0 +1,230 @@
+{
+  "version": 3,
+  "model": "model.moc3",
+  "textures": [
+    "texture_00.png"
+  ],
+  "physics": "physics.physics3.json",
+  "pose": "pose.pose3.json",
+  "expressions": [
+    {
+      "name": "default",
+      "file": "expressions/default.exp3.json"
+    },
+    {
+      "name": "happy",
+      "file": "expressions/happy.exp3.json"
+    },
+    {
+      "name": "sad",
+      "file": "expressions/sad.exp3.json"
+    },
+    {
+      "name": "angry",
+      "file": "expressions/angry.exp3.json"
+    },
+    {
+      "name": "surprised",
+      "file": "expressions/surprised.exp3.json"
+    },
+    {
+      "name": "confused",
+      "file": "expressions/confused.exp3.json"
+    },
+    {
+      "name": "thinking",
+      "file": "expressions/thinking.exp3.json"
+    },
+    {
+      "name": "excited",
+      "file": "expressions/excited.exp3.json"
+    },
+    {
+      "name": "sleepy",
+      "file": "expressions/sleepy.exp3.json"
+    },
+    {
+      "name": "focused",
+      "file": "expressions/focused.exp3.json"
+    },
+    {
+      "name": "smile",
+      "file": "expressions/smile.exp3.json"
+    },
+    {
+      "name": "wink",
+      "file": "expressions/wink.exp3.json"
+    }
+  ],
+  "motions": {
+    "Idle": [
+      {
+        "file": "motions/idle_01.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5
+      },
+      {
+        "file": "motions/idle_02.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5
+      },
+      {
+        "file": "motions/idle_03.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5
+      }
+    ],
+    "TapBody": [
+      {
+        "file": "motions/tap_body_01.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5,
+        "sound": "sounds/tap_01.wav"
+      },
+      {
+        "file": "motions/tap_body_02.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5,
+        "sound": "sounds/tap_02.wav"
+      },
+      {
+        "file": "motions/tap_body_03.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5,
+        "sound": "sounds/tap_03.wav"
+      }
+    ],
+    "TapHead": [
+      {
+        "file": "motions/tap_head_01.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5,
+        "sound": "sounds/tap_head_01.wav"
+      }
+    ],
+    "Shake": [
+      {
+        "file": "motions/shake_01.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5
+      }
+    ],
+    "Flick": [
+      {
+        "file": "motions/flick_head_01.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5
+      }
+    ],
+    "Pinch": [
+      {
+        "file": "motions/pinch_01.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5
+      }
+    ],
+    "Speaking": [
+      {
+        "file": "motions/speaking_01.motion3.json",
+        "fadeInTime": 0.3,
+        "fadeOutTime": 0.3
+      },
+      {
+        "file": "motions/speaking_02.motion3.json",
+        "fadeInTime": 0.3,
+        "fadeOutTime": 0.3
+      }
+    ],
+    "Thinking": [
+      {
+        "file": "motions/thinking_01.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5
+      }
+    ],
+    "Greeting": [
+      {
+        "file": "motions/greeting_01.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5,
+        "sound": "sounds/greeting_01.wav"
+      }
+    ],
+    "Farewell": [
+      {
+        "file": "motions/farewell_01.motion3.json",
+        "fadeInTime": 0.5,
+        "fadeOutTime": 0.5,
+        "sound": "sounds/farewell_01.wav"
+      }
+    ]
+  },
+  "hit_areas": [
+    {
+      "name": "Head",
+      "id": "HitAreaHead"
+    },
+    {
+      "name": "Body",
+      "id": "HitAreaBody"
+    }
+  ],
+  "layout": {
+    "center_x": 0.0,
+    "center_y": -0.05,
+    "width": 2.0,
+    "height": 2.0
+  },
+  "groups": [
+    {
+      "target": "Parameter",
+      "name": "LipSync",
+      "ids": ["ParamMouthOpenY"]
+    },
+    {
+      "target": "Parameter",
+      "name": "EyeBlink",
+      "ids": ["ParamEyeLOpen", "ParamEyeROpen"]
+    }
+  ],
+  "file_references": {
+    "moc": "model.moc3",
+    "textures": [
+      "texture_00.png"
+    ],
+    "physics": "physics.physics3.json",
+    "pose": "pose.pose3.json",
+    "display_info": "display_info.cdi3.json",
+    "expressions": [
+      "expressions/default.exp3.json",
+      "expressions/happy.exp3.json",
+      "expressions/sad.exp3.json",
+      "expressions/angry.exp3.json",
+      "expressions/surprised.exp3.json",
+      "expressions/confused.exp3.json",
+      "expressions/thinking.exp3.json",
+      "expressions/excited.exp3.json",
+      "expressions/sleepy.exp3.json",
+      "expressions/focused.exp3.json",
+      "expressions/smile.exp3.json",
+      "expressions/wink.exp3.json"
+    ],
+    "motions": [
+      "motions/idle_01.motion3.json",
+      "motions/idle_02.motion3.json",
+      "motions/idle_03.motion3.json",
+      "motions/tap_body_01.motion3.json",
+      "motions/tap_body_02.motion3.json",
+      "motions/tap_body_03.motion3.json",
+      "motions/tap_head_01.motion3.json",
+      "motions/shake_01.motion3.json",
+      "motions/flick_head_01.motion3.json",
+      "motions/pinch_01.motion3.json",
+      "motions/speaking_01.motion3.json",
+      "motions/speaking_02.motion3.json",
+      "motions/thinking_01.motion3.json",
+      "motions/greeting_01.motion3.json",
+      "motions/farewell_01.motion3.json"
+    ]
+  }
+}

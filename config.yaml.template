@@ -1,0 +1,80 @@
+# Chat Box Application Configuration
+# 聊天应用配置文件
+
+# AI模型配置
+ai_model:
+  model_type: "candle"  # "ollama" or "candle"
+  model_name: "microsoft/DialoGPT-medium"
+  server_url: "http://localhost"
+  server_port: 11434
+  system_prompt: "你是一个友好、乐于助人的AI助手，使用中文回答问题。"
+  # Candle特定配置
+  candle_model_id: "microsoft/DialoGPT-medium"
+  candle_revision: "main"
+  candle_use_flash_attn: false
+
+# 语音配置
+voice:
+  enabled: false
+  model_path: "model/vosk-model-small-cn-0.22"
+  timeout_seconds: 15
+
+# 用户界面配置
+ui:
+  theme: "light"  # "light" or "dark"
+  language: "zh-CN"  # "zh-CN", "en-US", "ja-JP"
+
+# 数据库配置
+database:
+  enabled: true
+  path: "database/chat_database.db"
+
+# Live2D配置
+live2d:
+  # 是否启用Live2D功能
+  enabled: true
+
+  # 模型文件路径（相对于应用资源目录）
+  model_path: "models/live2d/hiyori/hiyori_free_en.model3.json"
+
+  # 模型名称（显示用）
+  model_name: "Hiyori"
+
+  # 显示配置
+  scale: 1.0           # 缩放比例
+  position_x: 0.0      # X轴位置偏移
+  position_y: 0.0      # Y轴位置偏移
+
+  # 自动动画配置
+  auto_blink: true     # 自动眨眼
+  auto_breath: true    # 自动呼吸
+
+  # 系统配置
+  check_model_on_startup: true           # 启动时检查模型
+  fallback_to_simple_character: true     # 模型不可用时降级到简化角色
+
+# 应用行为配置
+app_behavior:
+  log_level: "info"
+  default_conversation_title: "新对话"
+  welcome_message: "欢迎使用聊天应用!"
+  message_chunk_buffer_size: 2
+  message_chunk_send_interval_ms: 3
+  show_error_dialogs: true
+  auto_retry_failed_init: false
+
+# 配置文件说明：
+#
+# Live2D模型设置：
+# - 如果要使用真实的Live2D模型，请下载官方模型文件
+# - 推荐下载地址：https://www.live2d.com/download/sample-data/
+# - 将模型文件解压到 models/live2d/ 目录下
+# - 确保模型文件包含：.model3.json, .moc3, 纹理文件等
+#
+# 如果模型文件不存在或无效：
+# - 启用 fallback_to_simple_character 时会使用简化角色
+# - 禁用 fallback_to_simple_character 时会显示下载提示
+#
+# 支持的模型格式：
+# - Live2D Cubism 3.0+ (.model3.json)
+# - Live2D Cubism 2.1 (.model.json) 部分支持
