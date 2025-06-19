@@ -6,6 +6,8 @@ import {
   Wifi,
   WifiOff,
   MessageSquare,
+  User,
+  Smile,
 } from "lucide-react";
 import { cn } from "./utils/cn";
 import { useChat } from "./hooks/useChat";
@@ -14,11 +16,19 @@ import { ConversationList } from "./components/ConversationList";
 import { MessageList } from "./components/Message";
 import { ChatInput } from "./components/ChatInput";
 import { Settings } from "./components/Settings";
+import Live2D from "./components/Live2d";
+import AgentConfig from "./components/AgentConfig";
+import Live2DControl from "./components/Live2DControl";
+import Live2DTest from "./components/Live2DTest";
 import "./App.css";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [agentConfigOpen, setAgentConfigOpen] = useState(false);
+  const [live2dControlOpen, setLive2dControlOpen] = useState(false);
+  const [showLive2D, setShowLive2D] = useState(true);
+  const [showTestPage, setShowTestPage] = useState(false);
 
   // Chat functionality
   const [chatState, chatActions] = useChat({
@@ -177,6 +187,33 @@ function App() {
                 <Plus size={16} />
               </button>
 
+              {/* Agent Config Button */}
+              <button
+                onClick={() => setAgentConfigOpen(true)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                title="Agent Config"
+              >
+                <User size={16} />
+              </button>
+
+              {/* Live2D Control Button */}
+              <button
+                onClick={() => setLive2dControlOpen(true)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                title="Live2D Control"
+              >
+                <Smile size={16} />
+              </button>
+
+              {/* Test Page Button */}
+              <button
+                onClick={() => setShowTestPage(true)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                title="Test Page"
+              >
+                <MessageSquare size={16} />
+              </button>
+
               {/* Settings Button */}
               <button
                 onClick={() => setSettingsOpen(true)}
@@ -189,58 +226,181 @@ function App() {
           </div>
         </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* Welcome Screen or Messages */}
-          {!chatState.currentConversation ? (
-            <div className="flex-1 flex items-center justify-center p-8">
-              <div className="text-center max-w-md">
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MessageSquare size={24} className="text-blue-500" />
+        {/* Main Content Area */}
+        <div className="flex-1 flex min-h-0">
+          {/* Chat Area */}
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* Welcome Screen or Messages */}
+            {!chatState.currentConversation ? (
+              <div className="flex-1 flex items-center justify-center p-8">
+                <div className="text-center max-w-md">
+                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MessageSquare size={24} className="text-blue-500" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    Welcome to Chat Box
+                  </h2>
+                  <p className="text-gray-500 dark:text-gray-400 mb-6">
+                    Start a new conversation to begin chatting with AI.
+                  </p>
+                  <button
+                    onClick={() => chatActions.createConversation()}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    <Plus size={16} />
+                    New Conversation
+                  </button>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                  Welcome to Chat Box
-                </h2>
-                <p className="text-gray-500 dark:text-gray-400 mb-6">
-                  Start a new conversation to begin chatting with AI.
-                </p>
-                <button
-                  onClick={() => chatActions.createConversation()}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  <Plus size={16} />
-                  New Conversation
-                </button>
+              </div>
+            ) : (
+              <>
+                {/* Messages */}
+                <MessageList
+                  messages={chatState.messages}
+                  partialMessage={chatState.partialMessage}
+                  isGenerating={chatState.isGenerating}
+                  className="flex-1"
+                />
+
+                {/* Input */}
+                <ChatInput
+                  onSendMessage={handleSendMessage}
+                  onStartVoice={handleStartVoice}
+                  onStopVoice={handleStopVoice}
+                  voiceStatus={chatState.voiceStatus}
+                  voiceTranscript={chatState.voiceTranscript}
+                  isGenerating={chatState.isGenerating}
+                  disabled={!settingsState.isOnline}
+                  placeholder="Type your message..."
+                />
+              </>
+            )}
+          </div>
+
+          {/* Live2D Area */}
+          {showLive2D && (
+            <div className="w-80 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <div className="h-full flex flex-col">
+                {/* Live2D Header */}
+                <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                      Live2D Character
+                    </h3>
+                    <button
+                      onClick={() => setShowLive2D(false)}
+                      className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+
+                {/* Live2D Component */}
+                <div className="flex-1 relative">
+                  <Live2D
+                    className="w-full h-full"
+                    onActionChange={(action) => {
+                      console.log("Live2D action changed:", action);
+                    }}
+                    onExpressionChange={(expression) => {
+                      console.log("Live2D expression changed:", expression);
+                    }}
+                  />
+                </div>
               </div>
             </div>
-          ) : (
-            <>
-              {/* Messages */}
-              <MessageList
-                messages={chatState.messages}
-                partialMessage={chatState.partialMessage}
-                isGenerating={chatState.isGenerating}
-                className="flex-1"
-              />
-
-              {/* Input */}
-              <ChatInput
-                onSendMessage={handleSendMessage}
-                onStartVoice={handleStartVoice}
-                onStopVoice={handleStopVoice}
-                voiceStatus={chatState.voiceStatus}
-                voiceTranscript={chatState.voiceTranscript}
-                isGenerating={chatState.isGenerating}
-                disabled={!settingsState.isOnline}
-                placeholder="Type your message..."
-              />
-            </>
           )}
         </div>
       </div>
 
       {/* Settings Modal */}
       <Settings isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      {/* Agent Config Modal */}
+      {agentConfigOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Agent Configuration
+              </h2>
+              <button
+                onClick={() => setAgentConfigOpen(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+              <AgentConfig
+                onConfigChange={(config) => {
+                  console.log("Agent config changed:", config);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Live2D Control Modal */}
+      {live2dControlOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Live2D Control Panel
+              </h2>
+              <button
+                onClick={() => setLive2dControlOpen(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+              <Live2DControl
+                onActionExecuted={(action) => {
+                  console.log("Live2D action executed:", action);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Test Page Modal */}
+      {showTestPage && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Live2D & Agent 测试页面
+              </h2>
+              <button
+                onClick={() => setShowTestPage(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400"
+              >
+                ×
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(95vh-80px)] p-4">
+              <Live2DTest />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Show Live2D Button (when hidden) */}
+      {!showLive2D && (
+        <button
+          onClick={() => setShowLive2D(true)}
+          className="fixed bottom-20 right-4 z-40 p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors"
+          title="Show Live2D Character"
+        >
+          <Smile size={20} />
+        </button>
+      )}
 
       {/* Global Loading Overlay */}
       {chatState.isLoading && chatState.conversations.length === 0 && (

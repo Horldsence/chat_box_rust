@@ -25,15 +25,15 @@ tracing-subscriber = { version = "0.3.18", features = ["fmt", "env-filter"] }
 tokenizers = { version = "0.21.1" }
 hf-hub = { version = "0.4.2" }
 tracing-chrome = "0.7.2"
-candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
-candle-transformers = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
-candle-nn = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
-candle-examples = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
+candle-core = { git = "https://github.com/Horldsence/candle_eswin.git", version = "0.9.1" }
+candle-transformers = { git = "https://github.com/Horldsence/candle_eswin.git", version = "0.9.1" }
+candle-nn = { git = "https://github.com/Horldsence/candle_eswin.git", version = "0.9.1" }
+candle-examples = { git = "https://github.com/Horldsence/candle_eswin.git", version = "0.9.1" }
 
 [features]
 default = []
-candle = [] # 启用本地模型支持
-ollama = [] # Ollama 集成
+candle = []                # 启用本地模型支持
+ollama = []                # Ollama 集成
 all = ["candle", "ollama"]
 
 [dev-dependencies]

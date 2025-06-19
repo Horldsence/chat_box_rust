@@ -8,6 +8,8 @@
     "opener:default",
     "dialog:default",
     "core:window:allow-show",
-    "core:window:allow-set-focus"
+    "core:window:allow-set-focus",
+    "core:path:default",
+    "core:resources:default"
   ]
 }

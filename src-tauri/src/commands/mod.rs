@@ -1,19 +1,25 @@
+pub mod agent;
 pub mod ai;
 pub mod candle_test;
+pub mod config;
 pub mod conversation;
 pub mod database;
 pub mod debug;
 pub mod dialog;
+pub mod live2d;
 pub mod message;
 pub mod settings;
 pub mod voice;
 
+pub use agent::*;
 pub use ai::*;
 pub use candle_test::*;
+pub use config::*;
 pub use conversation::*;
 pub use database::*;
 pub use debug::*;
 pub use dialog::*;
+pub use live2d::*;
 pub use message::*;
 pub use settings::*;
 pub use voice::*;

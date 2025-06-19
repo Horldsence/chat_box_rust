@@ -59,7 +59,14 @@ pub async fn init_app_state(
         conversation_id: default_conversation_id,
     }];
 
-    let state = AppState::new(config.clone(), conversations, messages, vosk_asr).await?;
+    let state = AppState::new(
+        config.clone(),
+        conversations,
+        messages,
+        vosk_asr,
+        handle.clone(),
+    )
+    .await?;
 
     // 初始化数据库
     if config.database.enabled {
@@ -104,6 +111,18 @@ pub fn convert_init_config_to_app_config(init_config: InitConfig) -> AppConfig {
             message_chunk_send_interval_ms: init_config.app_behavior.message_chunk_send_interval_ms,
             show_error_dialogs: init_config.app_behavior.show_error_dialogs,
             auto_retry_failed_init: init_config.app_behavior.auto_retry_failed_init,
+        },
+        live2d: utils::config::Live2DConfig {
+            enabled: true,
+            model_path: "models/live2d/hiyori/hiyori_free_en.model3.json".to_string(),
+            model_name: "Hiyori".to_string(),
+            scale: 1.0,
+            position_x: 0.0,
+            position_y: 0.0,
+            auto_blink: true,
+            auto_breath: true,
+            check_model_on_startup: true,
+            fallback_to_simple_character: true,
         },
     }
 }

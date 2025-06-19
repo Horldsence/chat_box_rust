@@ -63,10 +63,10 @@ rusqlite = { version = "0.36.0", features = ["bundled"] }
 scopeguard = "1.2.0"
 tauri-plugin-dialog = "2.2.2"
 uuid = { version = "1.0", features = ["v4"] }
-candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
-candle-transformers = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
-candle-nn = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
-candle-examples = { git = "https://github.com/huggingface/candle.git", version = "0.9.1" }
+candle-core = { git = "https://github.com/Horldsence/candle_eswin.git", version = "0.9.1" }
+candle-transformers = { git = "https://github.com/Horldsence/candle_eswin.git", version = "0.9.1" }
+candle-nn = { git = "https://github.com/Horldsence/candle_eswin.git", version = "0.9.1" }
+candle-examples = { git = "https://github.com/Horldsence/candle_eswin.git", version = "0.9.1" }
 hf-hub = "0.4.2"
 tokenizers = "0.21.1"
 clap = { version = "4.5.39", features = ["derive", "suggestions"] }

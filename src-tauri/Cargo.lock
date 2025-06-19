@@ -23,10 +23,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "candle-core",
+ "candle-core 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
  "candle-examples",
- "candle-nn",
- "candle-transformers",
+ "candle-nn 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
+ "candle-transformers 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
  "chrono",
  "clap",
  "env_logger",
@@ -673,6 +673,27 @@ dependencies = [
 [[package]]
 name = "candle-core"
 version = "0.9.1"
+source = "git+https://github.com/Horldsence/candle_eswin.git#17313a4226a6c6bde444d28b4be4f0f96d155be7"
+dependencies = [
+ "byteorder",
+ "gemm 0.17.1",
+ "half",
+ "memmap2",
+ "num-traits",
+ "num_cpus",
+ "rand 0.9.1",
+ "rand_distr",
+ "rayon",
+ "safetensors",
+ "thiserror 1.0.69",
+ "ug",
+ "yoke 0.7.5",
+ "zip",
+]
+
+[[package]]
+name = "candle-core"
+version = "0.9.1"
 source = "git+https://github.com/huggingface/candle.git#17313a4226a6c6bde444d28b4be4f0f96d155be7"
 dependencies = [
  "byteorder",
@@ -694,12 +715,12 @@ dependencies = [
 [[package]]
 name = "candle-examples"
 version = "0.9.1"
-source = "git+https://github.com/huggingface/candle.git#17313a4226a6c6bde444d28b4be4f0f96d155be7"
+source = "git+https://github.com/Horldsence/candle_eswin.git#17313a4226a6c6bde444d28b4be4f0f96d155be7"
 dependencies = [
  "anyhow",
- "candle-core",
- "candle-nn",
- "candle-transformers",
+ "candle-core 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
+ "candle-nn 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
+ "candle-transformers 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
  "csv",
  "hf-hub",
  "image",
@@ -714,9 +735,23 @@ dependencies = [
 [[package]]
 name = "candle-nn"
 version = "0.9.1"
+source = "git+https://github.com/Horldsence/candle_eswin.git#17313a4226a6c6bde444d28b4be4f0f96d155be7"
+dependencies = [
+ "candle-core 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
+ "half",
+ "num-traits",
+ "rayon",
+ "safetensors",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "candle-nn"
+version = "0.9.1"
 source = "git+https://github.com/huggingface/candle.git#17313a4226a6c6bde444d28b4be4f0f96d155be7"
 dependencies = [
- "candle-core",
+ "candle-core 0.9.1 (git+https://github.com/huggingface/candle.git)",
  "half",
  "num-traits",
  "rayon",
@@ -728,11 +763,29 @@ dependencies = [
 [[package]]
 name = "candle-transformers"
 version = "0.9.1"
+source = "git+https://github.com/Horldsence/candle_eswin.git#17313a4226a6c6bde444d28b4be4f0f96d155be7"
+dependencies = [
+ "byteorder",
+ "candle-core 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
+ "candle-nn 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
+ "fancy-regex",
+ "num-traits",
+ "rand 0.9.1",
+ "rayon",
+ "serde",
+ "serde_json",
+ "serde_plain",
+ "tracing",
+]
+
+[[package]]
+name = "candle-transformers"
+version = "0.9.1"
 source = "git+https://github.com/huggingface/candle.git#17313a4226a6c6bde444d28b4be4f0f96d155be7"
 dependencies = [
  "byteorder",
- "candle-core",
- "candle-nn",
+ "candle-core 0.9.1 (git+https://github.com/huggingface/candle.git)",
+ "candle-nn 0.9.1 (git+https://github.com/huggingface/candle.git)",
  "fancy-regex",
  "num-traits",
  "rand 0.9.1",
@@ -843,10 +896,10 @@ dependencies = [
  "anyhow",
  "async-stream",
  "async-trait",
- "candle-core",
+ "candle-core 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
  "candle-examples",
- "candle-nn",
- "candle-transformers",
+ "candle-nn 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
+ "candle-transformers 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
  "chrono",
  "clap",
  "config",
@@ -3014,9 +3067,9 @@ name = "initialize"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "candle-core",
- "candle-nn",
- "candle-transformers",
+ "candle-core 0.9.1 (git+https://github.com/huggingface/candle.git)",
+ "candle-nn 0.9.1 (git+https://github.com/huggingface/candle.git)",
+ "candle-transformers 0.9.1 (git+https://github.com/huggingface/candle.git)",
  "chrono",
  "futures",
  "hf-hub",

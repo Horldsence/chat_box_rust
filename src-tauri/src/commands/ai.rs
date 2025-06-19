@@ -22,6 +22,25 @@ pub async fn generate_ai_response(
     let conversation_id = request.conversation_id;
     info!("开始生成AI回复，对话ID: {}", conversation_id);
 
+    // 触发Live2D思考状态
+    {
+        let live2d_service = state.live2d_service.lock().await;
+        if let Err(e) = live2d_service.start_thinking().await {
+            error!("启动Live2D思考状态失败: {}", e);
+        }
+    }
+
+    // 处理用户消息以便Agent分析
+    {
+        let agent_service = state.agent_service.lock().await;
+        if let Err(e) = agent_service
+            .process_user_message(&user_message_content)
+            .await
+        {
+            error!("Agent处理用户消息失败: {}", e);
+        }
+    }
+
     // 创建机器人消息占位符
     let bot_message_id = Utc::now().timestamp_millis() as u64;
     let bot_message = Message {
@@ -53,8 +72,18 @@ pub async fn generate_ai_response(
 
     let history = state.get_conversation_history(conversation_id);
 
+    // 构建Agent增强的系统提示词
+    let agent_service = state.agent_service.lock().await;
+    let system_prompt = agent_service
+        .build_system_prompt(Some(&format!(
+            "当前对话上下文：用户刚刚说了：{}",
+            user_message_content
+        )))
+        .await;
+    drop(agent_service);
+
     // 构建完整的对话历史提示
-    let mut prompt = String::new();
+    let mut prompt = format!("{}\n\n", system_prompt);
     for msg in &history {
         match msg.sender.as_str() {
             "user" => prompt.push_str(&format!("User: {}\n", msg.content)),
@@ -71,10 +100,21 @@ pub async fn generate_ai_response(
     let mut stream = match llm_manager.generate_stream(&prompt).await {
         Ok(stream) => {
             info!("成功创建LLM响应流");
+            // 开始说话状态
+            let live2d_service = state.live2d_service.lock().await;
+            if let Err(e) = live2d_service.start_speaking().await {
+                error!("启动Live2D说话状态失败: {}", e);
+            }
+            drop(live2d_service);
             stream
         }
         Err(e) => {
             error!("创建LLM响应流失败: {}", e);
+            // 如果生成失败，恢复到idle状态
+            let live2d_service = state.live2d_service.lock().await;
+            if let Err(live2d_err) = live2d_service.stop_speaking().await {
+                error!("恢复Live2D状态失败: {}", live2d_err);
+            }
             return Err(format!("创建响应流失败: {}", e));
         }
     };
@@ -86,6 +126,7 @@ pub async fn generate_ai_response(
     let msg_arc = state.messages.clone();
     let config_arc = state.config.clone();
     let db_arc = state.db.clone();
+    let live2d_service_arc = state.live2d_service.clone();
     let window_clone = window.clone();
 
     let config = config_arc.lock().unwrap();
@@ -113,6 +154,14 @@ pub async fn generate_ai_response(
                 chunk,
                 full_response.len()
             );
+
+            // 处理流式文本以触发Live2D动作
+            {
+                let live2d_service = live2d_service_arc.lock().await;
+                if let Err(e) = live2d_service.process_streaming_text(&chunk).await {
+                    error!("Live2D处理流式文本失败: {}", e);
+                }
+            }
 
             // 使用缓冲策略: 从配置获取缓冲大小和发送间隔
             let now = std::time::Instant::now();
@@ -207,6 +256,16 @@ pub async fn generate_ai_response(
                     }
                 }
             }
+        }
+
+        // 停止Live2D说话状态
+        {
+            let live2d_service = live2d_service_arc.lock().await;
+            if let Err(e) = live2d_service.stop_speaking().await {
+                error!("停止Live2D说话状态失败: {}", e);
+            }
+            // 清空文本缓冲区
+            live2d_service.clear_text_buffer().await;
         }
 
         // 发送完成信号

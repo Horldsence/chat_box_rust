@@ -1,6 +1,8 @@
 use crate::models::{Conversation, Message};
+use crate::services::agent::AgentService;
 use crate::services::asr::vosk_python::VoskASR;
 use crate::services::database::ChatDatabase;
+use crate::services::live2d::Live2DService;
 use crate::utils::config::AppConfig;
 #[cfg(feature = "candle")]
 use agent::models::llm::{CandleConfig, CandleProvider, WhichModel};
@@ -17,6 +19,8 @@ pub struct AppState {
     pub llm_manager: Arc<LLMManager>,
     pub vosk_asr: Arc<tokio::sync::Mutex<VoskASR>>,
     pub db: Arc<Mutex<Option<ChatDatabase>>>, // 添加数据库支持
+    pub live2d_service: Arc<tokio::sync::Mutex<Live2DService>>, // 添加Live2D服务
+    pub agent_service: Arc<tokio::sync::Mutex<AgentService>>, // 添加Agent服务
 }
 
 #[allow(dead_code)]
@@ -26,6 +30,7 @@ impl AppState {
         conversations: Vec<Conversation>,
         messages: Vec<Message>,
         vosk_asr: VoskASR,
+        app_handle: tauri::AppHandle,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         // 创建 LLM 管理器配置
         let mut providers = HashMap::new();
@@ -85,6 +90,12 @@ impl AppState {
             LLMManager::new(llm_manager_config).await?
         };
 
+        // 创建Live2D服务
+        let live2d_service = Live2DService::new(app_handle.clone());
+
+        // 创建Agent服务
+        let agent_service = AgentService::new(app_handle);
+
         Ok(AppState {
             config: Arc::new(Mutex::new(config)),
             conversations: Arc::new(Mutex::new(conversations)),
@@ -92,6 +103,8 @@ impl AppState {
             llm_manager: Arc::new(llm_manager),
             vosk_asr: Arc::new(tokio::sync::Mutex::new(vosk_asr)),
             db: Arc::new(Mutex::new(None)), // 初始时数据库为None
+            live2d_service: Arc::new(tokio::sync::Mutex::new(live2d_service)),
+            agent_service: Arc::new(tokio::sync::Mutex::new(agent_service)),
         })
     }
 

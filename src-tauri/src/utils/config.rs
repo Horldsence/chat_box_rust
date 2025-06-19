@@ -47,6 +47,20 @@ pub struct AppBehaviorConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Live2DConfig {
+    pub enabled: bool,
+    pub model_path: String,
+    pub model_name: String,
+    pub scale: f32,
+    pub position_x: f32,
+    pub position_y: f32,
+    pub auto_blink: bool,
+    pub auto_breath: bool,
+    pub check_model_on_startup: bool,
+    pub fallback_to_simple_character: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AppConfig {
     pub config_path: PathBuf,
     pub ai_model: AiModelConfig,
@@ -54,6 +68,7 @@ pub struct AppConfig {
     pub ui: UiConfig,
     pub database: DatabaseConfig,
     pub app_behavior: AppBehaviorConfig,
+    pub live2d: Live2DConfig,
 }
 
 impl Default for AppConfig {
@@ -91,6 +106,18 @@ impl Default for AppConfig {
             database: DatabaseConfig {
                 enabled: true,
                 path: "database/chat_database.db".to_string(),
+            },
+            live2d: Live2DConfig {
+                enabled: true,
+                model_path: "models/live2d/hiyori/hiyori_free_en.model3.json".to_string(),
+                model_name: "Hiyori".to_string(),
+                scale: 1.0,
+                position_x: 0.0,
+                position_y: 0.0,
+                auto_blink: true,
+                auto_breath: true,
+                check_model_on_startup: true,
+                fallback_to_simple_character: true,
             },
         }
     }
