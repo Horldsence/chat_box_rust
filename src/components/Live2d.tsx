@@ -95,44 +95,60 @@ const Live2D: React.FC<Live2DProps> = ({
 
   // 创建简化角色
   const createSimpleCharacter = useCallback(
-    (app: any, scale: number, position: [number, number]) => {
-      const container = new app.Container();
+    async (app: any, scale: number, position: [number, number]) => {
+      console.log("createSimpleCharacter 开始，参数:", { scale, position });
+
+      // 动态导入PIXI以获取类
+      const PIXI = await import("pixi.js");
+      console.log("PIXI模块导入成功");
+
+      const container = new PIXI.Container();
+      console.log("Container创建成功");
 
       // 身体
-      const body = new app.Graphics();
+      const body = new PIXI.Graphics();
       body.beginFill(0x4a90e2);
       body.drawRoundedRect(-40, -60, 80, 120, 20);
       body.endFill();
 
       // 头部
-      const head = new app.Graphics();
+      const head = new PIXI.Graphics();
       head.beginFill(0x66ccff);
       head.drawCircle(0, -120, 40);
       head.endFill();
 
       // 眼睛
-      const leftEye = new app.Graphics();
+      const leftEye = new PIXI.Graphics();
       leftEye.beginFill(0x000000);
       leftEye.drawCircle(-15, -130, 5);
       leftEye.endFill();
 
-      const rightEye = new app.Graphics();
+      const rightEye = new PIXI.Graphics();
       rightEye.beginFill(0x000000);
       rightEye.drawCircle(15, -130, 5);
       rightEye.endFill();
 
       // 嘴巴
-      const mouth = new app.Graphics();
+      const mouth = new PIXI.Graphics();
       mouth.beginFill(0xff6b6b);
       mouth.drawEllipse(0, -110, 15, 8);
       mouth.endFill();
 
       container.addChild(body, head, leftEye, rightEye, mouth);
       container.scale.set(scale);
-      container.position.set(
-        position[0] + app.screen.width / 2,
-        position[1] + app.screen.height,
-      );
+
+      // 安全地设置位置，避免app.screen未定义的错误
+      const screenWidth = app.renderer?.width || app.screen?.width || 400;
+      const screenHeight = app.renderer?.height || app.screen?.height || 600;
+      console.log("屏幕尺寸:", { screenWidth, screenHeight });
+
+      const finalPosX = position[0] + screenWidth / 2;
+      const finalPosY = position[1] + screenHeight;
+      console.log("最终位置:", { finalPosX, finalPosY });
+
+      container.position.set(finalPosX, finalPosY);
+
+      console.log("角色图形创建完成，返回角色对象");
 
       const character: SimpleCharacter = {
         graphics: container,
@@ -198,6 +214,12 @@ const Live2D: React.FC<Live2DProps> = ({
     setError(null);
 
     try {
+      console.log("开始初始化Live2D...");
+      console.log("WebGL支持:", webglSupported);
+      console.log("使用简化角色:", useSimpleCharacter);
+      console.log("当前配置:", appConfig);
+      console.log("模型状态:", modelStatus);
+
       // 检查是否应该使用真实模型
       if (!useSimpleCharacter && appConfig && modelStatus?.status === "ready") {
         // 尝试加载真实Live2D模型
@@ -206,42 +228,85 @@ const Live2D: React.FC<Live2DProps> = ({
         // 暂时还是使用简化角色
       }
 
-      // 动态导入PIXI.js
-      const PIXI = await import("pixi.js");
+      // 如果没有配置，使用默认配置继续初始化
+      if (!appConfig) {
+        console.log("没有配置，使用默认设置继续初始化");
+      }
 
-      // 创建PIXI应用
-      const app = new PIXI.Application({
-        view: canvasRef.current,
-        autoStart: true,
-        backgroundAlpha: 0,
-        width: canvasRef.current.clientWidth,
-        height: canvasRef.current.clientHeight,
-      });
+      // 动态导入PIXI.js
+      console.log("动态导入PIXI.js...");
+      const PIXI = await import("pixi.js");
+      console.log("PIXI.js版本:", PIXI.VERSION);
+
+      // 获取canvas尺寸
+      const canvas = canvasRef.current;
+      const width = canvas.clientWidth || 400;
+      const height = canvas.clientHeight || 600;
+      console.log("Canvas尺寸:", { width, height });
+
+      // 尝试创建PIXI应用 - 使用最基础的配置
+      let app;
+      try {
+        console.log("尝试创建PIXI应用 (WebGL)...");
+        app = new PIXI.Application({
+          view: canvas,
+          width,
+          height,
+          backgroundAlpha: 0,
+          antialias: false,
+          autoStart: false,
+        });
+        console.log("PIXI应用创建成功 (WebGL)");
+      } catch (webglError) {
+        console.warn("WebGL初始化失败，尝试Canvas渲染器:", webglError);
+        // 强制使用Canvas渲染器
+        app = new PIXI.Application({
+          view: canvas,
+          width,
+          height,
+          backgroundAlpha: 0,
+          antialias: false,
+          autoStart: false,
+          forceCanvas: true,
+        });
+        console.log("PIXI应用创建成功 (Canvas)");
+      }
 
       live2dApp.current = app;
+      console.log("PIXI应用已保存到ref");
 
-      // 创建角色（使用配置中的参数）
+      // 创建角色（使用配置中的参数或默认参数）
       const configScale = appConfig?.scale || scale;
       const configPosition: [number, number] = appConfig
         ? [appConfig.position_x, appConfig.position_y]
         : position;
 
-      const character = createSimpleCharacter(
-        PIXI,
+      console.log("使用的参数:", { configScale, configPosition });
+
+      console.log("创建简化角色，参数:", { configScale, configPosition });
+      const character = await createSimpleCharacter(
+        app,
         configScale,
         configPosition,
       );
       currentModel.current = character;
+      console.log("角色创建完成");
 
       // 添加到舞台
       app.stage.addChild(character.graphics);
+      console.log("角色已添加到舞台");
 
       // 添加交互
       character.graphics.interactive = true;
-      character.graphics.buttonMode = true;
+      character.graphics.cursor = "pointer";
       character.graphics.on("pointerdown", () => {
         handleModelTap();
       });
+      console.log("交互事件已设置");
+
+      // 启动应用
+      app.start();
+      console.log("PIXI应用已启动");
 
       setIsLoaded(true);
       console.log(
@@ -249,7 +314,15 @@ const Live2D: React.FC<Live2DProps> = ({
       );
     } catch (err) {
       console.error("Live2D 初始化失败:", err);
-      setError(err instanceof Error ? err.message : "未知错误");
+
+      // 如果初始化失败，尝试强制使用简化模式
+      if (!useSimpleCharacter) {
+        console.log("尝试强制使用简化角色模式...");
+        setUseSimpleCharacter(true);
+        // 不设置错误，让组件重新尝试初始化
+      } else {
+        setError(err instanceof Error ? err.message : "未知错误");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -332,17 +405,32 @@ const Live2D: React.FC<Live2DProps> = ({
 
   // 根据模型状态决定使用模式
   useEffect(() => {
+    console.log("模型状态变化:", {
+      modelStatus,
+      needsSetup,
+      canUseFallback,
+      isModelValid,
+    });
+
     if (modelStatus) {
       if (needsSetup && !canUseFallback) {
+        console.log("需要设置模型且不能回退");
         setShowModelSetup(true);
         setUseSimpleCharacter(false);
       } else if (needsSetup && canUseFallback) {
+        console.log("需要设置模型但可以回退，使用简化角色");
         setUseSimpleCharacter(true);
         setShowModelSetup(false);
       } else if (isModelValid) {
+        console.log("模型有效，使用真实模型");
         setUseSimpleCharacter(false);
         setShowModelSetup(false);
       }
+    } else {
+      // 如果没有模型状态，默认使用简化角色
+      console.log("没有模型状态，默认使用简化角色");
+      setUseSimpleCharacter(true);
+      setShowModelSetup(false);
     }
   }, [modelStatus, needsSetup, canUseFallback, isModelValid]);
 
@@ -403,7 +491,16 @@ const Live2D: React.FC<Live2DProps> = ({
 
   // 初始化Live2D
   useEffect(() => {
-    if (appConfig?.enabled && canvasRef.current && modelStatus) {
+    // 如果有配置且启用，或者没有配置但需要使用默认配置
+    if (
+      canvasRef.current &&
+      (appConfig?.enabled || (!appConfig && !isConfigLoading))
+    ) {
+      console.log("触发Live2D初始化，配置状态:", {
+        appConfig,
+        modelStatus,
+        isConfigLoading,
+      });
       initializeLive2D();
     }
 
@@ -415,7 +512,7 @@ const Live2D: React.FC<Live2DProps> = ({
       }
       currentModel.current = null;
     };
-  }, [config, initializeLive2D, appConfig, modelStatus]);
+  }, [config, initializeLive2D, appConfig, modelStatus, isConfigLoading]);
 
   // 处理画布大小变化
   useEffect(() => {
@@ -430,7 +527,10 @@ const Live2D: React.FC<Live2DProps> = ({
         // 重新定位模型
         if (currentModel.current) {
           const model = currentModel.current;
-          model.position.set(canvas.clientWidth / 2, canvas.clientHeight);
+          model.graphics.position.set(
+            canvas.clientWidth / 2,
+            canvas.clientHeight,
+          );
         }
       }
     };

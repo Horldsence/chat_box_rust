@@ -29,6 +29,9 @@ importers:
       liquid-glass-react:
         specifier: ^1.0.0
         version: 1.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      live2d-render:
+        specifier: ^0.0.6
+        version: 0.0.6
       lucide-react:
         specifier: ^0.400.0
         version: 0.400.0(react@18.3.1)
@@ -1088,6 +1091,9 @@ packages:
     peerDependencies:
       react: '>=19'
       react-dom: '>=19'
+
+  live2d-render@0.0.6:
+    resolution: {integrity: sha512-FwkukpQwhVoiWseIDhbiFHm4CcNx/q5gHdn9OEqGnLYGFny6z7SD3DTijK0QbJ/3JJzjWLJXMGFf/xfQdzlRMA==}
 
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
@@ -2342,6 +2348,8 @@ snapshots:
     dependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+
+  live2d-render@0.0.6: {}
 
   loose-envify@1.4.0:
     dependencies:

@@ -1,5 +1,4 @@
-use chrono::Utc;
-use log::{debug, error, info};
+use log::{debug, info};
 use rusqlite::{params, Connection, Result};
 use std::fs;
 use std::path::Path;

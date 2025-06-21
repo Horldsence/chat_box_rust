@@ -13,7 +13,6 @@ use std::path::Path;
 use tauri::path::BaseDirectory;
 use tauri::Manager;
 use utils::config::AppConfig;
-use utils::logger::init_logger; // 导入配置相关函数
 
 pub async fn init_app_state(
     handle: tauri::AppHandle,
@@ -27,8 +26,6 @@ pub async fn init_app_state(
     // 使用新的初始化系统加载配置
     let init_config = InitConfig::new(config_path.clone()).load_config();
 
-    // 设置日志级别
-    init_logger();
     info!("应用启动，开始新的初始化流程");
 
     // 注：条件初始化已在 conditional_initialize_app 中完成

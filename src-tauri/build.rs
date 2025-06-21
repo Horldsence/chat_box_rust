@@ -1,12 +1,4 @@
-use log::info;
-
 fn main() {
-    env_logger::Builder::new()
-        .filter_level(log::LevelFilter::Info)
-        .init();
-
-    info!("开始执行构建脚本");
-
     // // 配置 Vosk 库
     // configure_vosk();
 

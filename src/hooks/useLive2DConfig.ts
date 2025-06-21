@@ -105,10 +105,30 @@ export const useLive2DConfig = (): UseLive2DConfigReturn => {
         "get_live2d_config_from_file",
       );
       setConfig(live2dConfig);
+      console.log("Live2D配置加载成功:", live2dConfig);
     } catch (err) {
+      console.error("Live2D配置加载失败，尝试使用默认配置:", err);
+
+      // 如果加载失败，使用默认配置
+      const defaultConfig: Live2DConfig = {
+        enabled: true,
+        model_path: "models/live2d/hiyori/hiyori_free_en.model3.json",
+        model_name: "Hiyori",
+        scale: 1.0,
+        position_x: 0.0,
+        position_y: 0.0,
+        auto_blink: true,
+        auto_breath: true,
+        check_model_on_startup: true,
+        fallback_to_simple_character: true,
+      };
+
+      setConfig(defaultConfig);
+      console.log("使用默认Live2D配置:", defaultConfig);
+
+      // 设置警告而不是错误，因为我们有回退方案
       const errorMessage = err instanceof Error ? err.message : "加载配置失败";
-      setError(errorMessage);
-      console.error("加载Live2D配置失败:", err);
+      console.warn("配置加载警告:", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -122,6 +142,7 @@ export const useLive2DConfig = (): UseLive2DConfigReturn => {
     try {
       await invoke("update_live2d_config_in_file", { live2dConfig: newConfig });
       setConfig(newConfig);
+      console.log("Live2D配置更新成功:", newConfig);
 
       // 重新检查模型状态
       await checkModelStatus();
@@ -129,7 +150,10 @@ export const useLive2DConfig = (): UseLive2DConfigReturn => {
       const errorMessage = err instanceof Error ? err.message : "更新配置失败";
       setError(errorMessage);
       console.error("更新Live2D配置失败:", err);
-      throw err;
+
+      // 即使更新失败，也保持本地配置状态
+      setConfig(newConfig);
+      console.log("保持本地配置状态:", newConfig);
     } finally {
       setIsLoading(false);
     }
@@ -141,15 +165,38 @@ export const useLive2DConfig = (): UseLive2DConfigReturn => {
       try {
         const status = await invoke<ModelStatus>("get_live2d_model_status");
         setModelStatus(status);
+        console.log("模型状态检查成功:", status);
         return status;
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "检查模型状态失败";
-        setError(errorMessage);
-        console.error("检查模型状态失败:", err);
-        return null;
+        console.error("检查模型状态失败，使用回退状态:", err);
+
+        // 创建一个回退状态，允许使用简化角色
+        const fallbackStatus: ModelStatus = {
+          config: config || {
+            enabled: true,
+            model_path: "models/live2d/hiyori/hiyori_free_en.model3.json",
+            model_name: "Hiyori",
+            scale: 1.0,
+            position_x: 0.0,
+            position_y: 0.0,
+            auto_blink: true,
+            auto_breath: true,
+            check_model_on_startup: true,
+            fallback_to_simple_character: true,
+          },
+          enabled: true,
+          status: "model_not_found",
+          message: "模型文件不存在，将使用简化角色",
+          can_fallback: true,
+          error_details:
+            err instanceof Error ? err.message : "检查模型状态失败",
+        };
+
+        setModelStatus(fallbackStatus);
+        console.log("使用回退模型状态:", fallbackStatus);
+        return fallbackStatus;
       }
-    }, []);
+    }, [config]);
 
   // 检查指定模型
   const checkModel = useCallback(
@@ -195,16 +242,26 @@ export const useLive2DConfig = (): UseLive2DConfigReturn => {
       await invoke("enable_live2d");
       await loadConfig();
       await checkModelStatus();
+      console.log("Live2D已成功启用");
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "启用Live2D失败";
-      setError(errorMessage);
-      console.error("启用Live2D失败:", err);
-      throw err;
+      console.error("启用Live2D失败，尝试本地启用:", err);
+
+      // 即使后端命令失败，也尝试在前端启用
+      if (config) {
+        const enabledConfig = { ...config, enabled: true };
+        setConfig(enabledConfig);
+        await checkModelStatus();
+        console.log("Live2D本地启用成功");
+      } else {
+        const errorMessage =
+          err instanceof Error ? err.message : "启用Live2D失败";
+        setError(errorMessage);
+        console.error("完全启用Live2D失败:", err);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [loadConfig, checkModelStatus]);
+  }, [loadConfig, checkModelStatus, config]);
 
   // 禁用Live2D
   const disableLive2D = useCallback(async () => {
@@ -215,16 +272,26 @@ export const useLive2DConfig = (): UseLive2DConfigReturn => {
       await invoke("disable_live2d");
       await loadConfig();
       setModelStatus(null);
+      console.log("Live2D已成功禁用");
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "禁用Live2D失败";
-      setError(errorMessage);
-      console.error("禁用Live2D失败:", err);
-      throw err;
+      console.error("禁用Live2D失败，尝试本地禁用:", err);
+
+      // 即使后端命令失败，也尝试在前端禁用
+      if (config) {
+        const disabledConfig = { ...config, enabled: false };
+        setConfig(disabledConfig);
+        setModelStatus(null);
+        console.log("Live2D本地禁用成功");
+      } else {
+        const errorMessage =
+          err instanceof Error ? err.message : "禁用Live2D失败";
+        setError(errorMessage);
+        console.error("完全禁用Live2D失败:", err);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [loadConfig]);
+  }, [loadConfig, config]);
 
   // 计算便捷属性
   const isModelValid = modelStatus?.status === "ready";

@@ -16,7 +16,7 @@ import { ConversationList } from "./components/ConversationList";
 import { MessageList } from "./components/Message";
 import { ChatInput } from "./components/ChatInput";
 import { Settings } from "./components/Settings";
-import Live2D from "./components/Live2d";
+import Live2DRender from "./components/Live2DRender";
 import AgentConfig from "./components/AgentConfig";
 import Live2DControl from "./components/Live2DControl";
 import Live2DTest from "./components/Live2DTest";
@@ -298,13 +298,13 @@ function App() {
 
                 {/* Live2D Component */}
                 <div className="flex-1 relative">
-                  <Live2D
+                  <Live2DRender
                     className="w-full h-full"
-                    onActionChange={(action) => {
-                      console.log("Live2D action changed:", action);
+                    onModelLoad={() => {
+                      console.log("Live2DRender model loaded");
                     }}
-                    onExpressionChange={(expression) => {
-                      console.log("Live2D expression changed:", expression);
+                    onModelError={(error) => {
+                      console.log("Live2DRender model error:", error);
                     }}
                   />
                 </div>

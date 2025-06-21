@@ -1,0 +1,12 @@
+[package]
+name = "kokoros-tts"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+futures = "0.3.31"
+kokoro-tts = "0.2.6"
+rodio = "0.20.1"
+tokio = { version = "1.45.1" , features = ["full"] }
+async_stream = "0.3.6"
