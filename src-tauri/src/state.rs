@@ -2,11 +2,11 @@ use crate::models::{Conversation, Message};
 use crate::services::agent::AgentService;
 use crate::services::asr::vosk_python::VoskASR;
 use crate::services::database::ChatDatabase;
-use crate::services::live2d::Live2DService;
 use crate::utils::config::AppConfig;
 #[cfg(feature = "candle")]
 use agent::models::llm::{CandleConfig, WhichModel};
 use agent::{LLMManager, LLMManagerConfig, OllamaConfig, ProviderConfig};
+use live2d::live2d::Live2DService;
 use log::{error, info};
 use std::collections::HashMap;
 

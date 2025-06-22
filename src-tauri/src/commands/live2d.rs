@@ -1,5 +1,5 @@
-use crate::services::live2d::{Live2DAction, Live2DActionType, Live2DConfig, Live2DState};
 use crate::state::AppState;
+use live2d::live2d::{Live2DAction, Live2DActionType, Live2DConfig, Live2DState};
 use log::{debug, info};
 use serde_json::Value;
 use std::collections::HashMap;

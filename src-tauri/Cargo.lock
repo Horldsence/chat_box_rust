@@ -1057,7 +1057,8 @@ dependencies = [
  "futures",
  "hf-hub",
  "initialize",
- "kokoro-tts",
+ "kokoros-tts",
+ "live2d",
  "log",
  "num-traits",
  "ollama-rs",
@@ -3615,6 +3616,7 @@ name = "kokoros-tts"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-stream",
  "futures",
  "kokoro-tts",
  "rodio",
@@ -3768,6 +3770,13 @@ checksum = "241eaef5fd12c88705a01fc1066c48c4b36e0dd4377dcdc7ec3942cea7a69956"
 [[package]]
 name = "live2d"
 version = "0.1.0"
+dependencies = [
+ "chrono",
+ "log",
+ "serde",
+ "tauri",
+ "tokio",
+]
 
 [[package]]
 name = "lock_api"
@@ -6834,9 +6843,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-opener"
-version = "2.2.7"
+version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66644b71a31ec1a8a52c4a16575edd28cf763c87cf4a7da24c884122b5c77097"
+checksum = "2c8983f50326d34437142a6d560b5c3426e91324297519b6eeb32ed0a1d1e0f2"
 dependencies = [
  "dunce",
  "glob",

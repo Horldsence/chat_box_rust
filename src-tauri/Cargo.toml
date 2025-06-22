@@ -1,10 +1,16 @@
 [workspace]
-members = ["crates/agent", "crates/initialize", "crates/kokoros-tts", "crates/live2d", "crates/kokoros-tts"]
+members = [
+    "crates/agent",
+    "crates/initialize",
+    "crates/kokoros-tts",
+    "crates/live2d",
+]
 
 [workspace.dependencies]
 agent = { path = "crates/agent" }
 initialize = { path = "crates/initialize" }
 kokoros-tts = { path = "crates/kokoros-tts" }
+live2d = { path = "crates/live2d" }
 
 [package]
 name = "chat_box"
@@ -46,7 +52,6 @@ chrono = "0.4.41"
 async-stream = "0.3.6"
 log = "0.4.27"
 futures = "0.3.31"
-env_logger = "0.11.8"
 ollama-rs = { version = "0.3.1", features = ["stream"] }
 tokio = { version = "1.45.1", features = ["full"] }
 tokio-stream = "0.1.17"
@@ -76,4 +81,5 @@ tracing-chrome = "0.7.2"
 agent = { path = "crates/agent" }
 initialize = { path = "crates/initialize" }
 tauri-plugin-log = "2"
-kokoro-tts = "0.2.6"
+live2d = { path = "crates/live2d" }
+kokoros-tts = { path = "crates/kokoros-tts" }

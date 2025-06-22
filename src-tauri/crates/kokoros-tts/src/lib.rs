@@ -35,8 +35,8 @@ impl TtsEngine {
         let (mut sink, mut stream) = self.tts.stream(voice);
 
         // Queue all texts for synthesis
-        for text in &texts {
-            sink.synth(text).await?;
+        for text in texts.iter() {
+            sink.synth(text.clone()).await?;
         }
 
         // Collect audio buffers as they are produced
@@ -57,7 +57,7 @@ impl TtsEngine {
         voice: Option<Voice>,
     ) -> Pin<Box<dyn Stream<Item = Result<(Vec<f32>, u128)>> + Send + 'a>>
     where
-        S: Stream<Item = String> + Send + 'a,
+        S: Stream<Item = String> + Send + 'static,
     {
         let voice = voice.unwrap_or(self.default_voice);
         let tts = self.tts.clone();
@@ -70,7 +70,7 @@ impl TtsEngine {
             tokio::spawn(async move {
                 while let Some(text) = input_stream.next().await {
                     // Ignore errors for now; could be handled more gracefully
-                    let _ = sink.synth(&text).await;
+                    let _ = sink.synth(text).await;
                 }
             });
 
@@ -81,6 +81,3 @@ impl TtsEngine {
         })
     }
 }
-
-// Re-export Voice for convenience
-pub use kokoro_tts::Voice;
