@@ -17,6 +17,7 @@ import { MessageList } from "./components/Message";
 import { ChatInput } from "./components/ChatInput";
 import { Settings } from "./components/Settings";
 import Live2DRender from "./components/Live2DRender";
+import { getExtension } from "./extensions";
 import AgentConfig from "./components/AgentConfig";
 import Live2DControl from "./components/Live2DControl";
 import Live2DTest from "./components/Live2DTest";
@@ -296,17 +297,30 @@ function App() {
                   </div>
                 </div>
 
-                {/* Live2D Component */}
+                {/* Live2D Component (通过扩展系统渲染) */}
                 <div className="flex-1 relative">
-                  <Live2DRender
-                    className="w-full h-full"
-                    onModelLoad={() => {
-                      console.log("Live2DRender model loaded");
-                    }}
-                    onModelError={(error) => {
-                      console.log("Live2DRender model error:", error);
-                    }}
-                  />
+                  {(() => {
+                    const ext = getExtension("live2d");
+                    if (ext && ext.Component) {
+                      const Live2DComponent = ext.Component;
+                      return (
+                        <Live2DComponent
+                          className="w-full h-full"
+                          onModelLoad={() => {
+                            console.log("Live2D extension model loaded");
+                          }}
+                          onModelError={(error: string) => {
+                            console.log("Live2D extension model error:", error);
+                          }}
+                        />
+                      );
+                    }
+                    return (
+                      <div className="flex items-center justify-center h-full text-gray-400">
+                        Live2D 扩展未启用或未加载
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
