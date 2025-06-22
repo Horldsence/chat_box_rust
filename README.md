@@ -34,6 +34,8 @@
   </p>
 </p>
 
+![](image/present.png)
+
 > This README is designed for developers
 
 A modern desktop AI chat application built with Tauri, React, and Rust, supporting multi-platform deployment and local AI models.
