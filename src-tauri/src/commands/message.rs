@@ -1,6 +1,6 @@
-use crate::models::Message;
 use crate::state::AppState;
 use chrono::Utc;
+use db::models::Message;
 use log::{debug, error, info};
 use serde::Deserialize;
 use tauri::State;

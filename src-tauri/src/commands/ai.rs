@@ -1,7 +1,7 @@
-use crate::models::{Message, MessageChunk};
 use crate::state::AppState;
 use agent::StreamGenerator;
 use chrono::Utc;
+use db::models::{Message, MessageChunk};
 use log::{debug, error, info};
 use serde::Deserialize;
 use tauri::{Emitter, State, Window};

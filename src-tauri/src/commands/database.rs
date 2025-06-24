@@ -1,4 +1,5 @@
-use crate::{models::Conversation, state::AppState};
+use crate::state::AppState;
+use db::models::Conversation;
 use tauri::State;
 
 #[tauri::command]

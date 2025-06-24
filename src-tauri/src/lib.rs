@@ -1,7 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 // #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod commands;
-mod models;
 mod services;
 mod state;
 mod utils;
@@ -209,7 +208,7 @@ async fn create_minimal_state(
     handle: tauri::AppHandle,
 ) -> Result<state::AppState, Box<dyn std::error::Error>> {
     use chrono::Utc;
-    use models::{Conversation, Message};
+    use db::models::{Conversation, Message};
     use services::asr::vosk_python::VoskASR;
     use utils::config::AppConfig;
 

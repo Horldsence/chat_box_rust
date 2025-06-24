@@ -1,7 +1,7 @@
-use crate::models;
 use crate::services;
 use crate::state;
 use crate::utils;
+use db::models;
 
 use chrono::Utc;
 use initialize::InitConfig;
