@@ -20,7 +20,7 @@ database:
   path: database/chat_database.db
 live2d:
   enabled: true
-  model_path: "model/live2d/whitecatfree_vts/sdwhite cat free.model3.json"
+  model_path: "whitecatfree_vts/sdwhite cat free.model3.json"
   model_name: Hiyori
   scale: 1.0
   position_x: 0.0

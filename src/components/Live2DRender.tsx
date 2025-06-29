@@ -15,11 +15,11 @@ interface Live2DRenderProps {
 }
 
 const Live2DRender: React.FC<Live2DRenderProps> = ({
-  modelPath = "model/live2d/whitecatfree_vts/sdwhite cat free.model3.json",
+  modelPath = "whitecatfree_vts/sdwhite cat free.model3.json",
   width = 400,
   height = 500,
   scale = 1.0,
-  showToolBox = true,
+  showToolBox = false,
   loadFromCache = true,
   className = "",
   onModelLoad,
@@ -31,7 +31,11 @@ const Live2DRender: React.FC<Live2DRenderProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // 新增：从后端获取Live2D配置
-  const { config: live2dConfig, isLoading: configLoading, error: configError } = useLive2DConfig();
+  const {
+    config: live2dConfig,
+    isLoading: configLoading,
+    error: configError,
+  } = useLive2DConfig();
 
   // 计算最终模型路径和参数
   const finalModelPath = live2dConfig?.model_path || modelPath;
@@ -58,9 +62,10 @@ const Live2DRender: React.FC<Live2DRenderProps> = ({
           },
           ShowToolBox: showToolBox,
           LoadFromCache: loadFromCache,
-          MinifiedJSUrl: 'https://unpkg.com/core-js-bundle@3.6.1/minified.js',
-          Live2dCubismcoreUrl: 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js',
-          CanvasId: ""
+          MinifiedJSUrl: "https://unpkg.com/core-js-bundle@3.6.1/minified.js",
+          Live2dCubismcoreUrl:
+            "https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js",
+          CanvasId: "default",
         });
         setIsLoaded(true);
         onModelLoad?.();
@@ -81,7 +86,15 @@ const Live2DRender: React.FC<Live2DRenderProps> = ({
         containerRef.current.innerHTML = "";
       }
     };
-  }, [finalModelPath, finalWidth, finalHeight, finalScale, showToolBox, loadFromCache, live2dConfig]);
+  }, [
+    finalModelPath,
+    finalWidth,
+    finalHeight,
+    finalScale,
+    showToolBox,
+    loadFromCache,
+    live2dConfig,
+  ]);
 
   // 公开的方法
   const triggerMotion = (groupName: string, motionIndex?: number) => {
