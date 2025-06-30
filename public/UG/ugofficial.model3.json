@@ -1,0 +1,73 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "UGOfficial.moc3",
+    "Textures": [
+      "UGOfficial.2048/texture_00.png",
+      "UGOfficial.2048/texture_01.png"
+    ],
+    "Physics": "UGOfficial.physics3.json",
+    "DisplayInfo": "UGOfficial.cdi3.json",
+    "Expressions": [
+      {
+        "Name": "idle",
+        "File": "1desk.exp3.json"
+      },
+      {
+        "Name": "speaking",
+        "File": "2mic.exp3.json"
+      },
+      {
+        "Name": "greeting",
+        "File": "3clever.exp3.json"
+      },
+      {
+        "Name": "surprised",
+        "File": "4OAO.exp3.json"
+      },
+      {
+        "Name": "farewell",
+        "File": "5QAQ.exp3.json"
+      },
+      {
+        "Name": "6i gi a ri",
+        "File": "6i gi a ri.exp3.json"
+      },
+      {
+        "Name": "thingking",
+        "File": "7keyboard.exp3.json"
+      },
+      {
+        "Name": "8punch",
+        "File": "8punch.exp3.json"
+      },
+      {
+        "Name": "confused",
+        "File": "9.exp3.json"
+      }
+    ],
+    "Motions": {
+      "": [
+        {
+          "File": "loop.motion3.json"
+        },
+        {
+          "File": "loop.motion3.json"
+        }
+      ]
+    }
+  },
+  "Groups": [
+    {
+      "Target": "Parameter",
+      "Name": "LipSync",
+      "Ids": []
+    },
+    {
+      "Target": "Parameter",
+      "Name": "EyeBlink",
+      "Ids": ["ParamEyeLOpen", "ParamEyeROpen"]
+    }
+  ],
+  "HitAreas": []
+}

@@ -1,0 +1,565 @@
+{
+	"Version": 3,
+	"Parameters": [
+		{
+			"Id": "Param",
+			"GroupId": "ParamGroup",
+			"Name": "mic"
+		},
+		{
+			"Id": "Param4",
+			"GroupId": "ParamGroup",
+			"Name": "desk"
+		},
+		{
+			"Id": "Param25",
+			"GroupId": "ParamGroup",
+			"Name": "emoji"
+		},
+		{
+			"Id": "Param32",
+			"GroupId": "ParamGroup",
+			"Name": "sweat1"
+		},
+		{
+			"Id": "Param33",
+			"GroupId": "ParamGroup",
+			"Name": "sweat2"
+		},
+		{
+			"Id": "Param28",
+			"GroupId": "ParamGroup",
+			"Name": "mouth off"
+		},
+		{
+			"Id": "Param10",
+			"GroupId": "ParamGroup",
+			"Name": "1face-all"
+		},
+		{
+			"Id": "Param11",
+			"GroupId": "ParamGroup",
+			"Name": "2face-clever"
+		},
+		{
+			"Id": "Param26",
+			"GroupId": "ParamGroup",
+			"Name": "3face-OAO"
+		},
+		{
+			"Id": "Param31",
+			"GroupId": "ParamGroup",
+			"Name": "leaf"
+		},
+		{
+			"Id": "Param55",
+			"GroupId": "ParamGroup",
+			"Name": "leaf off"
+		},
+		{
+			"Id": "Param23",
+			"GroupId": "ParamGroup",
+			"Name": "4face-QAQ"
+		},
+		{
+			"Id": "Param24",
+			"GroupId": "ParamGroup",
+			"Name": "5face-i gi a ri"
+		},
+		{
+			"Id": "Param22",
+			"GroupId": "ParamGroup",
+			"Name": "6face-kb"
+		},
+		{
+			"Id": "Param27",
+			"GroupId": "ParamGroup",
+			"Name": "7face-punch"
+		},
+		{
+			"Id": "Param48",
+			"GroupId": "ParamGroup",
+			"Name": "+1"
+		},
+		{
+			"Id": "Param13",
+			"GroupId": "ParamGroup",
+			"Name": "cup"
+		},
+		{
+			"Id": "Param34",
+			"GroupId": "ParamGroup",
+			"Name": "hand"
+		},
+		{
+			"Id": "Param44",
+			"GroupId": "ParamGroup",
+			"Name": "hand2"
+		},
+		{
+			"Id": "Param53",
+			"GroupId": "ParamGroup",
+			"Name": "hand3"
+		},
+		{
+			"Id": "Param30",
+			"GroupId": "ParamGroup",
+			"Name": "+1"
+		},
+		{
+			"Id": "Param54",
+			"GroupId": "ParamGroup",
+			"Name": "+1off"
+		},
+		{
+			"Id": "Param14",
+			"GroupId": "ParamGroup",
+			"Name": "keyboard"
+		},
+		{
+			"Id": "Param21",
+			"GroupId": "ParamGroup",
+			"Name": "keyboard3"
+		},
+		{
+			"Id": "Param20",
+			"GroupId": "ParamGroup",
+			"Name": "keyboard2"
+		},
+		{
+			"Id": "Param17",
+			"GroupId": "ParamGroup",
+			"Name": "keyboard1"
+		},
+		{
+			"Id": "Param15",
+			"GroupId": "ParamGroup",
+			"Name": "keyboard-hand"
+		},
+		{
+			"Id": "Param35",
+			"GroupId": "ParamGroup2",
+			"Name": "punch1"
+		},
+		{
+			"Id": "Param36",
+			"GroupId": "ParamGroup2",
+			"Name": "punchoff1"
+		},
+		{
+			"Id": "Param49",
+			"GroupId": "ParamGroup2",
+			"Name": "punch2"
+		},
+		{
+			"Id": "Param37",
+			"GroupId": "ParamGroup2",
+			"Name": "punchoff2"
+		},
+		{
+			"Id": "Param45",
+			"GroupId": "ParamGroup2",
+			"Name": "punch3"
+		},
+		{
+			"Id": "Param38",
+			"GroupId": "ParamGroup2",
+			"Name": "punchoff3"
+		},
+		{
+			"Id": "Param46",
+			"GroupId": "ParamGroup2",
+			"Name": "punch4"
+		},
+		{
+			"Id": "Param39",
+			"GroupId": "ParamGroup2",
+			"Name": "punchoff4"
+		},
+		{
+			"Id": "Param50",
+			"GroupId": "ParamGroup2",
+			"Name": "punch5"
+		},
+		{
+			"Id": "Param40",
+			"GroupId": "ParamGroup2",
+			"Name": "punchoff5"
+		},
+		{
+			"Id": "Param51",
+			"GroupId": "ParamGroup2",
+			"Name": "punch6"
+		},
+		{
+			"Id": "Param41",
+			"GroupId": "ParamGroup2",
+			"Name": "punchoff6"
+		},
+		{
+			"Id": "Param52",
+			"GroupId": "ParamGroup2",
+			"Name": "punch7"
+		},
+		{
+			"Id": "Param42",
+			"GroupId": "ParamGroup2",
+			"Name": "punchoff7"
+		},
+		{
+			"Id": "Param47",
+			"GroupId": "ParamGroup2",
+			"Name": "punch8"
+		},
+		{
+			"Id": "Param43",
+			"GroupId": "ParamGroup2",
+			"Name": "punchoff8"
+		},
+		{
+			"Id": "Param16",
+			"GroupId": "",
+			"Name": "keyboard1"
+		},
+		{
+			"Id": "Param18",
+			"GroupId": "",
+			"Name": "keyboard2"
+		},
+		{
+			"Id": "Param19",
+			"GroupId": "",
+			"Name": "keyboard3"
+		},
+		{
+			"Id": "Param2",
+			"GroupId": "",
+			"Name": "惯性"
+		},
+		{
+			"Id": "Param3",
+			"GroupId": "",
+			"Name": "惯性"
+		},
+		{
+			"Id": "ParamLowerBodyX2",
+			"GroupId": "",
+			"Name": "眼整体"
+		},
+		{
+			"Id": "ParamLowerBodyX12",
+			"GroupId": "",
+			"Name": "眼smile"
+		},
+		{
+			"Id": "ParamLowerBodyX13",
+			"GroupId": "",
+			"Name": "hl"
+		},
+		{
+			"Id": "ParamLowerBodyX14",
+			"GroupId": "",
+			"Name": "hl"
+		},
+		{
+			"Id": "Param6",
+			"GroupId": "",
+			"Name": "hair1"
+		},
+		{
+			"Id": "Param8",
+			"GroupId": "",
+			"Name": "hair2"
+		},
+		{
+			"Id": "Param9",
+			"GroupId": "",
+			"Name": "hair3"
+		},
+		{
+			"Id": "Param5",
+			"GroupId": "",
+			"Name": "ear1"
+		},
+		{
+			"Id": "Param7",
+			"GroupId": "",
+			"Name": "ear2"
+		},
+		{
+			"Id": "Param12",
+			"GroupId": "",
+			"Name": "ear3"
+		},
+		{
+			"Id": "ParamAngleX",
+			"GroupId": "",
+			"Name": "角度 X"
+		},
+		{
+			"Id": "ParamAngleY",
+			"GroupId": "",
+			"Name": "角度 Y"
+		},
+		{
+			"Id": "ParamAngleZ",
+			"GroupId": "",
+			"Name": "角度 Z"
+		},
+		{
+			"Id": "ParamEyeLOpen",
+			"GroupId": "",
+			"Name": "左眼　开闭"
+		},
+		{
+			"Id": "ParamEyeLSmile",
+			"GroupId": "",
+			"Name": "左眼　微笑"
+		},
+		{
+			"Id": "ParamEyeROpen",
+			"GroupId": "",
+			"Name": "右眼"
+		},
+		{
+			"Id": "ParamEyeRSmile",
+			"GroupId": "",
+			"Name": "右眼　微笑"
+		},
+		{
+			"Id": "ParamEyeBallX",
+			"GroupId": "",
+			"Name": "眼珠 X"
+		},
+		{
+			"Id": "ParamEyeBallY",
+			"GroupId": "",
+			"Name": "眼珠 Y"
+		},
+		{
+			"Id": "ParamBrowLY",
+			"GroupId": "",
+			"Name": "左眉上下"
+		},
+		{
+			"Id": "ParamBrowRY",
+			"GroupId": "",
+			"Name": "右眉　上下"
+		},
+		{
+			"Id": "ParamBrowLX",
+			"GroupId": "",
+			"Name": "左眉　左右"
+		},
+		{
+			"Id": "ParamBrowRX",
+			"GroupId": "",
+			"Name": "右眉　左右"
+		},
+		{
+			"Id": "ParamBrowLAngle",
+			"GroupId": "",
+			"Name": "左眉　角度"
+		},
+		{
+			"Id": "ParamBrowRAngle",
+			"GroupId": "",
+			"Name": "右眉　角度"
+		},
+		{
+			"Id": "ParamBrowLForm",
+			"GroupId": "",
+			"Name": "左眉　変形"
+		},
+		{
+			"Id": "ParamBrowRForm",
+			"GroupId": "",
+			"Name": "右眉　変形"
+		},
+		{
+			"Id": "ParamMouthForm",
+			"GroupId": "",
+			"Name": "嘴　变形"
+		},
+		{
+			"Id": "ParamMouthOpenY",
+			"GroupId": "",
+			"Name": "嘴　张开和闭合"
+		},
+		{
+			"Id": "ParamCheek",
+			"GroupId": "",
+			"Name": "脸颊泛红"
+		},
+		{
+			"Id": "ParamBodyAngleX",
+			"GroupId": "",
+			"Name": "身体旋转　X"
+		},
+		{
+			"Id": "ParamBodyAngleY",
+			"GroupId": "",
+			"Name": "身体旋转　Y"
+		},
+		{
+			"Id": "ParamBodyAngleX2",
+			"GroupId": "",
+			"Name": "身体旋转　X"
+		},
+		{
+			"Id": "ParamBodyAngleY2",
+			"GroupId": "",
+			"Name": "身体旋转　Y"
+		},
+		{
+			"Id": "ParamBodyAngleZ",
+			"GroupId": "",
+			"Name": "身体旋转　Z"
+		},
+		{
+			"Id": "ParamBodyAngleZ2",
+			"GroupId": "",
+			"Name": "身体旋转　Z"
+		},
+		{
+			"Id": "ParamBreath",
+			"GroupId": "",
+			"Name": "呼吸"
+		},
+		{
+			"Id": "ParamHairFront",
+			"GroupId": "",
+			"Name": "摇动 前发"
+		},
+		{
+			"Id": "ParamHairSide",
+			"GroupId": "",
+			"Name": "摇动 侧发"
+		},
+		{
+			"Id": "ParamHairBack",
+			"GroupId": "",
+			"Name": "摇动 后发"
+		}
+	],
+	"ParameterGroups": [
+		{
+			"Id": "ParamGroup",
+			"GroupId": "",
+			"Name": "Folder 1"
+		},
+		{
+			"Id": "ParamGroup2",
+			"GroupId": "",
+			"Name": "punch"
+		}
+	],
+	"Parts": [
+		{
+			"Id": "desk",
+			"Name": "desk"
+		},
+		{
+			"Id": "mic",
+			"Name": "mic"
+		},
+		{
+			"Id": "Part30",
+			"Name": "ulk.psd(未找到对应图层)"
+		},
+		{
+			"Id": "Part20",
+			"Name": "ulk.psd(未找到对应图层)"
+		},
+		{
+			"Id": "Part",
+			"Name": "文件夹1"
+		},
+		{
+			"Id": "Part2",
+			"Name": "文件夹2"
+		},
+		{
+			"Id": "Part3",
+			"Name": "文件夹3"
+		},
+		{
+			"Id": "Part4",
+			"Name": "文件夹4"
+		},
+		{
+			"Id": "Part5",
+			"Name": "文件夹5"
+		},
+		{
+			"Id": "Part6",
+			"Name": "文件夹6"
+		},
+		{
+			"Id": "Part7",
+			"Name": "文件夹7"
+		},
+		{
+			"Id": "keyboard2",
+			"Name": "keyboard"
+		},
+		{
+			"Id": "Part17",
+			"Name": "yiyi！"
+		},
+		{
+			"Id": "keyboard",
+			"Name": "keyboard"
+		},
+		{
+			"Id": "Part10",
+			"Name": "yiyi！"
+		},
+		{
+			"Id": "shock",
+			"Name": "shock"
+		},
+		{
+			"Id": "Part11",
+			"Name": "给你一拳"
+		},
+		{
+			"Id": "Part12",
+			"Name": "+1"
+		},
+		{
+			"Id": "Part14",
+			"Name": "文件夹2"
+		},
+		{
+			"Id": "Part15",
+			"Name": "文件夹3"
+		},
+		{
+			"Id": "Part18",
+			"Name": "文件夹6"
+		},
+		{
+			"Id": "eye",
+			"Name": "eye"
+		},
+		{
+			"Id": "Part19",
+			"Name": "文件夹7"
+		},
+		{
+			"Id": "Part8",
+			"Name": "文件夹16"
+		},
+		{
+			"Id": "Part9",
+			"Name": "文件夹10"
+		}
+	],
+	"CombinedParameters": [
+		[
+			"ParamAngleX",
+			"ParamAngleY"
+		]
+	]
+}

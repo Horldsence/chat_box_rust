@@ -19,7 +19,7 @@ const Live2DRender: React.FC<Live2DRenderProps> = ({
   width = 400,
   height = 500,
   scale = 1.0,
-  showToolBox = false,
+  showToolBox = true,
   loadFromCache = true,
   className = "",
   onModelLoad,
