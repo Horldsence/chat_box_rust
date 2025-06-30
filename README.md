@@ -34,7 +34,7 @@
   </p>
 </p>
 
-![](image/present.png)
+![present](image/present.png)
 
 > This README is designed for developers
 
