@@ -9,6 +9,7 @@ use db::models::{Conversation, Message};
 use live2d::live2d::Live2DService;
 use log::{error, info};
 use std::collections::HashMap;
+use tts::kokoro_tts::TtsEngine;
 
 use std::sync::{Arc, Mutex};
 
@@ -21,6 +22,7 @@ pub struct AppState {
     pub db: Arc<Mutex<Option<ChatDatabase>>>, // 添加数据库支持
     pub live2d_service: Arc<tokio::sync::Mutex<Live2DService>>, // 添加Live2D服务
     pub agent_service: Arc<tokio::sync::Mutex<AgentService>>, // 添加Agent服务
+    pub tts_service: Arc<TtsEngine>,          // 注册TTS服务
 }
 
 #[allow(dead_code)]
@@ -31,6 +33,7 @@ impl AppState {
         messages: Vec<Message>,
         vosk_asr: VoskASR,
         app_handle: tauri::AppHandle,
+        tts_service: Arc<TtsEngine>,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         // 创建 LLM 管理器配置
         let mut providers = HashMap::new();
@@ -105,6 +108,7 @@ impl AppState {
             db: Arc::new(Mutex::new(None)), // 初始时数据库为None
             live2d_service: Arc::new(tokio::sync::Mutex::new(live2d_service)),
             agent_service: Arc::new(tokio::sync::Mutex::new(agent_service)),
+            tts_service, // 注册TTS服务
         })
     }
 

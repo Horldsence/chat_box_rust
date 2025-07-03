@@ -6,5 +6,7 @@ edition = "2024"
 [dependencies]
 kokoro-tts = "0.2.6"
 rodio = "0.20.1"
-tokio = "1.45.1"
+tokio = { version = "1.46.0", features = ["full"] }
 tokio-stream = "0.1.17"
+anyhow = "1.0.98"
+futures = "0.3.31"

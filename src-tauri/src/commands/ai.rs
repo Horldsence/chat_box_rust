@@ -142,6 +142,10 @@ pub async fn generate_ai_response(
         let mut buffer = String::new();
         let mut last_emit_time = std::time::Instant::now();
 
+        // 引入tts_speak命令
+        use crate::commands::tts::tts_speak;
+        use crate::commands::tts::TTSSpeakRequest;
+
         while let Some(chunk) = stream.next().await {
             // 将新的内容添加到完整响应中
             full_response.push_str(&chunk);
@@ -161,6 +165,16 @@ pub async fn generate_ai_response(
                 if let Err(e) = live2d_service.process_streaming_text(&chunk).await {
                     error!("Live2D处理流式文本失败: {}", e);
                 }
+            }
+
+            // 实时TTS播报每个chunk（可根据实际需求调整为buffer）
+            if !chunk.trim().is_empty() {
+                let req = TTSSpeakRequest {
+                    text: chunk.clone(),
+                    voice: None, // 默认voice
+                };
+                // 忽略错误，异步fire and forget
+                let _ = tts_speak(req).await;
             }
 
             // 使用缓冲策略: 从配置获取缓冲大小和发送间隔

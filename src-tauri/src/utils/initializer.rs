@@ -55,12 +55,16 @@ pub async fn init_app_state(
         conversation_id: default_conversation_id,
     }];
 
+    // 创建 TtsEngine 实例
+    let tts_engine = Arc::new(tts::kokoro_tts::TtsEngine::new(&config)?);
+
     let state = AppState::new(
         config.clone(),
         conversations,
         messages,
         vosk_asr,
         handle.clone(),
+        tts_engine,
     )
     .await?;
 

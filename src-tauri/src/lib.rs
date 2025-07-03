@@ -5,6 +5,7 @@ mod services;
 mod state;
 mod utils;
 
+use kokoros_tts::TtsEngine;
 use log::{error, info, warn};
 use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};

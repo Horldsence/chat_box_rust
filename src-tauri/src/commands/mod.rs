@@ -9,6 +9,7 @@ pub mod dialog;
 pub mod live2d;
 pub mod message;
 pub mod settings;
+pub mod tts;
 pub mod voice;
 
 pub use agent::*;
