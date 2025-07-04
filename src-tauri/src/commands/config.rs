@@ -1,5 +1,5 @@
 use crate::state::AppState;
-use crate::utils::config::{AppConfig, Live2DConfig};
+use cb_config::{AppConfig, Live2DConfig};
 use log::{debug, info, warn};
 use serde_json::Value;
 use std::collections::HashMap;

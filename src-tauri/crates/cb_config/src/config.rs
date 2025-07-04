@@ -28,6 +28,13 @@ pub struct VoiceConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TtsConfig {
+    pub enabled: bool,
+    pub model_path: PathBuf,
+    pub voice_path: PathBuf,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UiConfig {
     pub theme: String,
     pub language: String,
@@ -49,9 +56,25 @@ pub struct InitConfig {
     pub config_path: PathBuf,
     pub ai_model: AiModelConfig,
     pub voice: VoiceConfig,
+    pub tts_engine: TtsConfig,
     pub ui: UiConfig,
     pub database: DatabaseConfig,
     pub app_behavior: AppBehaviorConfig,
+    pub live2d: Live2DConfig,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Live2DConfig {
+    pub enabled: bool,
+    pub model_path: String,
+    pub model_name: String,
+    pub scale: f32,
+    pub position_x: f32,
+    pub position_y: f32,
+    pub auto_blink: bool,
+    pub auto_breath: bool,
+    pub check_model_on_startup: bool,
+    pub fallback_to_simple_character: bool,
 }
 
 impl Default for InitConfig {
@@ -73,6 +96,11 @@ impl Default for InitConfig {
                 model_path: "model/vosk-model-small-cn-0.22".to_string(),
                 timeout_seconds: 15,
             },
+            tts_engine: TtsConfig {
+                enabled: true,
+                model_path: "model/kokoro/kokoro-v1.1-zh.onnx".into(),
+                voice_path: "model/kokoro/voices-v1.1-zh.bin".into(),
+            },
             ui: UiConfig {
                 theme: "light".to_string(),
                 language: "zh-CN".to_string(),
@@ -89,6 +117,18 @@ impl Default for InitConfig {
             database: DatabaseConfig {
                 enabled: true,
                 path: "database/chat_database.db".to_string(),
+            },
+            live2d: Live2DConfig {
+                enabled: true,
+                model_path: "models/live2d/hiyori/hiyori_free_en.model3.json".to_string(),
+                model_name: "Hiyori".to_string(),
+                scale: 1.0,
+                position_x: 0.0,
+                position_y: 0.0,
+                auto_blink: true,
+                auto_breath: true,
+                check_model_on_startup: true,
+                fallback_to_simple_character: true,
             },
         }
     }

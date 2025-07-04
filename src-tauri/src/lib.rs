@@ -5,7 +5,6 @@ mod services;
 mod state;
 mod utils;
 
-use kokoros_tts::TtsEngine;
 use log::{error, info, warn};
 use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
@@ -208,10 +207,10 @@ pub fn run() {
 async fn create_minimal_state(
     handle: tauri::AppHandle,
 ) -> Result<state::AppState, Box<dyn std::error::Error>> {
+    use cb_config::AppConfig;
     use chrono::Utc;
     use db::models::{Conversation, Message};
     use services::asr::vosk_python::VoskASR;
-    use utils::config::AppConfig;
 
     warn!("创建最小配置状态");
 
@@ -245,5 +244,14 @@ async fn create_minimal_state(
         })
     });
 
-    state::AppState::new(config, conversations, messages, vosk_asr, handle).await
+    let tts_engine =  None;
+
+    state::AppState::new(
+        config,
+        conversations,
+        messages,
+        vosk_asr,
+        handle,
+        tts_engine,
+    ).await
 }

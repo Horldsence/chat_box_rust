@@ -1,8 +1,10 @@
 use crate::services;
 use crate::state;
 use crate::utils;
+use candle_transformers::models::whisper::SOT_TOKEN;
 use db::models;
 
+use cb_config::AppConfig;
 use chrono::Utc;
 use initialize::InitConfig;
 use log::{error, info};
@@ -10,9 +12,10 @@ use models::{Conversation, Message};
 use services::asr::vosk_python::VoskASR;
 use state::AppState;
 use std::path::Path;
+use std::sync::Arc;
 use tauri::path::BaseDirectory;
 use tauri::Manager;
-use utils::config::AppConfig;
+use tauri_plugin_opener::init;
 
 pub async fn init_app_state(
     handle: tauri::AppHandle,
@@ -56,7 +59,19 @@ pub async fn init_app_state(
     }];
 
     // 创建 TtsEngine 实例
-    let tts_engine = Arc::new(tts::kokoro_tts::TtsEngine::new(&config)?);
+    let tts_engine = tts::kokoro_tts::TtsEngine::new(
+            config
+                .tts_engine
+                .model_path
+                .to_str()
+                .ok_or("Invalid model path")?,
+            config
+                .tts_engine
+                .voice_path
+                .to_str()
+                .ok_or("Invalid voice path")?,
+        )
+        .await?;
 
     let state = AppState::new(
         config.clone(),
@@ -64,7 +79,7 @@ pub async fn init_app_state(
         messages,
         vosk_asr,
         handle.clone(),
-        tts_engine,
+        Some(tts_engine),
     )
     .await?;
 
@@ -80,7 +95,7 @@ pub async fn init_app_state(
 pub fn convert_init_config_to_app_config(init_config: InitConfig) -> AppConfig {
     AppConfig {
         config_path: init_config.config_path,
-        ai_model: utils::config::AiModelConfig {
+        ai_model: cb_config::AiModelConfig {
             model_type: init_config.ai_model.model_type,
             model_name: init_config.ai_model.model_name,
             server_url: init_config.ai_model.server_url,
@@ -90,20 +105,25 @@ pub fn convert_init_config_to_app_config(init_config: InitConfig) -> AppConfig {
             candle_revision: init_config.ai_model.candle_revision,
             candle_use_flash_attn: init_config.ai_model.candle_use_flash_attn,
         },
-        voice: utils::config::VoiceConfig {
+        voice: cb_config::VoiceConfig {
             enabled: init_config.voice.enabled,
             model_path: init_config.voice.model_path,
             timeout_seconds: init_config.voice.timeout_seconds,
         },
-        ui: utils::config::UiConfig {
+        tts_engine: cb_config::TtsConfig {
+            enabled: init_config.tts_engine.enabled,
+            model_path: init_config.tts_engine.model_path,
+            voice_path: init_config.tts_engine.voice_path,
+        },
+        ui: cb_config::UiConfig {
             theme: init_config.ui.theme,
             language: init_config.ui.language,
         },
-        database: utils::config::DatabaseConfig {
+        database: cb_config::DatabaseConfig {
             enabled: init_config.database.enabled,
             path: init_config.database.path,
         },
-        app_behavior: utils::config::AppBehaviorConfig {
+        app_behavior: cb_config::AppBehaviorConfig {
             log_level: init_config.app_behavior.log_level,
             default_conversation_title: init_config.app_behavior.default_conversation_title,
             welcome_message: init_config.app_behavior.welcome_message,
@@ -112,7 +132,7 @@ pub fn convert_init_config_to_app_config(init_config: InitConfig) -> AppConfig {
             show_error_dialogs: init_config.app_behavior.show_error_dialogs,
             auto_retry_failed_init: init_config.app_behavior.auto_retry_failed_init,
         },
-        live2d: utils::config::Live2DConfig {
+        live2d: cb_config::Live2DConfig {
             enabled: true,
             model_path: "models/live2d/hiyori/hiyori_free_en.model3.json".to_string(),
             model_name: "Hiyori".to_string(),

@@ -3,11 +3,15 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
+pub mod config;
+pub use config::*;
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AppConfig {
     pub config_path: PathBuf,
     pub ai_model: AiModelConfig,
     pub voice: VoiceConfig,
+    pub tts_engine: TtsConfig,
     pub ui: UiConfig,
     pub database: DatabaseConfig,
     pub app_behavior: AppBehaviorConfig,
@@ -85,5 +89,62 @@ impl AppConfig {
     pub fn get_config_file_path(self) -> Option<PathBuf> {
         let config_path = AppConfig::default().config_path.clone();
         Some(config_path)
+    }
+}
+
+impl Default for AppConfig {
+    fn default() -> Self {
+        Self {
+            config_path: "config.yaml".into(),
+            ai_model: AiModelConfig {
+                model_type: "candle".to_string(),
+                model_name: "microsoft/DialoGPT-medium".to_string(),
+                server_url: "http://localhost".to_string(),
+                server_port: 11434,
+                system_prompt: "你是一个友好、乐于助人的AI助手，使用中文回答问题。".to_string(),
+                candle_model_id: Some("microsoft/DialoGPT-medium".to_string()),
+                candle_revision: Some("main".to_string()),
+                candle_use_flash_attn: false,
+            },
+            voice: VoiceConfig {
+                enabled: false,
+                model_path: "model/vosk-model-small-cn-0.22".to_string(),
+                timeout_seconds: 15,
+            },
+            tts_engine: TtsConfig {
+                enabled: true,
+                model_path: "model/kokoro/kokoro-v1.1-zh.onnx".into(),
+                voice_path: "model/kokoro/voices-v1.1-zh.bin".into(),
+            },
+            ui: UiConfig {
+                theme: "light".to_string(),
+                language: "zh-CN".to_string(),
+            },
+            app_behavior: AppBehaviorConfig {
+                log_level: "info".to_string(),
+                default_conversation_title: "新对话".to_string(),
+                welcome_message: "欢迎使用聊天应用!".to_string(),
+                message_chunk_buffer_size: 2,
+                message_chunk_send_interval_ms: 3,
+                show_error_dialogs: true,
+                auto_retry_failed_init: false,
+            },
+            database: DatabaseConfig {
+                enabled: true,
+                path: "database/chat_database.db".to_string(),
+            },
+            live2d: Live2DConfig {
+                enabled: true,
+                model_path: "models/live2d/hiyori/hiyori_free_en.model3.json".to_string(),
+                model_name: "Hiyori".to_string(),
+                scale: 1.0,
+                position_x: 0.0,
+                position_y: 0.0,
+                auto_blink: true,
+                auto_breath: true,
+                check_model_on_startup: true,
+                fallback_to_simple_character: true,
+            },
+        }
     }
 }

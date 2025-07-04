@@ -1,5 +1,6 @@
-use crate::{InitConfig, InitError};
+use crate::InitError;
 use anyhow::{anyhow, Result};
+use cb_config::config::InitConfig;
 use hf_hub::api::tokio::Api;
 use log::{info, warn};
 use ollama_rs::Ollama;

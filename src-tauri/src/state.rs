@@ -1,9 +1,9 @@
 use crate::services::agent::AgentService;
 use crate::services::asr::vosk_python::VoskASR;
-use crate::utils::config::AppConfig;
 #[cfg(feature = "candle")]
 use agent::models::llm::{CandleConfig, WhichModel};
 use agent::{LLMManager, LLMManagerConfig, OllamaConfig, ProviderConfig};
+use cb_config::AppConfig;
 use db::database::ChatDatabase;
 use db::models::{Conversation, Message};
 use live2d::live2d::Live2DService;
@@ -22,7 +22,7 @@ pub struct AppState {
     pub db: Arc<Mutex<Option<ChatDatabase>>>, // 添加数据库支持
     pub live2d_service: Arc<tokio::sync::Mutex<Live2DService>>, // 添加Live2D服务
     pub agent_service: Arc<tokio::sync::Mutex<AgentService>>, // 添加Agent服务
-    pub tts_service: Arc<TtsEngine>,          // 注册TTS服务
+    pub tts_service: Arc<Option<TtsEngine>>,  // 注册TTS服务
 }
 
 #[allow(dead_code)]
@@ -33,7 +33,7 @@ impl AppState {
         messages: Vec<Message>,
         vosk_asr: VoskASR,
         app_handle: tauri::AppHandle,
-        tts_service: Arc<TtsEngine>,
+        tts_service: Option<TtsEngine>,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         // 创建 LLM 管理器配置
         let mut providers = HashMap::new();
@@ -108,7 +108,7 @@ impl AppState {
             db: Arc::new(Mutex::new(None)), // 初始时数据库为None
             live2d_service: Arc::new(tokio::sync::Mutex::new(live2d_service)),
             agent_service: Arc::new(tokio::sync::Mutex::new(agent_service)),
-            tts_service, // 注册TTS服务
+            tts_service: Arc::new(tts_service), // 注册TTS服务
         })
     }
 

@@ -1,5 +1,5 @@
 use crate::state::AppState;
-use crate::utils::config::AppConfig;
+use cb_config::AppConfig;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use tauri::State;

@@ -1,8 +1,9 @@
 use crate::{
-    config::InitConfig, error_handler::ErrorHandler, model_manager::ModelManager, ComponentStatus,
-    InitError, InitializationResult, UserAction,
+    error_handler::ErrorHandler, model_manager::ModelManager, ComponentStatus, InitError,
+    InitializationResult, UserAction,
 };
 use anyhow::{anyhow, Result};
+use cb_config::config::InitConfig;
 use log::{error, info, warn};
 use serde_yaml;
 use std::path::Path;

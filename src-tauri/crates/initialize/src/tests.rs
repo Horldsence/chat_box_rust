@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{InitConfig, InitError, UserAction};
+    use crate::{InitError, UserAction};
+    use cb_config::config::InitConfig;
     use std::path::PathBuf;
     use tempfile::TempDir;
 

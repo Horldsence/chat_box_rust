@@ -1,9 +1,8 @@
-pub mod config;
 pub mod error_handler;
 pub mod initializer;
 pub mod model_manager;
 
-pub use config::*;
+pub use cb_config::*;
 pub use error_handler::*;
 pub use initializer::*;
 pub use model_manager::*;

@@ -25,7 +25,6 @@ fn get_tts_engine() -> Arc<TtsEngine> {
 #[derive(Deserialize)]
 pub struct TTSSpeakRequest {
     pub text: String,
-    pub voice: Option<String>,
 }
 
 #[tauri::command]

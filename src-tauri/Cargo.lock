@@ -1028,6 +1028,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cb_config"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "serde",
+ "serde_yaml",
+]
+
+[[package]]
 name = "cc"
 version = "1.2.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1107,9 +1116,10 @@ dependencies = [
  "candle-examples",
  "candle-nn 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
  "candle-transformers 0.9.1 (git+https://github.com/Horldsence/candle_eswin.git)",
+ "cb_config",
  "chrono",
  "clap",
- "config 0.15.11",
+ "config",
  "cpal",
  "db",
  "env_logger",
@@ -1309,10 +1319,6 @@ dependencies = [
 
 [[package]]
 name = "config"
-version = "0.1.0"
-
-[[package]]
-name = "config"
 version = "0.15.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "595aae20e65c3be792d05818e8c63025294ac3cb7e200f11459063a352a6ef80"
@@ -1384,7 +1390,7 @@ version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ddef33a339a91ea89fb53151bd0a4689cfce27055c291dfa69945475d22c747"
 dependencies = [
- "time",
+ "time 0.3.41",
  "version_check",
 ]
 
@@ -3427,6 +3433,7 @@ dependencies = [
  "candle-core 0.9.1 (git+https://github.com/huggingface/candle.git)",
  "candle-nn 0.9.1 (git+https://github.com/huggingface/candle.git)",
  "candle-transformers 0.9.1 (git+https://github.com/huggingface/candle.git)",
+ "cb_config",
  "chrono",
  "futures",
  "hf-hub",
@@ -3444,6 +3451,7 @@ dependencies = [
  "tokenizers",
  "tokio",
  "tokio-test",
+ "utc",
  "vosk",
 ]
 
@@ -5141,7 +5149,7 @@ dependencies = [
  "indexmap 2.10.0",
  "quick-xml",
  "serde",
- "time",
+ "time 0.3.41",
 ]
 
 [[package]]
@@ -6295,7 +6303,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "serde_with_macros",
- "time",
+ "time 0.3.41",
 ]
 
 [[package]]
@@ -6921,7 +6929,7 @@ dependencies = [
  "syn 2.0.104",
  "tauri-utils",
  "thiserror 2.0.12",
- "time",
+ "time 0.3.41",
  "url",
  "uuid",
  "walkdir",
@@ -7017,7 +7025,7 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.12",
- "time",
+ "time 0.3.41",
 ]
 
 [[package]]
@@ -7220,6 +7228,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f60246a4944f24f6e018aa17cdeffb7818b76356965d03b07d6a9886e8962185"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "time"
+version = "0.1.45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b797afad3f312d1c66a56d11d0316f916356d11bd158fbc6ca6389ff6bf805a"
+dependencies = [
+ "libc",
+ "wasi 0.10.0+wasi-snapshot-preview1",
+ "winapi",
 ]
 
 [[package]]
@@ -7862,6 +7881,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "utc"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0d77eb4c5ba3b63fbf69d21b34bb54bdf076ce68182a53b17a2ae3114f92eba"
+dependencies = [
+ "time 0.1.45",
+]
+
+[[package]]
 name = "utf-8"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7995,6 +8023,12 @@ name = "wasi"
 version = "0.9.0+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cccddf32554fecc6acb585f82a32a72e28b48f8c4c1883ddfeeeaa96f7d8e519"
+
+[[package]]
+name = "wasi"
+version = "0.10.0+wasi-snapshot-preview1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f"
 
 [[package]]
 name = "wasi"

@@ -171,7 +171,6 @@ pub async fn generate_ai_response(
             if !chunk.trim().is_empty() {
                 let req = TTSSpeakRequest {
                     text: chunk.clone(),
-                    voice: None, // 默认voice
                 };
                 // 忽略错误，异步fire and forget
                 let _ = tts_speak(req).await;

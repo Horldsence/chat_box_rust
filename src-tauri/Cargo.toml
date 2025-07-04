@@ -1,9 +1,12 @@
 [workspace]
 members = [
     "crates/agent",
-    "crates/asr", "crates/calendar",
-    "crates/config",
-    "crates/db", "crates/extensions", "crates/file_finder",
+    "crates/asr",
+    "crates/calendar",
+    "crates/cb_config",
+    "crates/db",
+    "crates/extensions",
+    "crates/file_finder",
     "crates/initialize",
     "crates/kokoros-tts",
     "crates/live2d",
@@ -17,6 +20,7 @@ kokoros-tts = { path = "crates/kokoros-tts" }
 live2d = { path = "crates/live2d" }
 db = { path = "crates/db" }
 tts = { path = "crates/tts" }
+cb_config = { path = "crates/cb_config" }
 
 [package]
 name = "chat_box"
@@ -91,3 +95,4 @@ live2d = { path = "crates/live2d" }
 kokoros-tts = { path = "crates/kokoros-tts" }
 db = { path = "crates/db" }
 tts = { path = "crates/tts" }
+cb_config = { path = "crates/cb_config" }
