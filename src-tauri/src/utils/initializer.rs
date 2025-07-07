@@ -64,14 +64,13 @@ pub async fn init_app_state(
                 .tts_engine
                 .model_path
                 .to_str()
-                .ok_or("Invalid model path")?,
+                .ok_or("Invalid model path")?.to_string(),
             config
                 .tts_engine
                 .voice_path
                 .to_str()
-                .ok_or("Invalid voice path")?,
-        )
-        .await?;
+                .ok_or("Invalid voice path")?.to_string(),
+        )?;
 
     let state = AppState::new(
         config.clone(),
