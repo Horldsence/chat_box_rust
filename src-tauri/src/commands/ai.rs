@@ -20,6 +20,25 @@ pub async fn generate_ai_response(
 ) -> Result<(), String> {
     let user_message_content = request.user_message_content;
     let conversation_id = request.conversation_id;
+
+    let user_message = Message {
+        id: Utc::now().timestamp_millis() as u64,
+        content: user_message_content.clone(),
+        sender: "user".to_string(),
+        timestamp: Utc::now().timestamp_millis() as u64,
+        conversation_id,
+    };
+    debug!("收到用户消息: {:?}", user_message);
+    if let Ok(mut db_guard) = state.db.lock() {
+        if let Some(ref mut db) = *db_guard {
+            if let Err(e) = db.save_message(&user_message) {
+                error!("保存初始AI消息到数据库失败: {}", e);
+            } else {
+                debug!("初始AI消息已保存到数据库: {}", user_message.id);
+            }
+        }
+    }
+
     info!("开始生成AI回复，对话ID: {}", conversation_id);
 
     // 触发Live2D思考状态
