@@ -22,7 +22,7 @@ pub struct AppState {
     pub db: Arc<Mutex<Option<ChatDatabase>>>, // 添加数据库支持
     pub live2d_service: Arc<tokio::sync::Mutex<Live2DService>>, // 添加Live2D服务
     pub agent_service: Arc<tokio::sync::Mutex<AgentService>>, // 添加Agent服务
-    pub tts_service: Arc<Option<TtsEngine>>,  // 注册TTS服务
+    pub tts_service: Arc<tokio::sync::Mutex<Option<TtsEngine>>>,  // 注册TTS服务
 }
 
 #[allow(dead_code)]
@@ -108,7 +108,7 @@ impl AppState {
             db: Arc::new(Mutex::new(None)), // 初始时数据库为None
             live2d_service: Arc::new(tokio::sync::Mutex::new(live2d_service)),
             agent_service: Arc::new(tokio::sync::Mutex::new(agent_service)),
-            tts_service: Arc::new(tts_service), // 注册TTS服务
+            tts_service: Arc::new(tokio::sync::Mutex::new(tts_service)), // 注册TTS服务
         })
     }
 

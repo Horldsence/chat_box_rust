@@ -146,6 +146,7 @@ pub async fn generate_ai_response(
     let config_arc = state.config.clone();
     let db_arc = state.db.clone();
     let live2d_service_arc = state.live2d_service.clone();
+    let tts_engine_arc = state.tts_service.clone();
     let window_clone = window.clone();
 
     let config = config_arc.lock().unwrap();
@@ -188,11 +189,23 @@ pub async fn generate_ai_response(
 
             // 实时TTS播报每个chunk（可根据实际需求调整为buffer）
             if !chunk.trim().is_empty() {
-                let req = TTSSpeakRequest {
-                    text: chunk.clone(),
-                };
-                // 忽略错误，异步fire and forget
-                let _ = tts_speak(req).await;
+                let text = chunk.clone();
+                let tts_engine_guard = tts_engine_arc
+                    .lock()
+                    .await;
+                let tts_engine = tts_engine_guard.as_ref();
+                match tts_engine {
+                    Some(engine) => {
+                        if let Err(e) = engine.speak(&text) {
+                            error!("TTS合成失败: {}", e);
+                        } else {
+                            debug!("TTS合成成功: '{}'", chunk);
+                        }
+                    }
+                    None => {
+                        error!("TTS引擎未初始化，无法进行语音合成");
+                    }
+                }
             }
 
             // 使用缓冲策略: 从配置获取缓冲大小和发送间隔
