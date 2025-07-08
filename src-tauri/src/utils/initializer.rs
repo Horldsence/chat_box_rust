@@ -1,7 +1,5 @@
 use crate::services;
 use crate::state;
-use crate::utils;
-use candle_transformers::models::whisper::SOT_TOKEN;
 use db::models;
 
 use cb_config::AppConfig;
@@ -12,10 +10,8 @@ use models::{Conversation, Message};
 use services::asr::vosk_python::VoskASR;
 use state::AppState;
 use std::path::Path;
-use std::sync::Arc;
 use tauri::path::BaseDirectory;
 use tauri::Manager;
-use tauri_plugin_opener::init;
 
 pub async fn init_app_state(
     handle: tauri::AppHandle,

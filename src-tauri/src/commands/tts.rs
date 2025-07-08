@@ -1,8 +1,6 @@
 use log::{error, info};
 use serde::Deserialize;
 
-use crate::state::{self, AppState};
-
 use tts::kokoro_tts::TtsEngine;
 
 #[derive(Deserialize)]

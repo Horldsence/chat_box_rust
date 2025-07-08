@@ -50,16 +50,31 @@ impl ChatDatabase {
     }
 
     // 保存对话
+    // 修复后的保存对话方法
     pub fn save_conversation(&mut self, conversation: &Conversation) -> Result<()> {
-        self.conn.execute(
-            "INSERT OR REPLACE INTO conversations (id, title, last_message, timestamp) VALUES (?, ?, ?, ?)",
+        // 先尝试更新现有记录
+        let rows_updated = self.conn.execute(
+            "UPDATE conversations SET title = ?, last_message = ?, timestamp = ? WHERE id = ?",
             params![
-                conversation.id,
                 conversation.title,
                 conversation.last_message,
-                conversation.timestamp
+                conversation.timestamp,
+                conversation.id
             ],
         )?;
+
+        // 如果没有更新到记录（说明是新对话），再插入
+        if rows_updated == 0 {
+            self.conn.execute(
+                "INSERT INTO conversations (id, title, last_message, timestamp) VALUES (?, ?, ?, ?)",
+                params![
+                    conversation.id,
+                    conversation.title,
+                    conversation.last_message,
+                    conversation.timestamp
+                ],
+            )?;
+        }
 
         debug!("保存对话: {}", conversation.id);
         Ok(())

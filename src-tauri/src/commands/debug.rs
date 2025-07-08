@@ -1,6 +1,5 @@
 use crate::state::AppState;
 use log::{debug, error, info};
-use rusqlite::params;
 use serde::Serialize;
 use tauri::State;
 

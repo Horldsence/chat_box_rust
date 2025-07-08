@@ -50,7 +50,18 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(log_plugin)
-        .plugin(tauri_plugin_dialog::init())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .level(log::LevelFilter::Debug)
+                .targets([
+                    Target::new(TargetKind::Stdout),
+                    Target::new(TargetKind::LogDir {
+                        file_name: Some("logs".to_string()),
+                    }),
+                    Target::new(TargetKind::Webview),
+                ])
+                .build()
+        )
         .setup(|app| {
             let handle = app.handle().clone();
 

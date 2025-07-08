@@ -21,23 +21,23 @@ pub async fn generate_ai_response(
     let user_message_content = request.user_message_content;
     let conversation_id = request.conversation_id;
 
-    let user_message = Message {
-        id: Utc::now().timestamp_millis() as u64,
-        content: user_message_content.clone(),
-        sender: "user".to_string(),
-        timestamp: Utc::now().timestamp_millis() as u64,
-        conversation_id,
-    };
-    debug!("收到用户消息: {:?}", user_message);
-    if let Ok(mut db_guard) = state.db.lock() {
-        if let Some(ref mut db) = *db_guard {
-            if let Err(e) = db.save_message(&user_message) {
-                error!("保存初始AI消息到数据库失败: {}", e);
-            } else {
-                debug!("初始AI消息已保存到数据库: {}", user_message.id);
-            }
-        }
-    }
+    // let user_message = Message {
+    //     id: Utc::now().timestamp_millis() as u64,
+    //     content: user_message_content.clone(),
+    //     sender: "user".to_string(),
+    //     timestamp: Utc::now().timestamp_millis() as u64,
+    //     conversation_id,
+    // };
+    // debug!("收到用户消息: {:?}", user_message);
+    // if let Ok(mut db_guard) = state.db.lock() {
+    //     if let Some(ref mut db) = *db_guard {
+    //         if let Err(e) = db.save_message(&user_message) {
+    //             error!("保存初始AI消息到数据库失败: {}", e);
+    //         } else {
+    //             debug!("初始AI消息已保存到数据库: {}", user_message.id);
+    //         }
+    //     }
+    // }
 
     info!("开始生成AI回复，对话ID: {}", conversation_id);
 
@@ -149,22 +149,22 @@ pub async fn generate_ai_response(
     let tts_engine_arc = state.tts_service.clone();
     let window_clone = window.clone();
 
-    let config = config_arc.lock().unwrap();
-    // 从配置中获取缓冲设置
-    let buffer_size = config.app_behavior.message_chunk_buffer_size;
-    let send_interval_ms = config.app_behavior.message_chunk_send_interval_ms;
+    // 只在同步作用域内持有锁，避免跨 await
+    let (buffer_size, send_interval_ms) = {
+        let config = config_arc.lock().unwrap();
+        (
+            config.app_behavior.message_chunk_buffer_size,
+            config.app_behavior.message_chunk_send_interval_ms,
+        )
+    };
 
     // 启动另一个任务处理流
     debug!("启动异步任务处理响应流");
-    tokio::spawn(async move {
+    let message_handle = tokio::spawn(async move {
         use tokio_stream::StreamExt;
         let mut chunk_count = 0;
         let mut buffer = String::new();
         let mut last_emit_time = std::time::Instant::now();
-
-        // 引入tts_speak命令
-        use crate::commands::tts::tts_speak;
-        use crate::commands::tts::TTSSpeakRequest;
 
         while let Some(chunk) = stream.next().await {
             // 将新的内容添加到完整响应中
@@ -325,6 +325,19 @@ pub async fn generate_ai_response(
             )
             .unwrap();
     });
+
+    let mut wait_count = 0;
+    while !message_handle.is_finished() {
+        // 等待消息处理任务完成
+        let _ = tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        wait_count += 1;
+        debug!(
+            "等待消息处理任务完成: 已等待 {} ms (循环第 {} 次)",
+            wait_count * 100,
+            wait_count
+        );
+    }
+    debug!("消息处理任务已完成，总共等待了 {} ms", wait_count * 100);
 
     Ok(())
 }
