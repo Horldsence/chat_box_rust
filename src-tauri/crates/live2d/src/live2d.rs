@@ -228,10 +228,20 @@ impl Live2DService {
             }
         }
 
-        // 如果缓冲区太大，保留最后1000个字符
-        if buffer.len() > 1000 {
-            let start = buffer.len() - 1000;
-            *buffer = buffer[start..].to_string();
+        // 安全截断缓冲区：确保在字符边界处截断
+        const MAX_BYTES: usize = 1000;
+        if buffer.len() > MAX_BYTES {
+            // 找到有效的UTF-8边界
+            let mut split_index = buffer.len() - MAX_BYTES;
+            while !buffer.is_char_boundary(split_index) {
+                split_index += 1;
+                // 防止越界（理论上不会发生，但安全起见）
+                if split_index >= buffer.len() {
+                    split_index = buffer.len();
+                    break;
+                }
+            }
+            *buffer = buffer[split_index..].to_string();
         }
 
         Ok(())
