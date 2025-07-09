@@ -6,9 +6,8 @@ import {
   ReloadOutlined,
   DatabaseOutlined,
   ApiOutlined,
-  BugOutlined,
 } from "@ant-design/icons";
-import { conversationApi, messageApi, settingsApi, debugApi } from "../utils/api";
+import { conversationApi, settingsApi, debugApi } from "../utils/api";
 import { dataValidation } from "../utils/dataValidation";
 import type { Conversation, Message, HealthStatus } from "../types";
 

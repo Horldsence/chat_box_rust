@@ -16,7 +16,6 @@ import { ConversationList } from "./components/ConversationList";
 import { MessageList } from "./components/Message";
 import { ChatInput } from "./components/ChatInput";
 import { Settings } from "./components/Settings";
-import Live2DRender from "./components/Live2DRender";
 import { getExtension } from "./extensions";
 import AgentConfig from "./components/AgentConfig";
 import Live2DControl from "./components/Live2DControl";

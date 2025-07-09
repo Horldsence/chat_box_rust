@@ -1,4 +1,3 @@
-import React from "react";
 import Live2DRender from "../../components/Live2DRender";
 import type { Extension } from "../index";
 

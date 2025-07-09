@@ -35,7 +35,6 @@ export const AntdXChatInput: React.FC<AntdXChatInputProps> = ({
   isGenerating = false,
   disabled = false,
   placeholder = "输入消息...",
-  maxLength = 2000,
   allowAttachments = true,
   supportedFileTypes = [
     ".txt",

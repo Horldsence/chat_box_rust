@@ -27,7 +27,7 @@ const Live2DRender: React.FC<Live2DRenderProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // 新增：从后端获取Live2D配置
@@ -97,37 +97,37 @@ const Live2DRender: React.FC<Live2DRenderProps> = ({
   ]);
 
   // 公开的方法
-  const triggerMotion = (groupName: string, motionIndex?: number) => {
-    if (!isLoaded) return;
+  // const triggerMotion = (groupName: string, motionIndex?: number) => {
+  //   if (!isLoaded) return;
 
-    try {
-      // 这里可能需要根据 live2d-render 的 API 调整
-      // live2d.triggerMotion?.(groupName, motionIndex);
-      console.log(`触发动作: ${groupName}, 索引: ${motionIndex}`);
-    } catch (err) {
-      console.error("触发动作失败:", err);
-    }
-  };
+  //   try {
+  //     // 这里可能需要根据 live2d-render 的 API 调整
+  //     // live2d.triggerMotion?.(groupName, motionIndex);
+  //     console.log(`触发动作: ${groupName}, 索引: ${motionIndex}`);
+  //   } catch (err) {
+  //     console.error("触发动作失败:", err);
+  //   }
+  // };
 
-  const setExpression = (expressionName: string) => {
-    if (!isLoaded) return;
+  // const setExpression = (expressionName: string) => {
+  //   if (!isLoaded) return;
 
-    try {
-      // 这里可能需要根据 live2d-render 的 API 调整
-      // live2d.setExpression?.(expressionName);
-      console.log(`设置表情: ${expressionName}`);
-    } catch (err) {
-      console.error("设置表情失败:", err);
-    }
-  };
+  //   try {
+  //     // 这里可能需要根据 live2d-render 的 API 调整
+  //     // live2d.setExpression?.(expressionName);
+  //     console.log(`设置表情: ${expressionName}`);
+  //   } catch (err) {
+  //     console.error("设置表情失败:", err);
+  //   }
+  // };
 
-  const startSpeaking = () => {
-    triggerMotion("Speaking");
-  };
+  // const startSpeaking = () => {
+  //   triggerMotion("Speaking");
+  // };
 
-  const stopSpeaking = () => {
-    triggerMotion("Idle");
-  };
+  // const stopSpeaking = () => {
+  //   triggerMotion("Idle");
+  // };
 
   return (
     <div
