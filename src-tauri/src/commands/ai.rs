@@ -94,10 +94,7 @@ pub async fn generate_ai_response(
     // 构建Agent增强的系统提示词
     let agent_service = state.agent_service.lock().await;
     let system_prompt = agent_service
-        .build_system_prompt(Some(&format!(
-            "当前对话上下文：用户刚刚说了：{}",
-            user_message_content
-        )))
+        .build_system_prompt(None)
         .await;
     drop(agent_service);
 
@@ -110,7 +107,7 @@ pub async fn generate_ai_response(
             _ => {}
         }
     }
-    prompt.push_str(&format!("User: {}\nAssistant: ", user_message_content));
+    // prompt.push_str(&format!("User: {}\nAssistant: ", user_message_content));
 
     debug!("构建的对话提示: {}", prompt);
 
