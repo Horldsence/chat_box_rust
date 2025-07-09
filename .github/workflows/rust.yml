@@ -95,7 +95,7 @@ jobs:
         with:
           tagName: app-v__VERSION__-beta.${{ steps.buildnumber.outputs.build_number }} # 添加beta标签和构建号
           releaseName: "App v__VERSION__ Beta (${{ steps.buildnumber.outputs.build_number }})" # 标题包含Beta
-          releaseBody: "这是一个Beta版本发布。请下载对应平台的安装包进行爆炸。"
+          releaseBody: "这是一个Beta版本发布。请下载对应平台的安装包进行测试。"
           releaseDraft: false
           prerelease: true # 设置为预发布版本
           args: ${{ matrix.args }}
