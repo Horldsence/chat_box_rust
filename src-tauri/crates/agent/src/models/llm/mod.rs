@@ -9,7 +9,9 @@ pub use candle::{
     CandleConfig, CandleProvider, QwenCandleGenerator, QwenInferenceParams, WhichModel,
 };
 pub use manager::{LLMManager, LLMManagerConfig, ProviderConfig, ProviderHealth, ProviderStatus};
-pub use ollama::{OllamaAgent, OllamaConfig, OllamaProvider};
+pub use ollama::provider::{OllamaConfig, OllamaProvider};
+// 兼容性接口
+pub use ollama::ollama::OllamaAgent;
 
 #[cfg(feature = "candle")]
 pub mod candle;

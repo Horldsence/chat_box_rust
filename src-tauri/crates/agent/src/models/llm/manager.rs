@@ -1,5 +1,5 @@
 use super::{
-    ollama::{OllamaConfig, OllamaProvider},
+    ollama::provider::{OllamaConfig, OllamaProvider},
     ChatRequest, ChatResponse, LLMError, LLMProvider, ModelInfo,
 };
 
