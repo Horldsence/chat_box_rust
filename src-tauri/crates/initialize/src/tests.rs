@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::{InitError, UserAction};
     use cb_config::config::InitConfig;
     use std::path::PathBuf;
@@ -145,8 +144,6 @@ mod tests {
 
     #[test]
     fn test_model_manager_model_info() {
-        use crate::model_manager::ModelManager;
-
         // Create a mock app handle for testing (this would need proper mocking in real tests)
         // For now, just test the basic model info generation logic
         let mut config = InitConfig::default();
