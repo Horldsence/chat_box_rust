@@ -29,6 +29,8 @@ candle-core = { git = "https://github.com/Horldsence/candle_eswin.git", version 
 candle-transformers = { git = "https://github.com/Horldsence/candle_eswin.git", version = "0.9.1" }
 candle-nn = { git = "https://github.com/Horldsence/candle_eswin.git", version = "0.9.1" }
 candle-examples = { git = "https://github.com/Horldsence/candle_eswin.git", version = "0.9.1" }
+mockall = "0.13.1"
+futures-util = "0.3.31"
 
 [features]
 default = []
