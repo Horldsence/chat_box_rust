@@ -74,7 +74,10 @@ export const messageApi = {
 // Voice API
 export const voiceApi = {
   async startVoiceInput(conversationId: number): Promise<string> {
-    return invoke("voice_input", { conversation_id: conversationId });
+    if (conversationId == null || conversationId <= 0) {
+      throw new Error("Invalid conversationId: must be a positive number");
+    }
+    return invoke("voice_input", { conversationId });
   },
 
   // Listen for voice status updates

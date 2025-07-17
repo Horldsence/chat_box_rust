@@ -120,7 +120,7 @@ impl Default for InitConfig {
             },
             live2d: Live2DConfig {
                 enabled: true,
-                model_path: "models/live2d/hiyori/hiyori_free_en.model3.json".to_string(),
+                model_path: "UG/ugofficial.model3.json".to_string(),
                 model_name: "Hiyori".to_string(),
                 scale: 1.0,
                 position_x: 0.0,
