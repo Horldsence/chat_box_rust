@@ -19,7 +19,6 @@ initialize = { path = "crates/initialize" }
 kokoros-tts = { path = "crates/kokoros-tts" }
 live2d = { path = "crates/live2d" }
 db = { path = "crates/db" }
-tts = { path = "crates/tts" }
 cb_config = { path = "crates/cb_config" }
 
 [package]
