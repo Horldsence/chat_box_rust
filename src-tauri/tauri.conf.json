@@ -31,6 +31,13 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": ["config.yaml", "model/**/*"]
+    "resources": ["config.yaml"],
+    "windows": {
+      "wix": {
+        "language": "en-US",
+        "fragmentPaths": [],
+        "componentRefs": []
+      }
+    }
   }
 }
