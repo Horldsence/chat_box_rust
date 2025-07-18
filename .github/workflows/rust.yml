@@ -58,12 +58,73 @@ jobs:
         if: matrix.target == 'riscv64gc-unknown-linux-gnu'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu libc6-dev-riscv64-cross
+          sudo apt-get install -y gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu libc6-dev-riscv64-cross libssl-dev
 
-          # Create OpenSSL directory structure for RISC-V
+          # Create proper OpenSSL directory structure for RISC-V
           sudo mkdir -p /usr/riscv64-linux-gnu/usr/include/openssl/
-          sudo ln -sf /usr/include/openssl/opensslconf.h /usr/riscv64-linux-gnu/usr/include/openssl/
-          sudo ln -sf /usr/include/openssl/* /usr/riscv64-linux-gnu/usr/include/openssl/
+          sudo mkdir -p /usr/riscv64-linux-gnu/lib/
+          sudo mkdir -p /usr/riscv64-linux-gnu/lib/pkgconfig/
+
+          # Copy all OpenSSL headers
+          sudo cp -r /usr/include/openssl/* /usr/riscv64-linux-gnu/usr/include/openssl/
+
+          # Copy OpenSSL libraries
+          sudo cp /usr/lib/x86_64-linux-gnu/libssl.so /usr/riscv64-linux-gnu/lib/
+          sudo cp /usr/lib/x86_64-linux-gnu/libcrypto.so /usr/riscv64-linux-gnu/lib/
+
+          # Create symbolic links
+          sudo ln -sf /usr/lib/x86_64-linux-gnu/libssl.so /usr/riscv64-linux-gnu/lib/libssl.so
+          sudo ln -sf /usr/lib/x86_64-linux-gnu/libcrypto.so /usr/riscv64-linux-gnu/lib/libcrypto.so
+
+          # Create OpenSSL pkg-config files for RISC-V
+          cat << EOF | sudo tee /usr/riscv64-linux-gnu/lib/pkgconfig/openssl.pc
+          prefix=/usr/riscv64-linux-gnu
+          exec_prefix=\${prefix}
+          libdir=\${exec_prefix}/lib
+          includedir=\${prefix}/usr/include
+
+          Name: OpenSSL
+          Description: Secure Sockets Layer and cryptography libraries
+          Version: 1.1.1
+          Requires: libssl libcrypto
+          EOF
+
+          cat << EOF | sudo tee /usr/riscv64-linux-gnu/lib/pkgconfig/libssl.pc
+          prefix=/usr/riscv64-linux-gnu
+          exec_prefix=\${prefix}
+          libdir=\${exec_prefix}/lib
+          includedir=\${prefix}/usr/include
+
+          Name: OpenSSL-libssl
+          Description: Secure Sockets Layer library
+          Version: 1.1.1
+          Requires.private: libcrypto
+          Libs: -L\${libdir} -lssl
+          Cflags: -I\${includedir}
+          EOF
+
+          cat << EOF | sudo tee /usr/riscv64-linux-gnu/lib/pkgconfig/libcrypto.pc
+          prefix=/usr/riscv64-linux-gnu
+          exec_prefix=\${prefix}
+          libdir=\${exec_prefix}/lib
+          includedir=\${prefix}/usr/include
+
+          Name: OpenSSL-libcrypto
+          Description: OpenSSL cryptography library
+          Version: 1.1.1
+          Libs: -L\${libdir} -lcrypto
+          Cflags: -I\${includedir}
+          EOF
+
+          # Set up pkg-config for cross-compilation
+          echo "PKG_CONFIG_PATH=/usr/riscv64-linux-gnu/lib/pkgconfig:/usr/lib/riscv64-linux-gnu/pkgconfig:/usr/share/pkgconfig" >> $GITHUB_ENV
+          echo "PKG_CONFIG_ALLOW_CROSS=1" >> $GITHUB_ENV
+          echo "PKG_CONFIG_SYSROOT_DIR=/usr/riscv64-linux-gnu" >> $GITHUB_ENV
+
+          # Set OpenSSL environment variables
+          echo "OPENSSL_DIR=/usr/riscv64-linux-gnu" >> $GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=/usr/riscv64-linux-gnu/usr/include" >> $GITHUB_ENV
+          echo "OPENSSL_LIB_DIR=/usr/riscv64-linux-gnu/lib" >> $GITHUB_ENV
 
       - name: Generate build number
         id: buildnumber
@@ -98,9 +159,11 @@ jobs:
           PKG_CONFIG_PATH: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/lib/riscv64-linux-gnu/pkgconfig:/usr/share/pkgconfig' || '' }}
           PKG_CONFIG_SYSROOT_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu' || '' }}
           # OpenSSL configuration for RISC-V
-          OPENSSL_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr' || '' }}
+          OPENSSL_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu' || '' }}
           OPENSSL_INCLUDE_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu/usr/include' || '' }}
-          OPENSSL_LIB_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/lib/riscv64-linux-gnu' || '' }}
+          OPENSSL_LIB_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu/lib' || '' }}
+          # Additional environment variables for RISC-V OpenSSL
+          OPENSSL_STATIC: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'true' || '' }}
         with:
           tagName: app-v__VERSION__-beta.${{ steps.buildnumber.outputs.build_number }} # 添加beta标签和构建号
           releaseName: "App v__VERSION__ Beta (${{ steps.buildnumber.outputs.build_number }})" # 标题包含Beta
