@@ -3,8 +3,11 @@ name = "tts"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+tts = ["kokoro-tts"]
+
 [dependencies]
-kokoro-tts = "0.2.6"
+kokoro-tts = { version = "0.2.6", optional = true }
 rodio = "0.20.1"
 tokio = { version = "1.46.0", features = ["full"] }
 tokio-stream = "0.1.17"

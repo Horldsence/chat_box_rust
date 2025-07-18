@@ -1,4 +1,5 @@
 // pub mod kokoro;
+#[cfg(feature = "tts")]
 pub mod kokoro_tts;
 // pub mod natural_tts;
 
