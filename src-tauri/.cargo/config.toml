@@ -1,9 +1,14 @@
 [target.x86_64-pc-windows-msvc]
 rustflags = ["-C", "target-feature=-crt-static"]
-# Force dynamic linking for C/C++ dependencies
-[env]
-CFLAGS = "/MD"
-CXXFLAGS = "/MD"
 
 [target.i686-pc-windows-msvc]
 rustflags = ["-C", "target-feature=-crt-static"]
+
+# Windows-specific environment variables
+[target.x86_64-pc-windows-msvc.env]
+CFLAGS = "/MD"
+CXXFLAGS = "/MD"
+
+[target.i686-pc-windows-msvc.env]
+CFLAGS = "/MD"
+CXXFLAGS = "/MD"
