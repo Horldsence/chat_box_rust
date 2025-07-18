@@ -143,6 +143,7 @@ pub async fn generate_ai_response(
     let config_arc = state.config.clone();
     let db_arc = state.db.clone();
     let live2d_service_arc = state.live2d_service.clone();
+    #[cfg(feature = "tts")]
     let tts_engine_arc = state.tts_service.clone();
     let window_clone = window.clone();
 
@@ -185,6 +186,7 @@ pub async fn generate_ai_response(
             }
 
             // 实时TTS播报每个chunk（可根据实际需求调整为buffer）
+            #[cfg(feature = "tts")]
             if !chunk.trim().is_empty() {
                 let text = chunk.clone();
                 let tts_engine_guard = tts_engine_arc

@@ -9,8 +9,10 @@ pub mod dialog;
 pub mod live2d;
 pub mod message;
 pub mod settings;
-pub mod tts;
 pub mod voice;
+
+#[cfg(feature = "tts")]
+pub mod tts;
 
 pub use agent::*;
 pub use ai::*;

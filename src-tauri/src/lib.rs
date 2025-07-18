@@ -255,6 +255,7 @@ async fn create_minimal_state(
         })
     });
 
+    #[cfg(feature = "tts")]
     let tts_engine =  None;
 
     state::AppState::new(
@@ -263,6 +264,7 @@ async fn create_minimal_state(
         messages,
         vosk_asr,
         handle,
+        #[cfg(feature = "tts")]
         tts_engine,
     ).await
 }

@@ -62,7 +62,7 @@ jobs:
         if: matrix.target == 'riscv64gc-unknown-linux-gnu'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu libc6-dev-riscv64-cross libssl-dev
+          sudo apt-get install -y gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu libc6-dev-riscv64-cross libssl-dev libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf alsa-utils libasound2-dev openssl pkg-config libssl-dev
 
           # Create proper OpenSSL directory structure for RISC-V
           sudo mkdir -p /usr/riscv64-linux-gnu/usr/include/openssl/
@@ -259,7 +259,6 @@ jobs:
         if: github.ref_type == 'tag'
         with:
           body_path: ${{ github.workspace }}-CHANGELOG.txt
-          repository: Horldsence/chat_box_rust
-          # note you'll typically need to create a personal access token
-          # with permissions to create releases in the other repo
+          # Remove the repository parameter to create the release in the current repo
+          # repository: Horldsence/chat_box_rust
           token: ${{ secrets.GITHUB_TOKEN }}

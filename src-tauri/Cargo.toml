@@ -49,6 +49,7 @@ env_logger = "0.11.8"
 default = ["candle"]
 reqwest = []
 candle = ["agent/candle"]
+tts = ["dep:tts"]
 
 [dependencies]
 serde_yaml = "0.9.34-deprecated"
@@ -94,5 +95,5 @@ tauri-plugin-log = "2"
 live2d = { path = "crates/live2d" }
 kokoros-tts = { path = "crates/kokoros-tts" }
 db = { path = "crates/db" }
-tts = { path = "crates/tts" }
+tts = { path = "crates/tts", optional = true }
 cb_config = { path = "crates/cb_config" }

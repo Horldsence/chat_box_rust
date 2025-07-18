@@ -54,6 +54,7 @@ pub async fn init_app_state(
         conversation_id: default_conversation_id,
     }];
 
+    #[cfg(feature = "tts")]
     // 创建 TtsEngine 实例
     let tts_engine = tts::kokoro_tts::TtsEngine::new(
             config
@@ -74,6 +75,7 @@ pub async fn init_app_state(
         messages,
         vosk_asr,
         handle.clone(),
+        #[cfg(feature = "tts")]
         Some(tts_engine),
     )
     .await?;
