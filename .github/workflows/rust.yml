@@ -54,6 +54,10 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf alsa-utils libasound2-dev openssl pkg-config libssl-dev
           # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
 
+          # Set OpenSSL environment variables for Linux build
+          echo "OPENSSL_LIB_DIR=/usr/lib/x86_64-linux-gnu" >> $GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=/usr/include" >> $GITHUB_ENV
+
       - name: install RISC-V cross-compilation tools
         if: matrix.target == 'riscv64gc-unknown-linux-gnu'
         run: |
@@ -137,19 +141,65 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install --no-frozen-lockfile # allow updating the lockfile when package.json has changed
 
-      - name: Install SQLite (Windows)
+      - name: Setup Windows build environment
         if: matrix.platform == 'windows-latest'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # SQLite environment variables for Windows
           SQLITE3_LIB_DIR: ${{ env.SQLITE3_LIB_DIR }}
           LIBSQLITE3_LINK_LIB: ${{ env.LIBSQLITE3_LINK_LIB }}
-          # Set CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER for RISC-V cross-compilation
-          CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'riscv64-linux-gnu-gcc' || '' }}
         run: |
           echo "LIBSQLITE3_LINK_LIB=sqlite3" >> $env:GITHUB_ENV
+          echo "VCPKGRS_DYNAMIC=1" >> $env:GITHUB_ENV
+          echo "ORT_STRATEGY=system" >> $env:GITHUB_ENV
+          echo "ESAXX_USE_SYSTEM_LIBS=1" >> $env:GITHUB_ENV
+          echo "CFLAGS=/MD" >> $env:GITHUB_ENV
+          echo "CXXFLAGS=/MD" >> $env:GITHUB_ENV
 
+      # Use custom build script for Windows
+      - name: Build Windows with custom script
+        if: matrix.platform == 'windows-latest'
+        run: |
+          # Create a patch for esaxx-rs to use dynamic runtime
+          mkdir -p patches\esaxx-rs
+          @"
+          diff --git a/build.rs b/build.rs
+          index abcdefg..hijklmn 100644
+          --- a/build.rs
+          +++ b/build.rs
+          @@ -10,6 +10,10 @@ fn main() {
+               let mut build = cc::Build::new();
+               build.cpp(true);
+
+          +    #[cfg(target_os = "windows")]
+          +    build.flag_if_supported("/MD")
+          +         .static_crt(false);
+          +
+               // Add the source files
+               build.file("esaxx/esa.cpp");
+               build.file("esaxx/sais.cpp");
+          "@ | Out-File -Encoding utf8 patches\esaxx-rs\build.rs.patch
+
+          # Set environment variables
+          $env:VCPKGRS_DYNAMIC = "1"
+          $env:ORT_STRATEGY = "system"
+          $env:ESAXX_USE_SYSTEM_LIBS = "1"
+          $env:CFLAGS = "/MD"
+          $env:CXXFLAGS = "/MD"
+          $env:RUSTFLAGS = "-C target-feature=-crt-static"
+
+          # Run the build
+          cd src-tauri
+          cargo build --release
+          cd ..
+          pnpm build
+
+          # Package the application
+          pnpm tauri build
+
+      # Use tauri-action for non-Windows platforms
       - uses: tauri-apps/tauri-action@v0
+        if: matrix.platform != 'windows-latest'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Set CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER for RISC-V cross-compilation
@@ -158,10 +208,10 @@ jobs:
           PKG_CONFIG_ALLOW_CROSS: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'true' || '' }}
           PKG_CONFIG_PATH: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/lib/riscv64-linux-gnu/pkgconfig:/usr/share/pkgconfig' || '' }}
           PKG_CONFIG_SYSROOT_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu' || '' }}
-          # OpenSSL configuration for RISC-V
-          OPENSSL_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu' || '' }}
-          OPENSSL_INCLUDE_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu/usr/include' || '' }}
-          OPENSSL_LIB_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu/lib' || '' }}
+          # OpenSSL configuration for all platforms
+          OPENSSL_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu' || (matrix.platform == 'ubuntu-22.04' && '/usr' || '') }}
+          OPENSSL_INCLUDE_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu/usr/include' || (matrix.platform == 'ubuntu-22.04' && '/usr/include' || '') }}
+          OPENSSL_LIB_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu/lib' || (matrix.platform == 'ubuntu-22.04' && '/usr/lib/x86_64-linux-gnu' || '') }}
           # Additional environment variables for RISC-V OpenSSL
           OPENSSL_STATIC: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'true' || '' }}
         with:

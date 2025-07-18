@@ -1,0 +1,15 @@
+diff --git a/build.rs b/build.rs
+index abcdefg..hijklmn 100644
+--- a/build.rs
++++ b/build.rs
+@@ -10,6 +10,10 @@ fn main() {
+     let mut build = cc::Build::new();
+     build.cpp(true);
+ 
++    #[cfg(target_os = "windows")]
++    build.flag_if_supported("/MD")
++         .static_crt(false);
++
+     // Add the source files
+     build.file("esaxx/esa.cpp");
+     build.file("esaxx/sais.cpp");

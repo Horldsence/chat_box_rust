@@ -1,16 +1,20 @@
-[target.riscv64gc-unknown-linux-gnu]
-linker = "riscv64-linux-gnu-gcc"
-
 [target.x86_64-pc-windows-msvc]
 rustflags = ["-C", "target-feature=-crt-static"]
 
 [target.i686-pc-windows-msvc]
 rustflags = ["-C", "target-feature=-crt-static"]
 
+# Windows-specific environment variables
 [target.x86_64-pc-windows-msvc.env]
 CFLAGS = "/MD"
 CXXFLAGS = "/MD"
+VCPKGRS_DYNAMIC = "1"
+ORT_STRATEGY = "system"
+ESAXX_USE_SYSTEM_LIBS = "1"
 
 [target.i686-pc-windows-msvc.env]
 CFLAGS = "/MD"
 CXXFLAGS = "/MD"
+VCPKGRS_DYNAMIC = "1"
+ORT_STRATEGY = "system"
+ESAXX_USE_SYSTEM_LIBS = "1"
