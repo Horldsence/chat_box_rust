@@ -58,7 +58,12 @@ jobs:
         if: matrix.target == 'riscv64gc-unknown-linux-gnu'
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu
+          sudo apt-get install -y gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu libc6-dev-riscv64-cross
+
+          # Create OpenSSL directory structure for RISC-V
+          sudo mkdir -p /usr/riscv64-linux-gnu/usr/include/openssl/
+          sudo ln -sf /usr/include/openssl/opensslconf.h /usr/riscv64-linux-gnu/usr/include/openssl/
+          sudo ln -sf /usr/include/openssl/* /usr/riscv64-linux-gnu/usr/include/openssl/
 
       - name: Generate build number
         id: buildnumber
@@ -92,6 +97,10 @@ jobs:
           PKG_CONFIG_ALLOW_CROSS: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && 'true' || '' }}
           PKG_CONFIG_PATH: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/lib/riscv64-linux-gnu/pkgconfig:/usr/share/pkgconfig' || '' }}
           PKG_CONFIG_SYSROOT_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu' || '' }}
+          # OpenSSL configuration for RISC-V
+          OPENSSL_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr' || '' }}
+          OPENSSL_INCLUDE_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/riscv64-linux-gnu/usr/include' || '' }}
+          OPENSSL_LIB_DIR: ${{ matrix.target == 'riscv64gc-unknown-linux-gnu' && '/usr/lib/riscv64-linux-gnu' || '' }}
         with:
           tagName: app-v__VERSION__-beta.${{ steps.buildnumber.outputs.build_number }} # 添加beta标签和构建号
           releaseName: "App v__VERSION__ Beta (${{ steps.buildnumber.outputs.build_number }})" # 标题包含Beta

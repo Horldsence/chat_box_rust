@@ -1,0 +1,16 @@
+[target.riscv64gc-unknown-linux-gnu]
+linker = "riscv64-linux-gnu-gcc"
+
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=-crt-static"]
+
+[target.i686-pc-windows-msvc]
+rustflags = ["-C", "target-feature=-crt-static"]
+
+[target.x86_64-pc-windows-msvc.env]
+CFLAGS = "/MD"
+CXXFLAGS = "/MD"
+
+[target.i686-pc-windows-msvc.env]
+CFLAGS = "/MD"
+CXXFLAGS = "/MD"
