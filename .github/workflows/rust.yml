@@ -161,7 +161,10 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: |
           # Create a patch for esaxx-rs to use dynamic runtime
-          mkdir -p patches\esaxx-rs
+          if (-not (Test-Path -Path "patches\esaxx-rs")) {
+            New-Item -Path "patches\esaxx-rs" -ItemType Directory -Force
+          }
+
           @"
           diff --git a/build.rs b/build.rs
           index abcdefg..hijklmn 100644
@@ -188,8 +191,37 @@ jobs:
           $env:CXXFLAGS = "/MD"
           $env:RUSTFLAGS = "-C target-feature=-crt-static"
 
-          # Run the build
+          # Create .cargo/config.toml if it doesn't exist
+          if (-not (Test-Path -Path ".cargo")) {
+            New-Item -Path ".cargo" -ItemType Directory -Force
+          }
+
+          @"
+          [target.x86_64-pc-windows-msvc]
+          rustflags = ["-C", "target-feature=-crt-static"]
+
+          [target.i686-pc-windows-msvc]
+          rustflags = ["-C", "target-feature=-crt-static"]
+
+          # Windows-specific environment variables
+          [target.x86_64-pc-windows-msvc.env]
+          CFLAGS = "/MD"
+          CXXFLAGS = "/MD"
+          VCPKGRS_DYNAMIC = "1"
+          ORT_STRATEGY = "system"
+          ESAXX_USE_SYSTEM_LIBS = "1"
+
+          [target.i686-pc-windows-msvc.env]
+          CFLAGS = "/MD"
+          CXXFLAGS = "/MD"
+          VCPKGRS_DYNAMIC = "1"
+          ORT_STRATEGY = "system"
+          ESAXX_USE_SYSTEM_LIBS = "1"
+          "@ | Out-File -Encoding utf8 .cargo\config.toml -Force
+
+          # Run the build with clean first
           cd src-tauri
+          cargo clean
           cargo build --release
           cd ..
           pnpm build
