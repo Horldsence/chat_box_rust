@@ -3,6 +3,7 @@ use log::{debug, error, info};
 use tauri::{Emitter, State, Window};
 use tokio_stream::StreamExt;
 
+#[cfg(feature = "asr")]
 #[tauri::command]
 pub async fn voice_input(
     window: Window,
@@ -124,4 +125,13 @@ pub async fn voice_input(
             Err(format!("等待语音识别结果失败: {}", e))
         }
     }
+}
+
+#[cfg(not(feature = "asr"))]
+#[tauri::command]
+pub async fn voice_input(window: Window, conversation_id: u64) -> Result<String, String> {
+    window
+        .emit("voice_status", "error")
+        .map_err(|e| e.to_string())?;
+    Err(format!("please enable asr feature: {}", conversation_id))
 }

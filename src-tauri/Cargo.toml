@@ -38,10 +38,11 @@ env_logger = "0.11.8"
 
 [features]
 default = ["candle"]
+asr = ["dep:asr", "pyo3"]
+full = ["tts", "candle", "reqwest", "asr"]
 reqwest = []
 candle = ["agent/candle"]
 tts = ["dep:tts", "kokoros-tts"]
-full = ["tts", "candle", "reqwest"]
 
 [dependencies]
 serde_yaml = "0.9.34-deprecated"
@@ -59,7 +60,10 @@ ollama-rs = { version = "0.3.1", features = ["stream"] }
 tokio = { version = "1.45.1", features = ["full"] }
 tokio-stream = "0.1.17"
 smol = "2.0.2"
-pyo3 = { version = "0.25.0", features = ["auto-initialize", "full"] }
+pyo3 = { version = "0.25.0", features = [
+    "auto-initialize",
+    "full",
+], optional = true }
 rodio = "0.20.1"
 config = "0.15.11"
 anyhow = "1.0.98"
@@ -89,3 +93,4 @@ kokoros-tts = { path = "crates/kokoros-tts", optional = true }
 db = { path = "crates/db" }
 tts = { path = "crates/tts", optional = true }
 cb_config = { path = "crates/cb_config" }
+asr = { path = "crates/asr", optional = true }

@@ -1,8 +1,9 @@
 use crate::services::agent::AgentService;
-use crate::services::asr::vosk_python::VoskASR;
 #[cfg(feature = "candle")]
 use agent::models::llm::{CandleConfig, WhichModel};
 use agent::{LLMManager, LLMManagerConfig, OllamaConfig, ProviderConfig};
+#[cfg(feature = "asr")]
+use asr::vosk_python::VoskASR;
 use cb_config::AppConfig;
 use db::database::ChatDatabase;
 use db::models::{Conversation, Message};
@@ -19,12 +20,13 @@ pub struct AppState {
     pub conversations: Arc<Mutex<Vec<Conversation>>>,
     pub messages: Arc<Mutex<Vec<Message>>>,
     pub llm_manager: Arc<LLMManager>,
+    #[cfg(feature = "asr")]
     pub vosk_asr: Arc<tokio::sync::Mutex<VoskASR>>,
     pub db: Arc<Mutex<Option<ChatDatabase>>>, // 添加数据库支持
     pub live2d_service: Arc<tokio::sync::Mutex<Live2DService>>, // 添加Live2D服务
     pub agent_service: Arc<tokio::sync::Mutex<AgentService>>, // 添加Agent服务
     #[cfg(feature = "tts")]
-    pub tts_service: Arc<tokio::sync::Mutex<Option<TtsEngine>>>,  // 注册TTS服务
+    pub tts_service: Arc<tokio::sync::Mutex<Option<TtsEngine>>>, // 注册TTS服务
 }
 
 #[allow(dead_code)]
@@ -33,10 +35,9 @@ impl AppState {
         config: AppConfig,
         conversations: Vec<Conversation>,
         messages: Vec<Message>,
-        vosk_asr: VoskASR,
+        #[cfg(feature = "asr")] vosk_asr: VoskASR,
         app_handle: tauri::AppHandle,
-        #[cfg(feature = "tts")]
-        tts_service: Option<TtsEngine>,
+        #[cfg(feature = "tts")] tts_service: Option<TtsEngine>,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         // 创建 LLM 管理器配置
         let mut providers = HashMap::new();
@@ -107,6 +108,7 @@ impl AppState {
             conversations: Arc::new(Mutex::new(conversations)),
             messages: Arc::new(Mutex::new(messages)),
             llm_manager: Arc::new(llm_manager),
+            #[cfg(feature = "asr")]
             vosk_asr: Arc::new(tokio::sync::Mutex::new(vosk_asr)),
             db: Arc::new(Mutex::new(None)), // 初始时数据库为None
             live2d_service: Arc::new(tokio::sync::Mutex::new(live2d_service)),

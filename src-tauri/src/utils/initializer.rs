@@ -2,12 +2,13 @@ use crate::services;
 use crate::state;
 use db::models;
 
+#[cfg(feature = "asr")]
+use asr::vosk_python::VoskASR;
 use cb_config::AppConfig;
 use chrono::Utc;
 use initialize::InitConfig;
 use log::{error, info};
 use models::{Conversation, Message};
-use services::asr::vosk_python::VoskASR;
 use state::AppState;
 use std::path::Path;
 use tauri::path::BaseDirectory;
@@ -33,6 +34,7 @@ pub async fn init_app_state(
     // 转换为旧的 AppConfig 格式以保持兼容性
     let config = convert_init_config_to_app_config(init_config);
 
+    #[cfg(feature = "asr")]
     // 创建 Vosk ASR 实例
     let vosk_asr = create_vosk_asr(&config, &handle)?;
 
@@ -57,22 +59,25 @@ pub async fn init_app_state(
     #[cfg(feature = "tts")]
     // 创建 TtsEngine 实例
     let tts_engine = tts::kokoro_tts::TtsEngine::new(
-            config
-                .tts_engine
-                .model_path
-                .to_str()
-                .ok_or("Invalid model path")?.to_string(),
-            config
-                .tts_engine
-                .voice_path
-                .to_str()
-                .ok_or("Invalid voice path")?.to_string(),
-        )?;
+        config
+            .tts_engine
+            .model_path
+            .to_str()
+            .ok_or("Invalid model path")?
+            .to_string(),
+        config
+            .tts_engine
+            .voice_path
+            .to_str()
+            .ok_or("Invalid voice path")?
+            .to_string(),
+    )?;
 
     let state = AppState::new(
         config.clone(),
         conversations,
         messages,
+        #[cfg(feature = "asr")]
         vosk_asr,
         handle.clone(),
         #[cfg(feature = "tts")]
@@ -144,6 +149,7 @@ pub fn convert_init_config_to_app_config(init_config: InitConfig) -> AppConfig {
     }
 }
 
+#[cfg(feature = "asr")]
 pub fn create_vosk_asr(
     config: &AppConfig,
     handle: &tauri::AppHandle,

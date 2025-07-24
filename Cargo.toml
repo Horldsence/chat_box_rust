@@ -1,5 +1,0 @@
-[patch.crates-io]
-esaxx-rs = { git = "https://github.com/Horldsence/esaxx-rs.git", branch = "dynamic-runtime" }
-
-[workspace]
-members = []

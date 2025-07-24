@@ -60,7 +60,7 @@ pub fn run() {
                     }),
                     Target::new(TargetKind::Webview),
                 ])
-                .build()
+                .build(),
         )
         .setup(|app| {
             let handle = app.handle().clone();
@@ -218,10 +218,11 @@ pub fn run() {
 async fn create_minimal_state(
     handle: tauri::AppHandle,
 ) -> Result<state::AppState, Box<dyn std::error::Error>> {
+    #[cfg(feature = "asr")]
+    use asr::vosk_python::VoskASR;
     use cb_config::AppConfig;
     use chrono::Utc;
     use db::models::{Conversation, Message};
-    use services::asr::vosk_python::VoskASR;
 
     warn!("创建最小配置状态");
 
@@ -245,6 +246,7 @@ async fn create_minimal_state(
     }];
 
     // 尝试创建简化的语音识别服务
+    #[cfg(feature = "asr")]
     let vosk_asr = VoskASR::new(None).unwrap_or_else(|e| {
         warn!("无法初始化语音识别服务: {}", e);
         // 这里应该返回一个虚拟的 VoskASR 实例
@@ -256,15 +258,17 @@ async fn create_minimal_state(
     });
 
     #[cfg(feature = "tts")]
-    let tts_engine =  None;
+    let tts_engine = None;
 
     state::AppState::new(
         config,
         conversations,
         messages,
+        #[cfg(feature = "asr")]
         vosk_asr,
         handle,
         #[cfg(feature = "tts")]
         tts_engine,
-    ).await
+    )
+    .await
 }
