@@ -4,4 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.98"
 april_asr = "0.1.31"
+cpal = "0.16.0"
+futures = "0.3.31"
+log = "0.4.27"
+num-traits = "0.2.19"
+pyo3 = "0.25.1"
+tokio = "1.46.1"
+tokio-stream = "0.1.17"
+vosk = "0.3.1"

@@ -1,23 +1,22 @@
 use anyhow::{Context, Result};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use futures;
 use log::{error, info, warn}; // 移除未使用的debug导入
 use num_traits::ToPrimitive;
-use tokio_stream::Stream;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::fmt;
+use std::pin::Pin;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::task::{Context as TaskContext, Poll};
 use tokio::sync::mpsc;
 use tokio::time::Duration;
+use tokio_stream::Stream;
 use vosk::{Model, Recognizer};
-use std::pin::Pin;
-use std::task::{Context as TaskContext, Poll};
-use std::fmt;
-use futures;
 
 pub struct VoskASR {
     model: Model,
     is_recording: Arc<AtomicBool>,
 }
-
 
 #[derive(Debug)]
 struct VoskError(String);
@@ -55,10 +54,13 @@ impl VoskASR {
     }
 
     /// 手动停止正在进行的录音
-    pub fn stop_recording(&self) {
+    pub fn stop_recording(&self) -> bool {
         if self.is_recording() {
             info!("Manually stopping voice recording");
             self.is_recording.store(false, Ordering::SeqCst);
+            true
+        } else {
+            false
         }
     }
 
@@ -228,10 +230,15 @@ impl VoskASR {
     pub async fn listen_and_transcribe(
         &mut self,
         max_duration_secs: Option<f32>,
-    ) -> Result<Pin<Box<dyn Stream<Item = Result<String, Box<dyn std::error::Error + Send + Sync>>> + Send>>> {
+    ) -> Result<
+        Pin<
+            Box<dyn Stream<Item = Result<String, Box<dyn std::error::Error + Send + Sync>>> + Send>,
+        >,
+    > {
         // 初始化音频设备
         let host = cpal::default_host();
-        let device = host.default_input_device()
+        let device = host
+            .default_input_device()
             .ok_or_else(|| Box::new(VoskError("No default input device".into())))?;
         let config = device.default_input_config()?;
         let sample_rate = config.sample_rate().0 as f32;
@@ -239,7 +246,7 @@ impl VoskASR {
         // 创建识别器
         let recognizer = Arc::new(tokio::sync::Mutex::new(
             Recognizer::new(&self.model, sample_rate)
-                .ok_or_else(|| VoskError("Failed to create recognizer".into()))?
+                .ok_or_else(|| VoskError("Failed to create recognizer".into()))?,
         ));
 
         // 创建音频通道
@@ -298,7 +305,11 @@ impl Stream for VoskStream {
                     // 静音检测逻辑
                     const SOUND_THRESHOLD: i16 = 500;
                     let has_sound = data.iter().any(|&s| s.abs() > SOUND_THRESHOLD);
-                    self.silence_counter = if has_sound { 0 } else { self.silence_counter + 1 };
+                    self.silence_counter = if has_sound {
+                        0
+                    } else {
+                        self.silence_counter + 1
+                    };
 
                     if self.silence_counter > 30 {
                         return Poll::Ready(Some(Ok("[silence detected]".to_string())));
@@ -313,7 +324,10 @@ impl Stream for VoskStream {
                     };
 
                     if let Err(e) = recognizer.accept_waveform(&data) {
-                        return Poll::Ready(Some(Err(Box::new(VoskError(format!("Recognition error: {}", e))))));
+                        return Poll::Ready(Some(Err(Box::new(VoskError(format!(
+                            "Recognition error: {}",
+                            e
+                        ))))));
                     }
 
                     // 返回部分结果

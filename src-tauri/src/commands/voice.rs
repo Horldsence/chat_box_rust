@@ -96,9 +96,9 @@ pub async fn voice_input(
             // 显式停止录音
             debug!("流处理完成，停止录音");
             {
-                // let mut vosk_asr = vosk_asr.lock().unwrap();
-                if let Err(e) = vosk_asr.stop_recording() {
-                    error!("停止录音失败: {:?}", e);
+                match vosk_asr.stop_recording() {
+                    Ok(()) => (),
+                    Err(e) => error!("停止录音出错: {}", e),
                 }
             }
         }

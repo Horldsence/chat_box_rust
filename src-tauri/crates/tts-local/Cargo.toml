@@ -1,0 +1,19 @@
+[package]
+name = "tts-local"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["sys_tts"]
+tts = ["kokoro-tts"]
+sys_tts = ["dep:tts"]
+kokoro-tts = ["dep:kokoro-tts"]
+
+[dependencies]
+kokoro-tts = { version = "0.2.6", optional = true }  # 修正名称，确保是远程依赖
+rodio = "0.20.1"
+tokio = { version = "1.46.0", features = ["full"] }
+tokio-stream = "0.1.17"
+anyhow = "1.0.98"
+futures = "0.3.31"
+tts = { version = "0.26.3", optional = true }

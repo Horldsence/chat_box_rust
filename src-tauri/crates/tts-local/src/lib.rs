@@ -22,3 +22,6 @@ mod tests {
         engine.speak("Hello world").expect("Synthesis failed");
     }
 }
+
+#[cfg(feature = "sys_tts")]
+pub mod rust_tts;
