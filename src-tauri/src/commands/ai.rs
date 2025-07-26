@@ -111,15 +111,33 @@ pub async fn generate_ai_response(
     drop(agent_service);
 
     // 构建完整的对话历史提示
-    let mut prompt = format!("{}\n\n", system_prompt);
+    let mut prompt = format!(
+        "{}
+
+",
+        system_prompt
+    );
     for msg in &history {
         match msg.sender.as_str() {
-            "user" => prompt.push_str(&format!("User: {}\n", msg.content)),
-            "bot" => prompt.push_str(&format!("Assistant: {}\n", msg.content)),
+            "user" => prompt.push_str(&format!(
+                "User: {}
+",
+                msg.content
+            )),
+            "bot" => prompt.push_str(&format!(
+                "Assistant: {}
+",
+                msg.content
+            )),
             _ => {}
         }
     }
-    // prompt.push_str(&format!("User: {}\nAssistant: ", user_message_content));
+    // 添加当前用户消息和Assistant前缀
+    prompt.push_str(&format!(
+        "User: {}
+Assistant: ",
+        user_message_content
+    ));
 
     debug!("构建的对话提示: {}", prompt);
 
