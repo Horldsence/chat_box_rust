@@ -44,7 +44,7 @@ impl VoskASR {
             #[cfg(windows)]
             path.insert(0, r".venv\Lib\site-packages")?;
             #[cfg(not(windows))]
-            path.insert(0, ".venv/lib/python3.13/site-packages")?;
+            path.insert(0, ".venv/lib/python3.9/site-packages")?;
 
             path.insert(0, "src/python")?;
 

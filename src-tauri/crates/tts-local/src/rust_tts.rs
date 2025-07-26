@@ -54,7 +54,7 @@ impl TtsStream {
         }
 
         let text = inner.queue.remove(0);
-        let tts_clone = inner.tts.clone();
+        let mut tts_clone = inner.tts.clone();
         let self_clone = self.clone();
 
         // 使用新线程处理语音播放，避免阻塞主线程
@@ -64,7 +64,7 @@ impl TtsStream {
             }
 
             // 递归处理队列中的下一项
-            let mut inner = self_clone.inner.lock().unwrap();
+            let inner = self_clone.inner.lock().unwrap();
             if let Err(e) = self_clone.process_queue(inner) {
                 eprintln!("TTS queue processing error: {}", e);
             }
@@ -85,19 +85,22 @@ impl TtsStream {
     /// 设置语速 (0.0-1.0)
     pub fn set_rate(&self, rate: f32) -> Result<(), Error> {
         let mut inner = self.inner.lock().unwrap();
-        inner.tts.set_rate(rate)
+        inner.tts.set_rate(rate)?;
+        Ok(())
     }
 
     /// 设置音量 (0.0-1.0)
     pub fn set_volume(&self, volume: f32) -> Result<(), Error> {
         let mut inner = self.inner.lock().unwrap();
-        inner.tts.set_volume(volume)
+        inner.tts.set_volume(volume)?;
+        Ok(())
     }
 
     /// 设置音高 (0.0-1.0)
     pub fn set_pitch(&self, pitch: f32) -> Result<(), Error> {
         let mut inner = self.inner.lock().unwrap();
-        inner.tts.set_pitch(pitch)
+        inner.tts.set_pitch(pitch)?;
+        Ok(())
     }
 
     /// 设置语音

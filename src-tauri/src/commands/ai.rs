@@ -76,6 +76,7 @@ pub async fn generate_ai_response(
     state.messages.lock().unwrap().push(bot_message.clone());
 
     // 尝试保存初始消息到数据库
+    let mut messages_amount = 0;
     if let Ok(mut db_guard) = state.db.lock() {
         if let Some(ref mut db) = *db_guard {
             if let Err(e) = db.save_message(&bot_message) {
@@ -83,6 +84,13 @@ pub async fn generate_ai_response(
             } else {
                 debug!("初始AI消息已保存到数据库: {}", bot_message.id);
             }
+            messages_amount = match db.get_conversation_messages_total_amount(conversation_id) {
+                Ok(amount) => amount,
+                Err(e) => {
+                    error!("get message amount error: {}", e);
+                    0
+                }
+            };
         }
     }
 
@@ -91,11 +99,15 @@ pub async fn generate_ai_response(
 
     let history = state.get_conversation_history(conversation_id);
 
-    // 构建Agent增强的系统提示词
+    // 检查是否为第一次对话，如果是则构建Agent增强的系统提示词
     let agent_service = state.agent_service.lock().await;
-    let system_prompt = agent_service
-        .build_system_prompt(None)
-        .await;
+    let system_prompt = match messages_amount - 1 == 0 {
+        true => {
+            debug!("已构建提示词");
+            agent_service.build_system_prompt(None).await
+        }
+        false => String::new(),
+    };
     drop(agent_service);
 
     // 构建完整的对话历史提示
@@ -189,9 +201,7 @@ pub async fn generate_ai_response(
             #[cfg(feature = "tts")]
             if !chunk.trim().is_empty() {
                 let text = chunk.clone();
-                let tts_engine_guard = tts_engine_arc
-                    .lock()
-                    .await;
+                let tts_engine_guard = tts_engine_arc.lock().await;
                 let tts_engine = tts_engine_guard.as_ref();
                 match tts_engine {
                     Some(engine) => {

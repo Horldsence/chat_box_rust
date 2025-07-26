@@ -219,6 +219,55 @@ impl ChatDatabase {
         Ok(messages)
     }
 
+    pub fn get_conversation_messages_total_amount(&self, conversation_id: u64) -> Result<usize> {
+        debug!("开始查询对话 {} 的消息", conversation_id);
+
+        // 先检查数据库中总共有多少条消息
+        let total_count: i64 = self
+            .conn
+            .query_row("SELECT COUNT(*) FROM messages", [], |row| row.get(0))?;
+        debug!("数据库中总共有 {} 条消息", total_count);
+
+        // 检查特定对话的消息数量
+        let conv_count: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM messages WHERE conversation_id = ?",
+            params![conversation_id],
+            |row| row.get(0),
+        )?;
+        debug!(
+            "对话 {} 在数据库中有 {} 条消息",
+            conversation_id, conv_count
+        );
+
+        let mut stmt = self.conn.prepare(
+            "SELECT id, conversation_id, content, sender, timestamp FROM messages WHERE conversation_id = ? ORDER BY timestamp ASC"
+        )?;
+
+        let rows = stmt.query_map(params![conversation_id], |row| {
+            let message = Message {
+                id: row.get(0)?,
+                conversation_id: row.get(1)?,
+                content: row.get(2)?,
+                sender: row.get(3)?,
+                timestamp: row.get(4)?,
+            };
+            debug!("查询到消息: ID={}, 内容='{}'", message.id, message.content);
+            Ok(message)
+        })?;
+
+        let mut messages = Vec::new();
+        for row in rows {
+            messages.push(row?);
+        }
+
+        info!(
+            "加载了对话 {} 的 {} 条消息",
+            conversation_id,
+            messages.len()
+        );
+        Ok(messages.len())
+    }
+
     pub fn delete_conversation(&mut self, conversation_id: u64) -> Result<()> {
         self.conn.execute(
             "DELETE FROM conversations WHERE id = ?",
