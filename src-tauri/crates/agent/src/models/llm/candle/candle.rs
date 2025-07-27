@@ -154,12 +154,12 @@ impl TextGeneration {
             .get_ids()
             .to_vec();
 
-        // Process prompt tokens
+        // 处理prompt但不输出：只更新tokenizer状态
         for &t in tokens.iter() {
-            if let Some(t) = self.tokenizer.next_token(t)? {
-                callback(&t)?;
-            }
+            let _ = self.tokenizer.next_token(t)?; // 忽略返回值
         }
+        // 清空可能存在的prompt残留缓存
+        let _ = self.tokenizer.decode_rest().map_err(E::msg)?;
 
         let mut generated_tokens = 0usize;
         let eos_token = match self.tokenizer.get_token("<|endoftext|>") {
@@ -191,6 +191,7 @@ impl TextGeneration {
             };
 
             let next_token = self.logits_processor.sample(&logits)?;
+
             tokens.push(next_token);
             generated_tokens += 1;
 
@@ -198,11 +199,13 @@ impl TextGeneration {
                 break;
             }
 
+            // 仅输出生成的token
             if let Some(t) = self.tokenizer.next_token(next_token)? {
                 callback(&t)?;
             }
         }
 
+        // 输出最后残留的生成内容
         if let Some(rest) = self.tokenizer.decode_rest().map_err(E::msg)? {
             callback(&rest)?;
         }
@@ -537,6 +540,46 @@ impl QwenCandleGenerator {
 
         // Return only the newly generated tokens
         Ok(tokens[initial_len..].to_vec())
+    }
+
+    pub fn generate_stream(
+        &mut self,
+        prompt: &str,
+        sample_len: usize,
+    ) -> Result<impl tokio_stream::Stream<Item = Result<String, String>> + Send> {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        let prompt = prompt.to_string();
+        let mut pipeline = TextGeneration::new(
+            self.model.clone(),
+            self.tokenizer.clone(),
+            self.params.seed,
+            self.params.temperature,
+            self.params.top_p,
+            self.params.repeat_penalty,
+            self.params.repeat_last_n,
+            &candle_examples::device(self.params.cpu)?,
+        );
+
+        // 在后台线程运行生成逻辑
+        tokio::spawn({
+            // 克隆发送端用于闭包内
+            let tx_clone = tx.clone();
+            async move {
+                let result = pipeline.run_with_callback(&prompt, sample_len, move |chunk| {
+                    // 使用克隆的发送端
+                    if tx_clone.send(Ok(chunk.to_string())).is_err() {
+                        return Err(anyhow::anyhow!("Receiver closed"));
+                    }
+                    Ok(())
+                });
+
+                // 发送完成信号或错误
+                if let Err(e) = result {
+                    let _ = tx.send(Err(e.to_string()));
+                }
+            }
+        });
+        Ok(tokio_stream::wrappers::UnboundedReceiverStream::new(rx))
     }
 }
 
