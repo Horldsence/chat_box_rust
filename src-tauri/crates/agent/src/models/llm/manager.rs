@@ -226,6 +226,7 @@ impl LLMManager {
     }
 
     /// 获取健康的提供者
+    #[allow(dead_code)]
     async fn get_healthy_provider(&self, preferred: Option<&str>) -> Option<Arc<dyn LLMProvider>> {
         let status_map = self.provider_status.read().await;
 

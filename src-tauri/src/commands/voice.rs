@@ -1,8 +1,3 @@
-use crate::state::AppState;
-use log::{debug, error, info};
-use tauri::{Emitter, State, Window};
-use tokio_stream::StreamExt;
-
 #[cfg(feature = "asr")]
 #[tauri::command]
 pub async fn voice_input(
@@ -10,6 +5,11 @@ pub async fn voice_input(
     conversation_id: u64,
     state: State<'_, AppState>,
 ) -> Result<String, String> {
+    use crate::state::AppState;
+    use log::{debug, error, info};
+    use tauri::{Emitter, State, Window};
+    use tokio_stream::StreamExt;
+
     info!("开始语音输入，对话ID: {}", conversation_id);
 
     // 通知前端录音开始
@@ -129,7 +129,8 @@ pub async fn voice_input(
 
 #[cfg(not(feature = "asr"))]
 #[tauri::command]
-pub async fn voice_input(window: Window, conversation_id: u64) -> Result<String, String> {
+pub async fn voice_input(window: tauri::Window, conversation_id: u64) -> Result<String, String> {
+    use tauri::Emitter;
     window
         .emit("voice_status", "error")
         .map_err(|e| e.to_string())?;

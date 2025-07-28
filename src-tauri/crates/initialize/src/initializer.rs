@@ -84,15 +84,15 @@ impl AppInitializer {
         }
     }
 
-    fn show_progress_dialog(&self, message: &str, progress_percent: f32) {
-        let title = format!("初始化进度 - {:.0}%", progress_percent);
-        let _ = self
-            .app_handle
-            .dialog()
-            .message(message)
-            .title(&title)
-            .kind(MessageDialogKind::Info);
-    }
+    // fn show_progress_dialog(&self, message: &str, progress_percent: f32) {
+    //     let title = format!("初始化进度 - {:.0}%", progress_percent);
+    //     let _ = self
+    //         .app_handle
+    //         .dialog()
+    //         .message(message)
+    //         .title(&title)
+    //         .kind(MessageDialogKind::Info);
+    // }
 
     fn calculate_estimated_time(
         &self,

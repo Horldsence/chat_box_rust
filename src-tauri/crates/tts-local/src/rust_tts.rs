@@ -129,4 +129,4 @@ impl TtsStream {
 }
 
 // 为 TtsStream 实现 Send，使其可以安全跨线程
-unsafe impl Send for TtsStream {}
+// unsafe impl Send for TtsStream {}

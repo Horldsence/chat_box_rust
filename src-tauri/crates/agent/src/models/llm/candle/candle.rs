@@ -1,9 +1,3 @@
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
-
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
-
 use anyhow::{Error as E, Result};
 use clap::Parser;
 
@@ -67,6 +61,7 @@ impl TextGeneration {
         }
     }
 
+    #[allow(dead_code)]
     fn run(&mut self, prompt: &str, sample_len: usize) -> Result<()> {
         use std::io::Write;
         self.tokenizer.clear();
@@ -161,7 +156,6 @@ impl TextGeneration {
         // 清空可能存在的prompt残留缓存
         let _ = self.tokenizer.decode_rest().map_err(E::msg)?;
 
-        let mut generated_tokens = 0usize;
         let eos_token = match self.tokenizer.get_token("<|endoftext|>") {
             Some(token) => token,
             None => anyhow::bail!("cannot find the <|endoftext|> token"),
@@ -193,7 +187,6 @@ impl TextGeneration {
             let next_token = self.logits_processor.sample(&logits)?;
 
             tokens.push(next_token);
-            generated_tokens += 1;
 
             if next_token == eos_token || next_token == eos_token2 {
                 break;
