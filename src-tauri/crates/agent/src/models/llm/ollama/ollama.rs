@@ -1,12 +1,10 @@
 #[allow(unused_imports)]
-use crate::{
-    ChatMessage, ChatRequest, ChatResponse, LLMError, LLMProvider, ModelInfo,
-};
-use tokio_stream::{Stream, StreamExt};
+use crate::{ChatMessage, ChatRequest, ChatResponse, LLMError, LLMProvider, ModelInfo};
 #[allow(unused_imports)]
 use ollama_rs::generation::chat::MessageRole;
+use tokio_stream::{Stream, StreamExt};
 
-use crate::models::llm::ollama::provider::{OllamaProvider, OllamaConfig};
+use crate::models::llm::ollama::provider::{OllamaConfig, OllamaProvider};
 
 /// 兼容旧版本接口的 OllamaAgent
 pub struct OllamaAgent {

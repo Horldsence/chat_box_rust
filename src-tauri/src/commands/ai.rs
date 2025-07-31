@@ -188,7 +188,7 @@ Assistant: ",
 
     // 启动另一个任务处理流
     debug!("启动异步任务处理响应流");
-    let message_handle = tokio::spawn(async move {
+    tokio::spawn(async move {
         use tokio_stream::StreamExt;
         let mut chunk_count = 0;
         let mut buffer = String::new();

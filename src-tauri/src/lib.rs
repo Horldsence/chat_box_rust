@@ -49,6 +49,7 @@ pub fn run() {
         .build();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
         .plugin(log_plugin)
         .plugin(
             tauri_plugin_log::Builder::new()
@@ -209,6 +210,11 @@ pub fn run() {
             debug_memory_state,
             debug_clear_database,
             debug_test_database_connection,
+            // 文件查找
+            search_files_with_content,
+            refresh_file_index,
+            get_file_info,
+            get_index_stats
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

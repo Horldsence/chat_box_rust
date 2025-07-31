@@ -7,6 +7,7 @@ use asr::AsrProvider;
 use cb_config::AppConfig;
 use db::database::ChatDatabase;
 use db::models::{Conversation, Message};
+use file_finder::FileFinder;
 use live2d::live2d::Live2DService;
 use log::{error, info};
 use std::collections::HashMap;
@@ -27,6 +28,7 @@ pub struct AppState {
     pub agent_service: Arc<tokio::sync::Mutex<AgentService>>, // 添加Agent服务
     #[cfg(feature = "tts")]
     pub tts_service: Arc<tokio::sync::Mutex<Option<TtsEngine>>>, // 注册TTS服务
+    pub file_finder: Arc<tokio::sync::Mutex<FileFinder>>, // 添加文件查找服务
 }
 
 #[allow(dead_code)]
@@ -100,6 +102,9 @@ impl AppState {
         // 创建Live2D服务
         let live2d_service = Live2DService::new(app_handle.clone());
 
+        // 创建FileFinder服务
+        let file_finder = FileFinder::new()?;
+
         // 创建Agent服务
         let agent_service = AgentService::new(app_handle);
 
@@ -115,6 +120,7 @@ impl AppState {
             agent_service: Arc::new(tokio::sync::Mutex::new(agent_service)),
             #[cfg(feature = "tts")]
             tts_service: Arc::new(tokio::sync::Mutex::new(tts_service)), // 注册TTS服务
+            file_finder: Arc::new(tokio::sync::Mutex::new(file_finder)),
         })
     }
 

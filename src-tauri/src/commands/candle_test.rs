@@ -1,7 +1,5 @@
 use crate::state::AppState;
-use agent::models::llm::{
-    CandleConfig, CandleProvider, ChatRequest, LLMProvider, WhichModel,
-};
+use agent::models::llm::{CandleConfig, CandleProvider, ChatRequest, LLMProvider, WhichModel};
 use log::{error, info};
 use tauri::State;
 

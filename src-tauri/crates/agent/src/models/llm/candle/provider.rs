@@ -274,20 +274,22 @@ impl LLMProvider for CandleProvider {
             match stream_result {
                 Ok(mut stream) => {
                     use tokio_stream::StreamExt;
-                    
+
                     // 处理流式输出的每个片段
                     while let Some(chunk_result) = stream.next().await {
                         match chunk_result {
                             Ok(chunk) => {
                                 if !chunk.is_empty() {
-                                    let response = ChatResponse::new(chunk, &model).with_done(false);
+                                    let response =
+                                        ChatResponse::new(chunk, &model).with_done(false);
                                     if tx.send(Ok(response)).is_err() {
                                         break; // 接收端已关闭
                                     }
                                 }
                             }
                             Err(e) => {
-                                let _ = tx.send(Err(LLMError::ApiError(format!("流式生成失败: {}", e))));
+                                let _ = tx
+                                    .send(Err(LLMError::ApiError(format!("流式生成失败: {}", e))));
                                 break;
                             }
                         }

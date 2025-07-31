@@ -36,7 +36,7 @@ log = "0.4.27"
 env_logger = "0.11.8"
 
 [features]
-default = ["candle", "asr"]
+default = ["candle"]
 asr = ["dep:asr", "pyo3"]
 full = ["tts", "candle", "reqwest", "asr"]
 reqwest = []
@@ -92,3 +92,5 @@ db = { path = "crates/db" }
 tts-local = { path = "crates/tts-local", optional = true }
 cb_config = { path = "crates/cb_config" }
 asr = { path = "crates/asr", optional = true }
+file_finder = { path = "crates/file_finder" }
+tauri-plugin-fs = "2"

@@ -1,5 +1,4 @@
 use anyhow::Result;
-use tokio_stream::StreamExt;
 use kokoro_tts::{KokoroTts, Voice};
 use rodio::{OutputStream, Sink as RodioSink, buffer::SamplesBuffer};
 use std::{
@@ -7,6 +6,7 @@ use std::{
     thread,
     time::Duration,
 };
+use tokio_stream::StreamExt;
 
 enum TtsCommand {
     Speak(String),

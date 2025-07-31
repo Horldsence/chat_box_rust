@@ -8,9 +8,7 @@ use ollama_rs::{
 use serde::{Deserialize, Serialize};
 use tokio_stream::Stream;
 
-use crate::{
-    ChatMessage, ChatRequest, ChatResponse, LLMError, LLMProvider, ModelInfo,
-};
+use crate::{ChatMessage, ChatRequest, ChatResponse, LLMError, LLMProvider, ModelInfo};
 
 /// Ollama 配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
