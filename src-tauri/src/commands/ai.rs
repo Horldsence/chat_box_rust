@@ -353,18 +353,19 @@ Assistant: ",
             .unwrap();
     });
 
-    let mut wait_count = 0;
-    while !message_handle.is_finished() {
-        // 等待消息处理任务完成
-        let _ = tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-        wait_count += 1;
-        debug!(
-            "等待消息处理任务完成: 已等待 {} ms (循环第 {} 次)",
-            wait_count * 100,
-            wait_count
-        );
-    }
-    debug!("消息处理任务已完成，总共等待了 {} ms", wait_count * 100);
+    // let mut wait_count = 0;
+    // while !message_handle.is_finished() {
+    //     // 等待消息处理任务完成
+    //     let _ = tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    //     wait_count += 1;
+    //     debug!(
+    //         "等待消息处理任务完成: 已等待 {} ms (循环第 {} 次)",
+    //         wait_count * 100,
+    //         wait_count
+    //     );
+    // }
+    // debug!("消息处理任务已完成，总共等待了 {} ms", wait_count * 100);
+    debug!("消息处理任务已完成");
 
     Ok(())
 }

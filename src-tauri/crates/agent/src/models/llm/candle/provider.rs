@@ -249,8 +249,8 @@ impl LLMProvider for CandleProvider {
 
         // 在后台任务中执行生成
         tokio::spawn(async move {
-            // 首先在作用域内获取生成器并完成生成
-            let generated_content = {
+            // 获取生成器并启动真正的流式生成
+            let stream_result = {
                 let mut generator_guard = match generator_mutex.lock() {
                     Ok(g) => g,
                     Err(e) => {
@@ -267,29 +267,29 @@ impl LLMProvider for CandleProvider {
                     }
                 };
 
-                // 在锁的作用域内完成生成
-                generator.generate_string(&prompt, max_tokens)
+                // 使用真正的流式生成方法
+                generator.generate_stream(&prompt, max_tokens)
             }; // 锁在这里被释放
 
-            // 处理生成结果
-            match generated_content {
-                Ok(content) => {
-                    // 将内容分成较小的块来模拟流式输出
-                    let chunks: Vec<&str> = content.split_whitespace().collect();
-                    let chunk_size = 3; // 每次发送3个词
-
-                    for chunk_group in chunks.chunks(chunk_size) {
-                        let chunk_content = chunk_group.join(" ");
-                        if !chunk_content.is_empty() {
-                            let response =
-                                ChatResponse::new(chunk_content + " ", &model).with_done(false);
-
-                            if tx.send(Ok(response)).is_err() {
-                                break; // 接收端已关闭
+            match stream_result {
+                Ok(mut stream) => {
+                    use tokio_stream::StreamExt;
+                    
+                    // 处理流式输出的每个片段
+                    while let Some(chunk_result) = stream.next().await {
+                        match chunk_result {
+                            Ok(chunk) => {
+                                if !chunk.is_empty() {
+                                    let response = ChatResponse::new(chunk, &model).with_done(false);
+                                    if tx.send(Ok(response)).is_err() {
+                                        break; // 接收端已关闭
+                                    }
+                                }
                             }
-
-                            // 添加小延迟来模拟流式输出
-                            tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+                            Err(e) => {
+                                let _ = tx.send(Err(LLMError::ApiError(format!("流式生成失败: {}", e))));
+                                break;
+                            }
                         }
                     }
 
@@ -300,7 +300,7 @@ impl LLMProvider for CandleProvider {
                     let _ = tx.send(Ok(final_response));
                 }
                 Err(e) => {
-                    let _ = tx.send(Err(LLMError::ApiError(format!("生成失败: {}", e))));
+                    let _ = tx.send(Err(LLMError::ApiError(format!("创建流式生成失败: {}", e))));
                 }
             }
         });

@@ -3,7 +3,7 @@ use crate::services::agent::AgentService;
 use agent::models::llm::{CandleConfig, WhichModel};
 use agent::{LLMManager, LLMManagerConfig, OllamaConfig, ProviderConfig};
 #[cfg(feature = "asr")]
-use asr::vosk_python::VoskASR;
+use asr::AsrProvider;
 use cb_config::AppConfig;
 use db::database::ChatDatabase;
 use db::models::{Conversation, Message};
@@ -35,7 +35,7 @@ impl AppState {
         config: AppConfig,
         conversations: Vec<Conversation>,
         messages: Vec<Message>,
-        #[cfg(feature = "asr")] vosk_asr: VoskASR,
+        #[cfg(feature = "asr")] asr_provider: Box<dyn AsrProvider>,
         app_handle: tauri::AppHandle,
         #[cfg(feature = "tts")] tts_service: Option<TtsEngine>,
     ) -> Result<Self, Box<dyn std::error::Error>> {
