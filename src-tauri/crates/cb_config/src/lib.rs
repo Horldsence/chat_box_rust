@@ -16,6 +16,7 @@ pub struct AppConfig {
     pub database: DatabaseConfig,
     pub app_behavior: AppBehaviorConfig,
     pub live2d: Live2DConfig,
+    pub qdrant: QdrantConfig,
 }
 
 impl AppConfig {
@@ -144,6 +145,16 @@ impl Default for AppConfig {
                 auto_breath: true,
                 check_model_on_startup: true,
                 fallback_to_simple_character: true,
+            },
+            qdrant: QdrantConfig {
+                enabled: false,
+                server_url: "http://localhost".to_string(),
+                server_port: 6334,
+                collection_name: "chat_vectors".to_string(),
+                vector_size: 768,
+                distance_metric: "Cosine".to_string(),
+                timeout_seconds: 30,
+                use_grpc: true,
             },
         }
     }

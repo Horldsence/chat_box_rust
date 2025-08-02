@@ -7,9 +7,11 @@ members = [
     "crates/db",
     "crates/extensions",
     "crates/file_finder",
+    "crates/file_vec",
     "crates/initialize",
     "crates/live2d",
     "crates/tts-local",
+    "crates/file_vec",
 ]
 
 [package]
@@ -94,3 +96,4 @@ cb_config = { path = "crates/cb_config" }
 asr = { path = "crates/asr", optional = true }
 file_finder = { path = "crates/file_finder" }
 tauri-plugin-fs = "2"
+file_vec = { path = "crates/file_vec" }

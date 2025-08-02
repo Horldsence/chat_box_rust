@@ -145,6 +145,16 @@ pub fn convert_init_config_to_app_config(init_config: InitConfig) -> AppConfig {
             check_model_on_startup: true,
             fallback_to_simple_character: true,
         },
+        qdrant: cb_config::QdrantConfig {
+            enabled: true,
+            server_url: "http://localhost".to_string(),
+            server_port: 6333,
+            collection_name: "chatbox".to_string(),
+            vector_size: 1536,
+            distance_metric: "Cosine".to_string(),
+            timeout_seconds: 10,
+            use_grpc: false,
+        },
     }
 }
 

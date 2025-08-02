@@ -61,6 +61,7 @@ pub struct InitConfig {
     pub database: DatabaseConfig,
     pub app_behavior: AppBehaviorConfig,
     pub live2d: Live2DConfig,
+    pub qdrant: QdrantConfig,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -75,6 +76,18 @@ pub struct Live2DConfig {
     pub auto_breath: bool,
     pub check_model_on_startup: bool,
     pub fallback_to_simple_character: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct QdrantConfig {
+    pub enabled: bool,
+    pub server_url: String,
+    pub server_port: u16,
+    pub collection_name: String,
+    pub vector_size: u64,
+    pub distance_metric: String,
+    pub timeout_seconds: u64,
+    pub use_grpc: bool,
 }
 
 impl Default for InitConfig {
@@ -129,6 +142,16 @@ impl Default for InitConfig {
                 auto_breath: true,
                 check_model_on_startup: true,
                 fallback_to_simple_character: true,
+            },
+            qdrant: QdrantConfig {
+                enabled: false,
+                server_url: "http://localhost".to_string(),
+                server_port: 6334,
+                collection_name: "chat_vectors".to_string(),
+                vector_size: 768,
+                distance_metric: "Cosine".to_string(),
+                timeout_seconds: 30,
+                use_grpc: true,
             },
         }
     }

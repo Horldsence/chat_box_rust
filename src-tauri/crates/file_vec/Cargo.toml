@@ -1,0 +1,17 @@
+[package]
+name = "file_vec"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+qdrant-client = "1.15.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+log = "0.4"
+thiserror = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+cb_config = { path = "../cb_config" }
+env_logger = "0.10.0"

@@ -37,3 +37,12 @@ app_behavior:
   message_chunk_send_interval_ms: 3
   show_error_dialogs: true
   auto_retry_failed_init: false
+qdrant:
+  enabled: false
+  server_url: http://localhost
+  server_port: 6334
+  collection_name: chat_vectors
+  vector_size: 768
+  distance_metric: Cosine
+  timeout_seconds: 30
+  use_grpc: true

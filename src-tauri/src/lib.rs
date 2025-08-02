@@ -211,6 +211,7 @@ pub fn run() {
             debug_clear_database,
             debug_test_database_connection,
             // 文件查找
+            search_files,
             search_files_with_content,
             refresh_file_index,
             get_file_info,
