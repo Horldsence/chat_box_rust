@@ -1,9 +1,8 @@
 use cb_config::QdrantConfig;
 use file_vec::{
     EmbedConfig, FastEmbedWrapper, QdrantVectorDb, SearchQuery, VectorPoint,
-    create_default_embedder, create_embedder,
+    create_default_embedder,
 };
-use log::info;
 use std::collections::HashMap;
 use tokio;
 use uuid::Uuid;
@@ -31,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         server_url: "http://localhost".to_string(),
         server_port: 6334,
         collection_name: "chat_embeddings".to_string(),
-        vector_size: vector_dim,
+        vector_size: vector_dim as u64,
         distance_metric: "Cosine".to_string(),
         timeout_seconds: 30,
         use_grpc: true,

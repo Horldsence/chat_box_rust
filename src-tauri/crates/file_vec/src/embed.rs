@@ -90,7 +90,7 @@ impl FastEmbedWrapper {
         let mut options = InitOptions::new(model_name);
 
         if let Some(cache_dir) = &self.config.cache_dir {
-            options = options.with_cache_dir(cache_dir);
+            options = options.with_cache_dir(cache_dir.into());
         }
 
         options = options.with_show_download_progress(self.config.show_download_progress);
@@ -111,14 +111,13 @@ impl FastEmbedWrapper {
         model_lock.is_some()
     }
 
-    /// 为单个文本生成嵌入向量
     pub async fn embed_text(&self, text: &str) -> Result<EmbedResult, EmbedError> {
         if text.trim().is_empty() {
             return Err(EmbedError::InvalidInput("文本不能为空".to_string()));
         }
 
-        let model_lock = self.model.read().await;
-        let model = model_lock.as_ref().ok_or(EmbedError::ModelNotInitialized)?;
+        let mut model_lock = self.model.write().await;
+        let model = model_lock.as_mut().ok_or(EmbedError::ModelNotInitialized)?;
 
         debug!("为文本生成嵌入: {}", &text[..text.len().min(50)]);
 
@@ -146,8 +145,8 @@ impl FastEmbedWrapper {
             return Err(EmbedError::InvalidInput("文本列表不能为空".to_string()));
         }
 
-        let model_lock = self.model.read().await;
-        let model = model_lock.as_ref().ok_or(EmbedError::ModelNotInitialized)?;
+        let mut model_lock = self.model.write().await;
+        let model = model_lock.as_mut().ok_or(EmbedError::ModelNotInitialized)?;
 
         debug!("批量生成嵌入，文本数量: {}", texts.len());
 
