@@ -14,6 +14,12 @@ use thiserror::Error;
 use tokio::time::timeout;
 use uuid::Uuid;
 
+pub mod embed;
+pub use embed::{
+    EmbedConfig, EmbedError, EmbedResult, FastEmbedWrapper, create_default_embedder,
+    create_embedder,
+};
+
 #[derive(Error, Debug)]
 pub enum VectorDbError {
     #[error("Connection error: {0}")]
@@ -620,6 +626,7 @@ mod tests {
     use super::*;
     use tokio;
 
+    #[allow(dead_code)]
     fn get_test_config() -> QdrantConfig {
         QdrantConfig {
             enabled: true,

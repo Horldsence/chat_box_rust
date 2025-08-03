@@ -1,6 +1,6 @@
 use cb_config::QdrantConfig;
 use file_vec::{
-    QdrantVectorDb, SearchQuery, VectorPoint, create_filtered_search_query, create_search_query,
+    QdrantVectorDb, SearchQuery, create_filtered_search_query, create_search_query,
     create_vector_point,
 };
 use std::collections::HashMap;
@@ -206,7 +206,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 5: Query with score threshold
     println!("\n🔍 Example 5: Query with score threshold");
-    let mut threshold_query = SearchQuery {
+    let threshold_query = SearchQuery {
         vector: vec![0.2, 0.1, 0.9, 0.7],
         filter: None,
         limit: 10,

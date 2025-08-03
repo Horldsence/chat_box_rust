@@ -15,3 +15,4 @@ thiserror = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 cb_config = { path = "../cb_config" }
 env_logger = "0.10.0"
+fastembed = "5.0.0"
