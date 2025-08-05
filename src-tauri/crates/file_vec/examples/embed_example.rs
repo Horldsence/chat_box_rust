@@ -1,8 +1,6 @@
-use cb_config::QdrantConfig;
-use file_vec::{
-    EmbedConfig, FastEmbedWrapper, QdrantVectorDb, SearchQuery, VectorPoint,
-    create_default_embedder,
-};
+use cb_config::{EmbedConfig, QdrantConfig};
+use file_vec::embed::FastEmbedWrapper;
+use file_vec::vec_db::{QdrantVectorDb, SearchQuery, VectorPoint};
 use std::collections::HashMap;
 use tokio;
 use uuid::Uuid;
@@ -16,7 +14,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 步骤 1: 创建嵌入器
     println!("\n📝 步骤 1: 初始化 FastEmbed 嵌入器");
-    let embedder = create_default_embedder().await?;
+    let config = EmbedConfig {
+        model_name: "BAAI/bge-small-en-v1.5".to_string(),
+        max_length: 512,
+        batch_size: 32,
+        show_download_progress: true,
+        cache_dir: None,
+    };
+    let embedder = FastEmbedWrapper::new(config);
     println!("✅ FastEmbed 嵌入器初始化成功");
 
     // 获取向量维度

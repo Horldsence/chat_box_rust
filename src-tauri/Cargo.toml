@@ -11,7 +11,7 @@ members = [
     "crates/initialize",
     "crates/live2d",
     "crates/tts-local",
-    "crates/file_vec",
+    "crates/file_vec", "crates/kb_manager",
 ]
 
 [package]

@@ -1,5 +1,5 @@
 use cb_config::QdrantConfig;
-use file_vec::{
+use file_vec::vec_db::{
     QdrantVectorDb, SearchQuery, create_filtered_search_query, create_search_query,
     create_vector_point,
 };

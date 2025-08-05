@@ -1,4 +1,5 @@
 use anyhow::Result;
+use cb_config::config::EmbedConfig;
 use fastembed::{EmbeddingModel, InitOptions, TextEmbedding};
 use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
@@ -16,32 +17,6 @@ pub enum EmbedError {
     InvalidInput(String),
     #[error("Model not initialized")]
     ModelNotInitialized,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EmbedConfig {
-    /// 模型名称，默认使用 BAAI/bge-small-en-v1.5
-    pub model_name: String,
-    /// 最大序列长度，默认 512
-    pub max_length: usize,
-    /// 批处理大小，默认 32
-    pub batch_size: usize,
-    /// 是否显示下载进度，默认 true
-    pub show_download_progress: bool,
-    /// 缓存目录，默认使用系统缓存目录
-    pub cache_dir: Option<String>,
-}
-
-impl Default for EmbedConfig {
-    fn default() -> Self {
-        Self {
-            model_name: "BAAI/bge-small-en-v1.5".to_string(),
-            max_length: 512,
-            batch_size: 32,
-            show_download_progress: true,
-            cache_dir: None,
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -64,11 +39,6 @@ impl FastEmbedWrapper {
             model: Arc::new(RwLock::new(None)),
             config,
         }
-    }
-
-    /// 使用默认配置创建实例
-    pub fn default() -> Self {
-        Self::new(EmbedConfig::default())
     }
 
     /// 初始化嵌入模型
@@ -245,12 +215,12 @@ impl FastEmbedWrapper {
     }
 }
 
-/// 创建带有默认配置的全局嵌入实例
-pub async fn create_default_embedder() -> Result<FastEmbedWrapper, EmbedError> {
-    let embedder = FastEmbedWrapper::default();
-    embedder.initialize().await?;
-    Ok(embedder)
-}
+// /// 创建带有默认配置的全局嵌入实例
+// pub async fn create_default_embedder() -> Result<FastEmbedWrapper, EmbedError> {
+//     let embedder = FastEmbedWrapper::default();
+//     embedder.initialize().await?;
+//     Ok(embedder)
+// }
 
 /// 创建带有自定义配置的嵌入实例
 pub async fn create_embedder(config: EmbedConfig) -> Result<FastEmbedWrapper, EmbedError> {
@@ -266,7 +236,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_embed_wrapper_creation() {
-        let config = EmbedConfig::default();
+        let config = EmbedConfig {
+            model_name: "BAAI/bge-small-en-v1.5".to_string(),
+            max_length: 512,
+            batch_size: 32,
+            show_download_progress: true,
+            cache_dir: None,
+        };
         let wrapper = FastEmbedWrapper::new(config);
         assert!(!wrapper.is_initialized().await);
     }
@@ -286,7 +262,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_invalid_input() {
-        let wrapper = FastEmbedWrapper::default();
+        let config = EmbedConfig {
+            model_name: "BAAI/bge-small-en-v1.5".to_string(),
+            max_length: 512,
+            batch_size: 32,
+            show_download_progress: true,
+            cache_dir: None,
+        };
+        let wrapper = FastEmbedWrapper::new(config);
         // 测试未初始化的模型
         let result = wrapper.embed_text("test").await;
         assert!(matches!(result, Err(EmbedError::ModelNotInitialized)));
@@ -296,7 +279,14 @@ mod tests {
     #[tokio::test]
     #[ignore] // 在CI中忽略，因为需要下载模型
     async fn test_embed_functionality() {
-        let wrapper = create_default_embedder().await.unwrap();
+        let config = EmbedConfig {
+            model_name: "BAAI/bge-small-en-v1.5".to_string(),
+            max_length: 512,
+            batch_size: 32,
+            show_download_progress: true,
+            cache_dir: None,
+        };
+        let wrapper = FastEmbedWrapper::new(config);
 
         let result = wrapper.embed_text("Hello, world!").await.unwrap();
         assert!(!result.vector.is_empty());
@@ -307,7 +297,14 @@ mod tests {
     #[tokio::test]
     #[ignore] // 在CI中忽略，因为需要下载模型
     async fn test_batch_embedding() {
-        let wrapper = create_default_embedder().await.unwrap();
+        let config = EmbedConfig {
+            model_name: "BAAI/bge-small-en-v1.5".to_string(),
+            max_length: 512,
+            batch_size: 32,
+            show_download_progress: true,
+            cache_dir: None,
+        };
+        let wrapper = FastEmbedWrapper::new(config);
 
         let texts = vec![
             "Hello, world!".to_string(),
@@ -327,7 +324,14 @@ mod tests {
     #[tokio::test]
     #[ignore] // 在CI中忽略，因为需要下载模型
     async fn test_query_and_passage_embedding() {
-        let wrapper = create_default_embedder().await.unwrap();
+        let config = EmbedConfig {
+            model_name: "BAAI/bge-small-en-v1.5".to_string(),
+            max_length: 512,
+            batch_size: 32,
+            show_download_progress: true,
+            cache_dir: None,
+        };
+        let wrapper = FastEmbedWrapper::new(config);
 
         let query_result = wrapper
             .embed_query("What is the capital of France?")

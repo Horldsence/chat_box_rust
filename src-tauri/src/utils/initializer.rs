@@ -155,6 +155,13 @@ pub fn convert_init_config_to_app_config(init_config: InitConfig) -> AppConfig {
             timeout_seconds: 10,
             use_grpc: false,
         },
+        embed: cb_config::EmbedConfig {
+            model_name: "BAAI/bge-small-en-v1.5".to_string(),
+            max_length: 512,
+            batch_size: 32,
+            show_download_progress: true,
+            cache_dir: None,
+        },
     }
 }
 

@@ -17,6 +17,7 @@ pub struct AppConfig {
     pub app_behavior: AppBehaviorConfig,
     pub live2d: Live2DConfig,
     pub qdrant: QdrantConfig,
+    pub embed: EmbedConfig,
 }
 
 impl AppConfig {
@@ -155,6 +156,13 @@ impl Default for AppConfig {
                 distance_metric: "Cosine".to_string(),
                 timeout_seconds: 30,
                 use_grpc: true,
+            },
+            embed: EmbedConfig {
+                model_name: "BAAI/bge-small-en-v1.5".to_string(),
+                max_length: 512,
+                batch_size: 32,
+                show_download_progress: true,
+                cache_dir: None,
             },
         }
     }

@@ -2521,6 +2521,7 @@ dependencies = [
  "chrono",
  "env_logger 0.10.2",
  "fastembed",
+ "file_finder",
  "log",
  "qdrant-client",
  "serde",
@@ -4169,6 +4170,10 @@ dependencies = [
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "kb_manager"
+version = "0.1.0"
 
 [[package]]
 name = "keyboard-types"

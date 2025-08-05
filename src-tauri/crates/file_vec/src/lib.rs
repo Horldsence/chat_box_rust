@@ -1,624 +1,333 @@
-use anyhow::Result;
-use cb_config::QdrantConfig;
-use log::{debug, error, info, warn};
-use qdrant_client::Qdrant;
-use qdrant_client::qdrant::{
-    Condition, CountPointsBuilder, CreateCollectionBuilder, DeletePointsBuilder, Distance, Filter,
-    PointStruct, QueryPointsBuilder, SearchPointsBuilder, UpsertPointsBuilder, Value,
-    VectorParamsBuilder,
-};
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::time::Duration;
-use thiserror::Error;
-use tokio::time::timeout;
-use uuid::Uuid;
-
 pub mod embed;
-pub use embed::{
-    EmbedConfig, EmbedError, EmbedResult, FastEmbedWrapper, create_default_embedder,
-    create_embedder,
-};
+pub mod vec_db;
 
-#[derive(Error, Debug)]
-pub enum VectorDbError {
-    #[error("Connection error: {0}")]
-    Connection(#[from] qdrant_client::QdrantError),
-    #[error("Timeout error: {0}")]
-    Timeout(#[from] tokio::time::error::Elapsed),
-    #[error("Serialization error: {0}")]
-    Serialization(#[from] serde_json::Error),
-    #[error("Configuration error: {0}")]
-    Config(String),
-    #[error("Collection not found: {0}")]
-    CollectionNotFound(String),
-    #[error("Invalid vector dimension: expected {expected}, got {actual}")]
-    InvalidVectorDimension { expected: usize, actual: usize },
+use cb_config::{EmbedConfig, QdrantConfig};
+use embed::FastEmbedWrapper;
+use file_finder::FileFinder;
+use log::{debug, info, warn};
+use serde_json::Value;
+use std::collections::HashMap;
+use uuid::Uuid;
+use vec_db::{QdrantVectorDb, SearchQuery, SearchResult, VectorPoint};
+
+pub struct VectorDBConfig {
+    pub qdrant_config: QdrantConfig,
+    pub embed_config: EmbedConfig,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VectorPoint {
-    pub id: Uuid,
-    pub vector: Vec<f32>,
-    pub payload: HashMap<String, serde_json::Value>,
-    pub timestamp: i64,
+pub struct VectorDb {
+    database: QdrantVectorDb,
+    file_embed: FastEmbedWrapper,
+    file_finder: FileFinder,
+    file_id_map: std::sync::Arc<std::sync::Mutex<HashMap<String, Uuid>>>, // file_path -> point_id
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SearchResult {
-    pub id: Uuid,
-    pub score: f32,
-    pub payload: HashMap<String, serde_json::Value>,
-    pub vector: Option<Vec<f32>>,
-}
+impl VectorDb {
+    pub async fn new(
+        embed_config: EmbedConfig,
+        qdrant_config: QdrantConfig,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let database = QdrantVectorDb::new(qdrant_config).await?;
+        let file_embed = FastEmbedWrapper::new(embed_config);
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SearchQuery {
-    pub vector: Vec<f32>,
-    pub filter: Option<HashMap<String, serde_json::Value>>,
-    pub limit: usize,
-    pub with_payload: bool,
-    pub with_vector: bool,
-    pub score_threshold: Option<f32>,
-}
+        // Initialize the embedding model
+        file_embed.initialize().await?;
 
-pub struct QdrantVectorDb {
-    client: Qdrant,
-    config: QdrantConfig,
-}
+        let file_finder = FileFinder::new()?;
 
-impl QdrantVectorDb {
-    /// Create a new QdrantVectorDb instance
-    pub async fn new(config: QdrantConfig) -> Result<Self, VectorDbError> {
-        let client_url = if config.use_grpc {
-            format!("{}:{}", config.server_url, config.server_port)
-        } else {
-            format!("{}:{}", config.server_url, config.server_port - 1) // REST API is typically on port 6333
+        Ok(Self {
+            database,
+            file_embed,
+            file_finder,
+            file_id_map: std::sync::Arc::new(std::sync::Mutex::new(HashMap::new())),
+        })
+    }
+
+    /// Add a file to the vector database
+    pub async fn add_file(&self, file_path: &str) -> Result<String, Box<dyn std::error::Error>> {
+        let file_content = std::fs::read_to_string(file_path)?;
+
+        // Generate embedding for the file content
+        let embed_result = self.file_embed.embed_passage(&file_content).await?;
+
+        // Generate unique ID for this file
+        let point_id = Uuid::new_v4();
+
+        // Create payload with file metadata
+        let mut payload = HashMap::new();
+        payload.insert(
+            "file_path".to_string(),
+            Value::String(file_path.to_string()),
+        );
+        payload.insert(
+            "content_preview".to_string(),
+            Value::String(file_content.chars().take(200).collect()),
+        );
+
+        // Get file info if possible
+        if let Ok(Some(file_info)) = self
+            .file_finder
+            .get_file_info(std::path::Path::new(file_path))
+            .await
+        {
+            payload.insert("file_name".to_string(), Value::String(file_info.name));
+            payload.insert(
+                "file_size".to_string(),
+                Value::Number(serde_json::Number::from(file_info.size)),
+            );
+            payload.insert(
+                "modified".to_string(),
+                Value::Number(serde_json::Number::from(file_info.modified)),
+            );
+            if let Some(ext) = file_info.extension {
+                payload.insert("extension".to_string(), Value::String(ext));
+            }
+        }
+
+        let vector_point = VectorPoint {
+            id: point_id,
+            vector: embed_result.vector,
+            payload,
+            timestamp: chrono::Utc::now().timestamp_millis() as i64,
         };
 
-        info!("Connecting to Qdrant at {}", client_url);
+        // Store in database
+        self.database.upsert_point(vector_point).await?;
 
-        let client = Qdrant::from_url(&client_url)
-            .timeout(Duration::from_secs(config.timeout_seconds))
-            .build()
-            .map_err(VectorDbError::Connection)?;
+        // Update file ID mapping
+        let mut file_map = self.file_id_map.lock().unwrap();
+        file_map.insert(file_path.to_string(), point_id);
 
-        Ok(Self { client, config })
+        info!(
+            "Added file '{}' with ID '{}'",
+            file_path,
+            point_id.to_string()
+        );
+        Ok(point_id.to_string())
     }
 
-    /// Test the connection to Qdrant
-    pub async fn test_connection(&self) -> Result<bool, VectorDbError> {
-        info!("Testing Qdrant connection...");
+    /// Search for similar files based on query text
+    pub async fn search(
+        &self,
+        query: &str,
+        top_k: usize,
+    ) -> Result<Vec<SearchResult>, Box<dyn std::error::Error>> {
+        // Generate embedding for the query
+        let embed_result = self.file_embed.embed_query(query).await?;
 
-        let timeout_duration = Duration::from_secs(self.config.timeout_seconds);
-
-        match timeout(timeout_duration, self.client.health_check()).await {
-            Ok(result) => match result {
-                Ok(_) => {
-                    info!("Qdrant connection successful");
-                    Ok(true)
-                }
-                Err(e) => {
-                    error!("Qdrant health check failed: {}", e);
-                    Err(VectorDbError::Connection(e))
-                }
-            },
-            Err(e) => {
-                error!("Qdrant connection timeout");
-                Err(VectorDbError::Timeout(e))
-            }
-        }
-    }
-
-    /// Create a collection if it doesn't exist
-    pub async fn ensure_collection(&self) -> Result<(), VectorDbError> {
-        let collection_name = &self.config.collection_name;
-
-        // Check if collection exists
-        match self.client.collection_info(collection_name).await {
-            Ok(_) => {
-                info!("Collection '{}' already exists", collection_name);
-                return Ok(());
-            }
-            Err(_) => {
-                info!(
-                    "Collection '{}' does not exist, creating...",
-                    collection_name
-                );
-            }
-        }
-
-        // Parse distance metric
-        let distance = match self.config.distance_metric.to_lowercase().as_str() {
-            "cosine" => Distance::Cosine,
-            "dot" => Distance::Dot,
-            "euclidean" => Distance::Euclid,
-            "manhattan" => Distance::Manhattan,
-            _ => {
-                warn!(
-                    "Unknown distance metric '{}', using Cosine",
-                    self.config.distance_metric
-                );
-                Distance::Cosine
-            }
+        let search_query = SearchQuery {
+            vector: embed_result.vector,
+            filter: None,
+            limit: top_k,
+            with_payload: true,
+            with_vector: false,
+            score_threshold: Some(0.5), // Minimum similarity threshold
         };
 
-        // Create collection
-        let create_collection = CreateCollectionBuilder::new(collection_name)
-            .vectors_config(VectorParamsBuilder::new(self.config.vector_size, distance));
-
-        self.client
-            .create_collection(create_collection)
-            .await
-            .map_err(VectorDbError::Connection)?;
-
-        info!("Collection '{}' created successfully", collection_name);
-        Ok(())
-    }
-
-    /// Insert or update a vector point
-    pub async fn upsert_point(&self, point: VectorPoint) -> Result<(), VectorDbError> {
-        self.upsert_points(vec![point]).await
-    }
-
-    /// Insert or update multiple vector points
-    pub async fn upsert_points(&self, points: Vec<VectorPoint>) -> Result<(), VectorDbError> {
-        if points.is_empty() {
-            return Ok(());
-        }
-
-        // Validate vector dimensions
-        for point in &points {
-            if point.vector.len() != self.config.vector_size as usize {
-                return Err(VectorDbError::InvalidVectorDimension {
-                    expected: self.config.vector_size as usize,
-                    actual: point.vector.len(),
-                });
-            }
-        }
-
-        // Convert to Qdrant points
-        let qdrant_points: Vec<PointStruct> = points
-            .into_iter()
-            .map(|point| {
-                let mut payload_map = HashMap::new();
-
-                // Add the original payload
-                for (key, value) in point.payload {
-                    payload_map.insert(key, value.into());
-                }
-
-                // Add timestamp
-                payload_map.insert("timestamp".to_string(), point.timestamp.into());
-
-                PointStruct::new(point.id.to_string(), point.vector, payload_map)
-            })
-            .collect();
-
-        let upsert_points =
-            UpsertPointsBuilder::new(&self.config.collection_name, qdrant_points).wait(true);
-
-        self.client
-            .upsert_points(upsert_points)
-            .await
-            .map_err(VectorDbError::Connection)?;
+        let results = self.database.search(search_query).await?;
 
         debug!(
-            "Successfully upserted points to collection '{}'",
-            self.config.collection_name
+            "Search query '{}' returned {} results",
+            query,
+            results.len()
         );
-        Ok(())
-    }
-
-    /// Search for similar vectors
-    pub async fn search(&self, query: SearchQuery) -> Result<Vec<SearchResult>, VectorDbError> {
-        if query.vector.len() != self.config.vector_size as usize {
-            return Err(VectorDbError::InvalidVectorDimension {
-                expected: self.config.vector_size as usize,
-                actual: query.vector.len(),
-            });
-        }
-
-        let mut search_builder = SearchPointsBuilder::new(
-            &self.config.collection_name,
-            query.vector,
-            query.limit as u64,
-        )
-        .with_payload(query.with_payload)
-        .with_vectors(query.with_vector);
-
-        // Add score threshold if specified
-        if let Some(threshold) = query.score_threshold {
-            search_builder = search_builder.score_threshold(threshold);
-        }
-
-        // Add filter if specified
-        if let Some(filter_map) = query.filter {
-            let mut conditions = Vec::new();
-
-            for (key, value) in filter_map {
-                let condition = match value {
-                    serde_json::Value::String(s) => Condition::matches(&key, s),
-                    serde_json::Value::Number(n) => {
-                        if let Some(i) = n.as_i64() {
-                            Condition::matches(&key, i)
-                        } else if let Some(f) = n.as_f64() {
-                            Condition::matches(&key, f as i64)
-                        } else {
-                            continue;
-                        }
-                    }
-                    serde_json::Value::Bool(b) => Condition::matches(&key, b),
-                    _ => continue,
-                };
-                conditions.push(condition);
-            }
-
-            if !conditions.is_empty() {
-                search_builder = search_builder.filter(Filter::must(conditions));
-            }
-        }
-
-        let search_result = self
-            .client
-            .search_points(search_builder)
-            .await
-            .map_err(VectorDbError::Connection)?;
-
-        let results: Vec<SearchResult> = search_result
-            .result
-            .into_iter()
-            .filter_map(|scored_point| {
-                let id_str = match &scored_point.id {
-                    Some(point_id) => match &point_id.point_id_options {
-                        Some(qdrant_client::qdrant::point_id::PointIdOptions::Uuid(uuid_str)) => {
-                            uuid_str
-                        }
-                        Some(qdrant_client::qdrant::point_id::PointIdOptions::Num(num)) => {
-                            &num.to_string()
-                        }
-                        None => return None,
-                    },
-                    None => return None,
-                };
-
-                let id = match Uuid::parse_str(id_str) {
-                    Ok(uuid) => uuid,
-                    Err(_) => return None,
-                };
-
-                let mut payload = HashMap::new();
-                for (key, value) in scored_point.payload {
-                    if let Some(json_value) = qdrant_value_to_json(value) {
-                        payload.insert(key, json_value);
-                    }
-                }
-
-                let vector =
-                    scored_point
-                        .vectors
-                        .and_then(|vectors| match vectors.vectors_options {
-                            Some(
-                                qdrant_client::qdrant::vectors_output::VectorsOptions::Vector(
-                                    vector_data,
-                                ),
-                            ) => Some(vector_data.data),
-                            _ => None,
-                        });
-
-                Some(SearchResult {
-                    id,
-                    score: scored_point.score,
-                    payload,
-                    vector,
-                })
-            })
-            .collect();
-
-        debug!("Search returned {} results", results.len());
         Ok(results)
     }
 
-    /// Query points (newer API, more flexible than search)
-    pub async fn query(&self, query: SearchQuery) -> Result<Vec<SearchResult>, VectorDbError> {
-        if query.vector.len() != self.config.vector_size as usize {
-            return Err(VectorDbError::InvalidVectorDimension {
-                expected: self.config.vector_size as usize,
-                actual: query.vector.len(),
-            });
-        }
-
-        let mut query_builder = QueryPointsBuilder::new(&self.config.collection_name)
-            .query(query.vector)
-            .limit(query.limit as u64)
-            .with_payload(query.with_payload);
-
-        // Add score threshold if specified
-        if let Some(threshold) = query.score_threshold {
-            query_builder = query_builder.score_threshold(threshold);
-        }
-
-        // Add filter if specified
-        if let Some(filter_map) = query.filter {
-            let mut conditions = Vec::new();
-
-            for (key, value) in filter_map {
-                let condition = match value {
-                    serde_json::Value::String(s) => Condition::matches(&key, s),
-                    serde_json::Value::Number(n) => {
-                        if let Some(i) = n.as_i64() {
-                            Condition::matches(&key, i)
-                        } else if let Some(f) = n.as_f64() {
-                            Condition::matches(&key, f as i64)
-                        } else {
-                            continue;
-                        }
-                    }
-                    serde_json::Value::Bool(b) => Condition::matches(&key, b),
-                    _ => continue,
-                };
-                conditions.push(condition);
-            }
-
-            if !conditions.is_empty() {
-                query_builder = query_builder.filter(Filter::must(conditions));
-            }
-        }
-
-        let query_result = self
-            .client
-            .query(query_builder)
-            .await
-            .map_err(VectorDbError::Connection)?;
-
-        let results: Vec<SearchResult> = query_result
-            .result
-            .into_iter()
-            .filter_map(|scored_point| {
-                let id_str = match &scored_point.id {
-                    Some(point_id) => match &point_id.point_id_options {
-                        Some(qdrant_client::qdrant::point_id::PointIdOptions::Uuid(uuid_str)) => {
-                            uuid_str
-                        }
-                        Some(qdrant_client::qdrant::point_id::PointIdOptions::Num(num)) => {
-                            &num.to_string()
-                        }
-                        None => return None,
-                    },
-                    None => return None,
-                };
-
-                let id = match Uuid::parse_str(id_str) {
-                    Ok(uuid) => uuid,
-                    Err(_) => return None,
-                };
-
-                let mut payload = HashMap::new();
-                for (key, value) in scored_point.payload {
-                    if let Some(json_value) = qdrant_value_to_json(value) {
-                        payload.insert(key, json_value);
-                    }
-                }
-
-                let vector =
-                    scored_point
-                        .vectors
-                        .and_then(|vectors| match vectors.vectors_options {
-                            Some(
-                                qdrant_client::qdrant::vectors_output::VectorsOptions::Vector(
-                                    vector_data,
-                                ),
-                            ) => Some(vector_data.data),
-                            _ => None,
-                        });
-
-                Some(SearchResult {
-                    id,
-                    score: scored_point.score,
-                    payload,
-                    vector,
-                })
-            })
-            .collect();
-
-        debug!("Query returned {} results", results.len());
-        Ok(results)
-    }
-
-    /// Delete points by IDs
-    pub async fn delete_points(&self, ids: Vec<Uuid>) -> Result<(), VectorDbError> {
-        if ids.is_empty() {
-            return Ok(());
-        }
-
-        let point_ids: Vec<String> = ids.into_iter().map(|id| id.to_string()).collect();
-        let count = point_ids.len();
-
-        let delete_points =
-            DeletePointsBuilder::new(&self.config.collection_name).points(point_ids);
-
-        self.client
-            .delete_points(delete_points)
-            .await
-            .map_err(VectorDbError::Connection)?;
-
-        debug!("Successfully deleted {} points", count);
-        Ok(())
-    }
-
-    /// Delete points by filter
-    pub async fn delete_points_by_filter(
+    /// Search with additional filters
+    pub async fn search_with_filter(
         &self,
-        filter: HashMap<String, serde_json::Value>,
-    ) -> Result<(), VectorDbError> {
-        let mut conditions = Vec::new();
+        query: &str,
+        top_k: usize,
+        filter: HashMap<String, Value>,
+    ) -> Result<Vec<SearchResult>, Box<dyn std::error::Error>> {
+        let embed_result = self.file_embed.embed_query(query).await?;
 
-        for (key, value) in filter {
-            let condition = match value {
-                serde_json::Value::String(s) => Condition::matches(&key, s),
-                serde_json::Value::Number(n) => {
-                    if let Some(i) = n.as_i64() {
-                        Condition::matches(&key, i)
-                    } else if let Some(f) = n.as_f64() {
-                        Condition::matches(&key, f as i64)
-                    } else {
-                        continue;
-                    }
-                }
-                serde_json::Value::Bool(b) => Condition::matches(&key, b),
-                _ => continue,
-            };
-            conditions.push(condition);
+        let search_query = SearchQuery {
+            vector: embed_result.vector,
+            filter: Some(filter),
+            limit: top_k,
+            with_payload: true,
+            with_vector: false,
+            score_threshold: Some(0.5),
+        };
+
+        let results = self.database.search(search_query).await?;
+        Ok(results)
+    }
+
+    /// Delete a file from the vector database
+    pub async fn delete_file(&self, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let mut file_map = self.file_id_map.lock().unwrap();
+
+        if let Some(point_id) = file_map.remove(file_path) {
+            drop(file_map); // Release the lock before async call
+            self.database.delete_points(vec![point_id.clone()]).await?;
+            info!("Deleted file '{}' with ID '{}'", file_path, point_id);
+        } else {
+            warn!("File '{}' not found in vector database", file_path);
         }
 
-        if conditions.is_empty() {
-            warn!("No valid filter conditions provided for deletion");
-            return Ok(());
-        }
-
-        // Note: In the current Qdrant client version, deleting by filter through
-        // DeletePointsBuilder might not be directly supported.
-        // We'll use an alternative approach: first query the points that match the filter,
-        // then delete them by IDs.
-        warn!("delete_points_by_filter is not directly supported in this Qdrant client version");
-        warn!(
-            "Consider implementing this by first querying matching points and then deleting by IDs"
-        );
         Ok(())
     }
 
-    /// Get collection info
-    pub async fn get_collection_info(&self) -> Result<serde_json::Value, VectorDbError> {
-        let info = self
-            .client
-            .collection_info(&self.config.collection_name)
-            .await
-            .map_err(VectorDbError::Connection)?;
+    /// Delete a vector point by its ID
+    pub async fn delete_point(&self, point_id: &Uuid) -> Result<(), Box<dyn std::error::Error>> {
+        self.database.delete_points(vec![point_id.clone()]).await?;
 
-        // Since GetCollectionInfoResponse doesn't implement Serialize,
-        // we need to manually extract the information we need
-        let mut json_info = serde_json::Map::new();
+        // Remove from file mapping if exists
+        let mut file_map = self.file_id_map.lock().unwrap();
+        file_map.retain(|_, id| id != point_id);
 
-        // Extract basic collection information
-        if let Some(result) = info.result {
-            json_info.insert(
-                "status".to_string(),
-                serde_json::Value::String(result.status.to_string()),
-            );
+        Ok(())
+    }
 
-            if let Some(config) = result.config {
-                let mut config_map = serde_json::Map::new();
+    /// Delete all embeddings from the database
+    pub async fn delete_all_embeddings(&self) -> Result<(), Box<dyn std::error::Error>> {
+        // Clear all points using filter (match all)
+        let filter = HashMap::new(); // Empty filter matches all
+        self.database.delete_points_by_filter(filter).await?;
 
-                if let Some(params) = config.params {
-                    let mut params_map = serde_json::Map::new();
-                    params_map.insert(
-                        "shard_number".to_string(),
-                        serde_json::Value::Number(serde_json::Number::from(params.shard_number)),
-                    );
-                    if let Some(replication_factor) = params.replication_factor {
-                        params_map.insert(
-                            "replication_factor".to_string(),
-                            serde_json::Value::Number(serde_json::Number::from(replication_factor)),
-                        );
+        // Clear file mapping
+        let mut file_map = self.file_id_map.lock().unwrap();
+        file_map.clear();
+
+        info!("Deleted all embeddings from vector database");
+        Ok(())
+    }
+
+    /// Get collection information and stats
+    pub async fn get_stats(&self) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        let collection_info = self.database.get_collection_info().await?;
+        let point_count = self.database.count_points().await?;
+
+        let file_map = self.file_id_map.lock().unwrap();
+        let mapped_files = file_map.len();
+        drop(file_map);
+
+        let stats = serde_json::json!({
+            "collection_info": collection_info,
+            "point_count": point_count,
+            "mapped_files": mapped_files,
+            "embedding_model": self.file_embed.get_config().model_name
+        });
+
+        Ok(stats)
+    }
+
+    /// Check for new files and add them to the database
+    pub async fn sync_files(
+        &self,
+        directory_path: &str,
+    ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+        // Build/refresh file index for the directory
+        self.file_finder
+            .index
+            .build_index(std::path::Path::new(directory_path))
+            .await?;
+
+        // Search for all files in the directory
+        let search_options = file_finder::SearchOptions {
+            pattern: "*".to_string(),
+            use_regex: false,
+            include_hidden: false,
+            max_depth: None,
+            file_types: Some(vec![
+                "txt".to_string(),
+                "md".to_string(),
+                "rs".to_string(),
+                "py".to_string(),
+            ]),
+            max_results: None,
+            search_content: false,
+        };
+
+        let files = self.file_finder.search_files(search_options)?;
+        let mut added_files = Vec::new();
+
+        for file_info in files {
+            if !file_info.is_dir {
+                let file_path = file_info.path.to_string_lossy();
+
+                // Check if file is already in database
+                let file_map = self.file_id_map.lock().unwrap();
+                let already_exists = file_map.contains_key(file_path.as_ref());
+                drop(file_map);
+
+                if !already_exists {
+                    match self.add_file(&file_path).await {
+                        Ok(point_id) => {
+                            added_files.push(file_path.to_string());
+                            debug!("Added new file: {} (ID: {})", file_path, point_id);
+                        }
+                        Err(e) => {
+                            warn!("Failed to add file {}: {}", file_path, e);
+                        }
                     }
-                    config_map.insert("params".to_string(), serde_json::Value::Object(params_map));
-                }
-
-                json_info.insert("config".to_string(), serde_json::Value::Object(config_map));
-            }
-        }
-
-        Ok(serde_json::Value::Object(json_info))
-    }
-
-    /// Count points in collection
-    pub async fn count_points(&self) -> Result<u64, VectorDbError> {
-        let count_request = CountPointsBuilder::new(&self.config.collection_name);
-
-        let count_result = self
-            .client
-            .count(count_request)
-            .await
-            .map_err(VectorDbError::Connection)?;
-
-        Ok(count_result.result.map(|r| r.count).unwrap_or(0))
-    }
-}
-
-/// Convert Qdrant Value to serde_json::Value
-fn qdrant_value_to_json(value: Value) -> Option<serde_json::Value> {
-    match value.kind {
-        Some(qdrant_client::qdrant::value::Kind::StringValue(s)) => {
-            Some(serde_json::Value::String(s))
-        }
-        Some(qdrant_client::qdrant::value::Kind::IntegerValue(i)) => {
-            Some(serde_json::Value::Number(serde_json::Number::from(i)))
-        }
-        Some(qdrant_client::qdrant::value::Kind::DoubleValue(f)) => {
-            serde_json::Number::from_f64(f).map(serde_json::Value::Number)
-        }
-        Some(qdrant_client::qdrant::value::Kind::BoolValue(b)) => Some(serde_json::Value::Bool(b)),
-        Some(qdrant_client::qdrant::value::Kind::NullValue(_)) => Some(serde_json::Value::Null),
-        Some(qdrant_client::qdrant::value::Kind::ListValue(list)) => {
-            let values: Vec<serde_json::Value> = list
-                .values
-                .into_iter()
-                .filter_map(qdrant_value_to_json)
-                .collect();
-            Some(serde_json::Value::Array(values))
-        }
-        Some(qdrant_client::qdrant::value::Kind::StructValue(struct_value)) => {
-            let mut map = serde_json::Map::new();
-            for (key, value) in struct_value.fields {
-                if let Some(json_value) = qdrant_value_to_json(value) {
-                    map.insert(key, json_value);
                 }
             }
-            Some(serde_json::Value::Object(map))
         }
-        None => None,
+
+        info!("Synced {} new files to vector database", added_files.len());
+        Ok(added_files)
+    }
+
+    /// Update an existing file in the database
+    pub async fn update_file(&self, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+        // First delete the existing entry
+        self.delete_file(file_path).await?;
+
+        // Then add it again with updated content
+        self.add_file(file_path).await?;
+
+        info!("Updated file '{}' in vector database", file_path);
+        Ok(())
+    }
+
+    /// Get file paths that are currently indexed
+    pub fn get_indexed_files(&self) -> Vec<String> {
+        let file_map = self.file_id_map.lock().unwrap();
+        file_map.keys().cloned().collect()
+    }
+
+    /// Test database connection
+    pub async fn test_connection(&self) -> Result<(), Box<dyn std::error::Error>> {
+        self.database.test_connection().await?;
+        Ok(())
+    }
+
+    /// Get embedding dimension
+    pub async fn get_embedding_dimension(&self) -> Result<usize, Box<dyn std::error::Error>> {
+        let dimension = self.file_embed.get_vector_dimension().await?;
+        Ok(dimension)
     }
 }
 
-/// Helper function to create a VectorPoint
-pub fn create_vector_point(
-    vector: Vec<f32>,
-    payload: HashMap<String, serde_json::Value>,
-) -> VectorPoint {
-    VectorPoint {
-        id: Uuid::new_v4(),
-        vector,
-        payload,
-        timestamp: chrono::Utc::now().timestamp(),
-    }
-}
+// Helper functions for creating configurations
+pub fn create_default_config() -> Result<VectorDBConfig, Box<dyn std::error::Error>> {
+    let embed_config = EmbedConfig {
+        model_name: "BAAI/bge-small-en-v1.5".to_string(),
+        max_length: 512,
+        batch_size: 32,
+        show_download_progress: true,
+        cache_dir: None,
+    };
 
-/// Helper function to create a basic search query
-pub fn create_search_query(vector: Vec<f32>, limit: usize) -> SearchQuery {
-    SearchQuery {
-        vector,
-        filter: None,
-        limit,
-        with_payload: true,
-        with_vector: false,
-        score_threshold: None,
-    }
-}
+    let qdrant_config = QdrantConfig {
+        enabled: true,
+        server_url: "http://localhost".to_string(),
+        server_port: 6333,
+        collection_name: "file_vectors".to_string(),
+        vector_size: 384, // BGE-small dimension
+        distance_metric: "cosine".to_string(),
+        timeout_seconds: 30,
+        use_grpc: false,
+    };
 
-/// Helper function to create a filtered search query
-pub fn create_filtered_search_query(
-    vector: Vec<f32>,
-    filter: HashMap<String, serde_json::Value>,
-    limit: usize,
-) -> SearchQuery {
-    SearchQuery {
-        vector,
-        filter: Some(filter),
-        limit,
-        with_payload: true,
-        with_vector: false,
-        score_threshold: None,
-    }
+    Ok(VectorDBConfig {
+        qdrant_config,
+        embed_config,
+    })
 }
 
 #[cfg(test)]
@@ -626,93 +335,24 @@ mod tests {
     use super::*;
     use tokio;
 
-    #[allow(dead_code)]
-    fn get_test_config() -> QdrantConfig {
-        QdrantConfig {
-            enabled: true,
-            server_url: "http://localhost".to_string(),
-            server_port: 6334,
-            collection_name: "test_collection".to_string(),
-            vector_size: 4,
-            distance_metric: "Cosine".to_string(),
-            timeout_seconds: 30,
-            use_grpc: true,
+    #[tokio::test]
+    async fn test_vector_db_creation() {
+        let config = create_default_config().unwrap();
+
+        // This test requires a running Qdrant instance
+        // Skip if not available
+        if let Ok(_db) = VectorDb::new(config.embed_config, config.qdrant_config).await {
+            // Test passed - database created successfully
+        } else {
+            // Skip test if Qdrant is not available
+            println!("Skipping test - Qdrant not available");
         }
     }
 
-    #[tokio::test]
-    async fn test_vector_point_creation() {
-        let mut payload = HashMap::new();
-        payload.insert(
-            "text".to_string(),
-            serde_json::Value::String("test".to_string()),
-        );
-
-        let point = create_vector_point(vec![0.1, 0.2, 0.3, 0.4], payload);
-
-        assert_eq!(point.vector.len(), 4);
-        assert!(point.payload.contains_key("text"));
-        assert!(point.timestamp > 0);
+    #[test]
+    fn test_config_creation() {
+        let config = create_default_config().unwrap();
+        assert_eq!(config.embed_config.model_name, "BAAI/bge-small-en-v1.5");
+        assert_eq!(config.qdrant_config.collection_name, "file_vectors");
     }
-
-    #[tokio::test]
-    async fn test_search_query_creation() {
-        let query = create_search_query(vec![0.1, 0.2, 0.3, 0.4], 10);
-
-        assert_eq!(query.vector.len(), 4);
-        assert_eq!(query.limit, 10);
-        assert!(query.with_payload);
-        assert!(!query.with_vector);
-        assert!(query.filter.is_none());
-        assert!(query.score_threshold.is_none());
-    }
-
-    // Note: The following tests require a running Qdrant instance
-    // They are commented out by default to avoid test failures in CI/CD
-
-    /*
-    #[tokio::test]
-    async fn test_connection() {
-        let config = get_test_config();
-        let db = QdrantVectorDb::new(config).await.unwrap();
-        let result = db.test_connection().await;
-        assert!(result.is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_collection_creation() {
-        let config = get_test_config();
-        let db = QdrantVectorDb::new(config).await.unwrap();
-        let result = db.ensure_collection().await;
-        assert!(result.is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_upsert_and_search() {
-        let config = get_test_config();
-        let db = QdrantVectorDb::new(config).await.unwrap();
-
-        // Ensure collection exists
-        db.ensure_collection().await.unwrap();
-
-        // Create test points
-        let mut payload1 = HashMap::new();
-        payload1.insert("city".to_string(), serde_json::Value::String("Berlin".to_string()));
-        let point1 = create_vector_point(vec![0.05, 0.61, 0.76, 0.74], payload1);
-
-        let mut payload2 = HashMap::new();
-        payload2.insert("city".to_string(), serde_json::Value::String("London".to_string()));
-        let point2 = create_vector_point(vec![0.19, 0.81, 0.75, 0.11], payload2);
-
-        // Upsert points
-        db.upsert_points(vec![point1, point2]).await.unwrap();
-
-        // Search
-        let query = create_search_query(vec![0.2, 0.1, 0.9, 0.7], 5);
-        let results = db.search(query).await.unwrap();
-
-        assert!(!results.is_empty());
-        assert!(results.len() <= 5);
-    }
-    */
 }

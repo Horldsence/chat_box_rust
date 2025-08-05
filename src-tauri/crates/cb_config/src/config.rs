@@ -62,6 +62,7 @@ pub struct InitConfig {
     pub app_behavior: AppBehaviorConfig,
     pub live2d: Live2DConfig,
     pub qdrant: QdrantConfig,
+    pub embed: EmbedConfig,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -88,6 +89,20 @@ pub struct QdrantConfig {
     pub distance_metric: String,
     pub timeout_seconds: u64,
     pub use_grpc: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EmbedConfig {
+    /// 模型名称，默认使用 BAAI/bge-small-en-v1.5
+    pub model_name: String,
+    /// 最大序列长度，默认 512
+    pub max_length: usize,
+    /// 批处理大小，默认 32
+    pub batch_size: usize,
+    /// 是否显示下载进度，默认 true
+    pub show_download_progress: bool,
+    /// 缓存目录，默认使用系统缓存目录
+    pub cache_dir: Option<String>,
 }
 
 impl Default for InitConfig {
@@ -152,6 +167,13 @@ impl Default for InitConfig {
                 distance_metric: "Cosine".to_string(),
                 timeout_seconds: 30,
                 use_grpc: true,
+            },
+            embed: EmbedConfig {
+                model_name: "BAAI/bge-small-en-v1.5".to_string(),
+                max_length: 512,
+                batch_size: 32,
+                show_download_progress: true,
+                cache_dir: None,
             },
         }
     }
