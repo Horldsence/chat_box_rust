@@ -204,7 +204,8 @@ Chat Box Rust React provides documentation in multiple languages:
 The application interface also supports multiple languages which can be configured in the settings.
 
 ## Roadmap
-
+- [ ] Automatically process and index uploaded files
+- [ ] Find relevant content in documents using natural language
 - [ ] Support for more large language models
 - [ ] Add text-to-speech functionality
 - [ ] Enhance offline mode experience
