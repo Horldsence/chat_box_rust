@@ -5,6 +5,8 @@ use db::models;
 use asr::vosk_python::VoskASR;
 use cb_config::AppConfig;
 use chrono::Utc;
+#[cfg(feature = "vector_db")]
+use file_vec::VectorDb;
 use initialize::InitConfig;
 use log::{error, info};
 use models::{Conversation, Message};
@@ -72,6 +74,13 @@ pub async fn init_app_state(
             .to_string(),
     )?;
 
+    #[cfg(feature = "vector_db")]
+    let vector_db = if config.qdrant.enabled == true {
+        Some(VectorDb::new(config.clone().embed, config.clone().qdrant).await?)
+    } else {
+        None
+    };
+
     let state = AppState::new(
         config.clone(),
         conversations,
@@ -81,6 +90,8 @@ pub async fn init_app_state(
         handle.clone(),
         #[cfg(feature = "tts")]
         Some(tts_engine),
+        #[cfg(feature = "vector_db")]
+        vector_db,
     )
     .await?;
 

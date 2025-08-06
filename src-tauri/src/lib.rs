@@ -280,6 +280,9 @@ async fn create_minimal_state(
     #[cfg(feature = "tts")]
     let tts_engine = None;
 
+    #[cfg(feature = "vector_db")]
+    let vector_db_service = None;
+
     state::AppState::new(
         config,
         conversations,
@@ -289,6 +292,8 @@ async fn create_minimal_state(
         handle,
         #[cfg(feature = "tts")]
         tts_engine,
+        #[cfg(feature = "vector_db")]
+        vector_db_service,
     )
     .await
 }

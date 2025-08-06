@@ -5,9 +5,13 @@ use agent::{LLMManager, LLMManagerConfig, OllamaConfig, ProviderConfig};
 #[cfg(feature = "asr")]
 use asr::AsrProvider;
 use cb_config::AppConfig;
+#[cfg(feature = "vector_db")]
+use cb_config::{EmbedConfig, QdrantConfig};
 use db::database::ChatDatabase;
 use db::models::{Conversation, Message};
 use file_finder::FileFinder;
+#[cfg(feature = "vector_db")]
+use file_vec::{VectorDBConfig, VectorDb};
 use live2d::live2d::Live2DService;
 use log::{error, info};
 use std::collections::HashMap;
@@ -28,6 +32,8 @@ pub struct AppState {
     pub agent_service: Arc<tokio::sync::Mutex<AgentService>>, // 添加Agent服务
     #[cfg(feature = "tts")]
     pub tts_service: Arc<tokio::sync::Mutex<Option<TtsEngine>>>, // 注册TTS服务
+    #[cfg(feature = "vector_db")]
+    pub vector_db: Arc<tokio::sync::Mutex<Option<VectorDb>>>, // 注册向量数据库服务
     pub file_finder: Arc<tokio::sync::Mutex<FileFinder>>, // 添加文件查找服务
 }
 
@@ -40,6 +46,7 @@ impl AppState {
         #[cfg(feature = "asr")] asr_provider: Box<dyn AsrProvider>,
         app_handle: tauri::AppHandle,
         #[cfg(feature = "tts")] tts_service: Option<TtsEngine>,
+        #[cfg(feature = "vector_db")] vector_db: Option<VectorDb>,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         // 创建 LLM 管理器配置
         let mut providers = HashMap::new();
@@ -108,6 +115,34 @@ impl AppState {
         // 创建Agent服务
         let agent_service = AgentService::new(app_handle);
 
+        let vector_db = {
+            #[cfg(feature = "vector_db")]
+            {
+                let embed_config = EmbedConfig {
+                    model_name: "BAAI/bge-small-en-v1.5".to_string(),
+                    max_length: 512,
+                    batch_size: 32,
+                    show_download_progress: true,
+                    cache_dir: None,
+                };
+                let qdrant_config = QdrantConfig {
+                    enabled: true,
+                    server_url: "http://localhost".to_string(),
+                    server_port: 6334,
+                    collection_name: "chat_vectors".to_string(),
+                    vector_size: 4, // Using 4 dimensions for this example
+                    distance_metric: "Cosine".to_string(),
+                    timeout_seconds: 30,
+                    use_grpc: true,
+                };
+                Some(VectorDb::new(embed_config, qdrant_config).await?)
+            }
+            #[cfg(not(feature = "vector_db"))]
+            {
+                Arc::new(tokio::sync::Mutex::new(None))
+            }
+        };
+
         Ok(AppState {
             config: Arc::new(Mutex::new(config)),
             conversations: Arc::new(Mutex::new(conversations)),
@@ -121,6 +156,8 @@ impl AppState {
             #[cfg(feature = "tts")]
             tts_service: Arc::new(tokio::sync::Mutex::new(tts_service)), // 注册TTS服务
             file_finder: Arc::new(tokio::sync::Mutex::new(file_finder)),
+            #[cfg(feature = "vector_db")]
+            vector_db: Arc::new(tokio::sync::Mutex::new(vector_db)),
         })
     }
 

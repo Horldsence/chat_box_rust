@@ -11,7 +11,8 @@ members = [
     "crates/initialize",
     "crates/live2d",
     "crates/tts-local",
-    "crates/file_vec", "crates/kb_manager",
+    "crates/file_vec",
+    "crates/kb_manager",
 ]
 
 [package]
@@ -38,12 +39,13 @@ log = "0.4.27"
 env_logger = "0.11.8"
 
 [features]
-default = ["candle"]
+default = ["candle", "vector_db"]
 asr = ["dep:asr", "pyo3"]
-full = ["tts", "candle", "reqwest", "asr"]
+full = ["tts", "candle", "reqwest", "asr", "vector_db"]
 reqwest = []
 candle = ["agent/candle"]
 tts = ["dep:tts-local", "tts-local/kokoro-tts"]
+vector_db = ["dep:file_vec"]
 
 [dependencies]
 serde_yaml = "0.9.34-deprecated"
@@ -96,4 +98,4 @@ cb_config = { path = "crates/cb_config" }
 asr = { path = "crates/asr", optional = true }
 file_finder = { path = "crates/file_finder" }
 tauri-plugin-fs = "2"
-file_vec = { path = "crates/file_vec" }
+file_vec = { path = "crates/file_vec", optional = true }
