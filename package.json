@@ -12,6 +12,10 @@
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
     "@ant-design/x": "^1.4.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.1",
+    "@mui/material": "^7.3.1",
     "@tauri-apps/api": "^2.6.0",
     "@tauri-apps/plugin-dialog": "^2.3.0",
     "@tauri-apps/plugin-fs": "~2.4.1",

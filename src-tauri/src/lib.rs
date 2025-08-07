@@ -217,18 +217,20 @@ pub fn run() {
             get_file_info,
             get_index_stats,
             // 向量数据库相关命令
-            // init_vector_db,
-            // add_file_to_vector_db,
-            // search_vector_db,
-            // delete_file_from_vector_db,
-            // sync_directory_to_vector_db,
-            // get_vector_db_stats,
-            // get_indexed_files,
-            // update_file_in_vector_db,
-            // clear_vector_db,
-            // test_vector_db_connection,
-            // get_vector_dimension,
-            // batch_add_files_to_vector_db
+            create_vector_db,
+            delete_vector_db,
+            add_file_to_vector_db,
+            search_vector_db,
+            search_vector_db_with_filter,
+            delete_file_from_vector_db,
+            delete_point_from_vector_db,
+            delete_all_embeddings,
+            get_vector_db_stats,
+            sync_files_to_vector_db,
+            update_file_in_vector_db,
+            get_indexed_files,
+            test_vector_db_connection,
+            get_embedding_dimension
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

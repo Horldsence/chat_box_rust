@@ -10,11 +10,11 @@ pub mod file_finder;
 pub mod live2d;
 pub mod message;
 pub mod settings;
-pub mod vector_db;
-pub mod voice;
-
 #[cfg(feature = "tts")]
 pub mod tts;
+#[cfg(feature = "vector_db")]
+pub mod vector_db;
+pub mod voice;
 
 pub use agent::*;
 pub use ai::*;
@@ -28,5 +28,6 @@ pub use file_finder::*;
 pub use live2d::*;
 pub use message::*;
 pub use settings::*;
+#[cfg(feature = "vector_db")]
 pub use vector_db::*;
 pub use voice::*;

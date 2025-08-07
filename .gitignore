@@ -25,3 +25,6 @@ dist-ssr
 
 # model
 src-tauri/model/kokoro
+
+# fastembed_cache
+.fastembed_cache

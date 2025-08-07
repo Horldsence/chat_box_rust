@@ -7,6 +7,7 @@ use file_finder::FileFinder;
 use log::{debug, info, warn};
 use serde_json::Value;
 use std::collections::HashMap;
+use tokio::sync::Mutex;
 use uuid::Uuid;
 use vec_db::{QdrantVectorDb, SearchQuery, SearchResult, VectorPoint};
 
@@ -19,7 +20,7 @@ pub struct VectorDb {
     database: QdrantVectorDb,
     file_embed: FastEmbedWrapper,
     file_finder: FileFinder,
-    file_id_map: std::sync::Arc<std::sync::Mutex<HashMap<String, Uuid>>>, // file_path -> point_id
+    file_id_map: std::sync::Arc<Mutex<HashMap<String, Uuid>>>, // file_path -> point_id
 }
 
 impl VectorDb {
@@ -39,7 +40,7 @@ impl VectorDb {
             database,
             file_embed,
             file_finder,
-            file_id_map: std::sync::Arc::new(std::sync::Mutex::new(HashMap::new())),
+            file_id_map: std::sync::Arc::new(Mutex::new(HashMap::new())),
         })
     }
 
@@ -95,7 +96,7 @@ impl VectorDb {
         self.database.upsert_point(vector_point).await?;
 
         // Update file ID mapping
-        let mut file_map = self.file_id_map.lock().unwrap();
+        let mut file_map = self.file_id_map.lock().await;
         file_map.insert(file_path.to_string(), point_id);
 
         info!(
@@ -158,7 +159,7 @@ impl VectorDb {
 
     /// Delete a file from the vector database
     pub async fn delete_file(&self, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let mut file_map = self.file_id_map.lock().unwrap();
+        let mut file_map = self.file_id_map.lock().await;
 
         if let Some(point_id) = file_map.remove(file_path) {
             drop(file_map); // Release the lock before async call
@@ -176,7 +177,7 @@ impl VectorDb {
         self.database.delete_points(vec![point_id.clone()]).await?;
 
         // Remove from file mapping if exists
-        let mut file_map = self.file_id_map.lock().unwrap();
+        let mut file_map = self.file_id_map.lock().await;
         file_map.retain(|_, id| id != point_id);
 
         Ok(())
@@ -189,7 +190,7 @@ impl VectorDb {
         self.database.delete_points_by_filter(filter).await?;
 
         // Clear file mapping
-        let mut file_map = self.file_id_map.lock().unwrap();
+        let mut file_map = self.file_id_map.lock().await;
         file_map.clear();
 
         info!("Deleted all embeddings from vector database");
@@ -201,7 +202,7 @@ impl VectorDb {
         let collection_info = self.database.get_collection_info().await?;
         let point_count = self.database.count_points().await?;
 
-        let file_map = self.file_id_map.lock().unwrap();
+        let file_map = self.file_id_map.lock().await;
         let mapped_files = file_map.len();
         drop(file_map);
 
@@ -250,7 +251,7 @@ impl VectorDb {
                 let file_path = file_info.path.to_string_lossy();
 
                 // Check if file is already in database
-                let file_map = self.file_id_map.lock().unwrap();
+                let file_map = self.file_id_map.lock().await;
                 let already_exists = file_map.contains_key(file_path.as_ref());
                 drop(file_map);
 
@@ -285,8 +286,8 @@ impl VectorDb {
     }
 
     /// Get file paths that are currently indexed
-    pub fn get_indexed_files(&self) -> Vec<String> {
-        let file_map = self.file_id_map.lock().unwrap();
+    pub async fn get_indexed_files(&self) -> Vec<String> {
+        let file_map = self.file_id_map.lock().await;
         file_map.keys().cloned().collect()
     }
 
